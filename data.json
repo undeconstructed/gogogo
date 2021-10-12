@@ -1,0 +1,2019 @@
+{
+  "squares": [
+    {
+      "name": "start - bank - bureau de change"
+    },
+    {
+      "name": "currency speculation - receive £100 from the bank in the currency of the country you are visiting",
+      "options": [
+        "gain100"
+      ]
+    },
+    {
+      "name": "overland - booking office - car hire co.",
+      "options": [
+        "buyland"
+      ]
+    },
+    {
+      "name": "overseas - shipping agency",
+      "options": [
+        "buysea"
+      ]
+    },
+    {
+      "name": "luck",
+      "options": [
+        "takeluck"
+      ]
+    },
+    {
+      "name": "bureau de change",
+      "options": [
+        "changemoney"
+      ]
+    },
+    {
+      "name": "british consulate"
+    },
+    {
+      "name": "quarantined - suspected smallpox - miss one turn",
+      "options": [
+        "missturn"
+      ]
+    },
+    {
+      "name": "bureau - thos. cook and son - de change",
+      "options": [
+        "changemoney",
+        "buyland",
+        "buysea",
+        "buyair",
+        "buyrail"
+      ]
+    },
+    {
+      "name": "casino - place bet & throw dice - 3 or under you lose, 4 or over pays 2 to 1",
+      "options": [
+        "gamble"
+      ]
+    },
+    {
+      "name": "luck",
+      "options": [
+        "takeluck"
+      ]
+    },
+    {
+      "name": "overland - booking office - car hire co.",
+      "options": [
+        "buyland"
+      ]
+    },
+    {
+      "name": "international - railways - booking office",
+      "options": [
+        "buyrail"
+      ]
+    },
+    {
+      "name": "bureau de change",
+      "options": [
+        "changemoney"
+      ]
+    },
+    {
+      "name": "B.O.A.C. - air ticket office",
+      "options": [
+        "buyair"
+      ]
+    },
+    {
+      "name": "customs - pay £100 duty - (in any currency)",
+      "options": [
+        "pay100"
+      ]
+    },
+    {
+      "name": "luck",
+      "options": [
+        "takeluck"
+      ]
+    },
+    {
+      "name": "short cut - to cooks",
+      "options": [
+        "gocooks"
+      ]
+    },
+    {
+      "name": "city hospital - you need a rest - miss one turn",
+      "options": [
+        "missturn"
+      ]
+    },
+    {
+      "name": "bureau de change",
+      "options": [
+        "changemoney"
+      ]
+    },
+    {
+      "name": "international - railways - booking office",
+      "options": [
+        "buyrail"
+      ]
+    },
+    {
+      "name": "luck",
+      "options": [
+        "takeluck"
+      ]
+    },
+    {
+      "name": "hotel bill - £100 - payable in local currency",
+      "options": [
+        "pay100"
+      ]
+    },
+    {
+      "name": "bureau - thos. cook and son - de change",
+      "options": [
+        "changemoney",
+        "buyland",
+        "buysea",
+        "buyair",
+        "buyrail"
+      ]
+    },
+    {
+      "name": "short cut to bank",
+      "options": [
+        "gobank"
+      ]
+    },
+    {
+      "name": "overseas - shipping agency",
+      "options": [
+        "buysea"
+      ]
+    },
+    {
+      "name": "bureau de change",
+      "options": [
+        "changemoney"
+      ]
+    },
+    {
+      "name": "luck",
+      "options": [
+        "takeluck"
+      ]
+    },
+    {
+      "name": "B.O.A.C. - air ticket office",
+      "options": [
+        "buyair"
+      ]
+    },
+    {
+      "name": "your papers are not in order - go back to the british consulate",
+      "options": [
+        "goconsulate"
+      ]
+    },
+    {
+      "name": "bureau - thos. cook and son - de change",
+      "options": [
+        "changemoney",
+        "buyland",
+        "buysea",
+        "buyair",
+        "buyrail"
+      ]
+    },
+    {
+      "name": "customs - one souvenir confiscated",
+      "options": [
+        "losesouvenir"
+      ]
+    }
+  ],
+  "currencies": {
+    "tc": {
+      "name": "Traveller's Cheque",
+      "value": 2000
+    },
+    "st": {
+      "name": "Sterling",
+      "value": 10
+    },
+    "us": {
+      "name": "US Dollars",
+      "value": 25
+    },
+    "ro": {
+      "name": "Roubles",
+      "value": 25
+    },
+    "fr": {
+      "name": "Francs",
+      "value": 100
+    },
+    "ma": {
+      "name": "Marks",
+      "value": 100
+    },
+    "ru": {
+      "name": "Rupees",
+      "value": 100
+    },
+    "pe": {
+      "name": "Pesos",
+      "value": 500
+    },
+    "hk": {
+      "name": "HKDollars",
+      "value": 150
+    },
+    "pi": {
+      "name": "Piastres",
+      "value": 1000
+    },
+    "li": {
+      "name": "Lire",
+      "value": 10000
+    },
+    "ye": {
+      "name": "Yen",
+      "value": 10000
+    }
+  },
+  "places": {
+    "archangel": {
+      "name": "Archangel",
+      "currency": "ru",
+      "routes": [
+        "london:s:50",
+        "moscow:r:20"
+      ]
+    },
+    "arica": {
+      "name": "Arica",
+      "currency": "pe",
+      "routes": [
+        "buenosaires:s:60",
+        "riodejaneiro:r:30",
+        "sanfrancisco:s:90"
+      ]
+    },
+    "ascensionisland": {
+      "name": "Ascension Island",
+      "currency": "st",
+      "routes": [
+        "capetown:s:40",
+        "casablanca:s:40",
+        "buenosaires:s:40"
+      ]
+    },
+    "bahamas": {
+      "name": "Bahamas",
+      "currency": "st",
+      "routes": [
+        "mexicocity:a:30",
+        "newyork:s:20",
+        "riodejaneiro:s:50"
+      ]
+    },
+    "berlin": {
+      "name": "Berlin",
+      "city": true,
+      "currency": "ma",
+      "routes": [
+        "london:a:40",
+        "moscow:r:30",
+        "moscow:a:70",
+        "moscow:l:40",
+        "paris:l:10",
+        "paris:a:40",
+        "rome:l:20",
+        "rome:a:50"
+      ]
+    },
+    "bombay": {
+      "name": "Bombay",
+      "city": true,
+      "currency": "ru",
+      "routes": [
+        "cairo:s:40",
+        "cairo:a:50",
+        "capetown:s:50",
+        "capetown:a:100",
+        "hongkong:a:60",
+        "moscow:a:80",
+        "rome:a:80",
+        "sydney:a:150",
+        "sydney:s+r:70",
+        "sydney:s:80",
+        "tokyo:s:100"
+      ]
+    },
+    "buenosaires": {
+      "name": "Buenos Aires",
+      "city": true,
+      "currency": "pe",
+      "routes": [
+        "capetown:a:100",
+        "capetown:s:50",
+        "casablanca:s:60",
+        "mexicocity:a:100",
+        "riodejaneiro:s:10",
+        "riodejaneiro:l:30",
+        "sanfrancisco:s:150"
+      ]
+    },
+    "cairo": {
+      "name": "Cairo",
+      "city": true,
+      "currency": "pi",
+      "routes": [
+        "bombay:s:40",
+        "bombay:a:50",
+        "capetown:r+l:1000000",
+        "capetown:a:100",
+        "capetown:l:80",
+        "casablanca:l:40",
+        "rome:a:30"
+      ]
+    },
+    "capetown": {
+      "name": "Cape Town",
+      "city": true,
+      "currency": "st",
+      "routes": [
+        "bombay:a:100",
+        "bombay:s:50",
+        "buenosaires:a:100",
+        "buenosaires:s:50",
+        "cairo:l:80",
+        "cairo:a:100",
+        "cairo:l+r:1000000",
+        "casablanca:l:100",
+        "casablanca:s:70",
+        "sydney:a:150",
+        "sydney:s:120",
+        "tokyo:s:150"
+      ]
+    },
+    "casablanca": {
+      "name": "Casablanca",
+      "city": true,
+      "currency": "fr",
+      "routes": [
+        "buenosaires:s:60",
+        "cairo:l:40",
+        "capetown:l:100",
+        "capetown:s:70",
+        "london:s:30",
+        "riodejaneiro:a:100"
+      ]
+    },
+    "christmasisland": {
+      "name": "Christmas Island",
+      "currency": "st",
+      "routes": [
+        "sydney:s:50",
+        "tokyo:s:50"
+      ]
+    },
+    "falklandislands": {
+      "name": "Falkland Islands",
+      "currency": "st",
+      "routes": [
+        "buenosaires:s:20",
+        "riodejaneiro:s+r:80",
+        "sanfrancisco:s:130"
+      ]
+    },
+    "heardisland": {
+      "name": "Heard Island",
+      "currency": "st",
+      "routes": [
+        "bombay:s:100",
+        "capetown:s:130",
+        "sydney:s:70",
+        "tokyo:s:120"
+      ]
+    },
+    "hongkong": {
+      "name": "Hong Kong",
+      "city": true,
+      "currency": "hk",
+      "routes": [
+        "bombay:a:60",
+        "moscow:a:150",
+        "moscow:r:100",
+        "tokyo:s:20"
+      ]
+    },
+    "honolulu": {
+      "name": "Honolulu",
+      "currency": "us",
+      "routes": [
+        "sanfrancisco:s:40",
+        "tokyo:s:40"
+      ]
+    },
+    "lapaz": {
+      "name": "La Paz",
+      "currency": "pe",
+      "routes": [
+        "buenosaires:r+s:70",
+        "riodejaneiro:r:20",
+        "sanfrancisco:r+s:100"
+      ]
+    },
+    "london": {
+      "name": "London",
+      "city": true,
+      "currency": "st",
+      "routes": [
+        "berlin:a:40",
+        "casablanca:s:30",
+        "moscow:s+r:70",
+        "newyork:a:100",
+        "newyork:s:50",
+        "paris:a:20"
+      ]
+    },
+    "losangeles": {
+      "name": "Los Angeles",
+      "city": true,
+      "currency": "us",
+      "routes": [
+        "mexicocity:l:30",
+        "newyork:a:80",
+        "sanfrancisco:l:10",
+        "tokyo:a:120"
+      ]
+    },
+    "madagascar": {
+      "name": "Madagascar",
+      "currency": "fr",
+      "routes": [
+        "capetown:s:10",
+        "bombay:s:40"
+      ]
+    },
+    "mexicocity": {
+      "name": "Mexico City",
+      "city": true,
+      "currency": "pe",
+      "routes": [
+        "buenosaires:a:100",
+        "losangeles:l:30",
+        "newyork:a:50",
+        "riodejaneiro:a:100"
+      ]
+    },
+    "mombasa": {
+      "name": "Mombasa",
+      "currency": "st",
+      "routes": [
+        "cairo:r:20",
+        "capetown:l:30"
+      ]
+    },
+    "moscow": {
+      "name": "Moscow",
+      "city": true,
+      "currency": "roubles",
+      "routes": [
+        "bombay:a:80",
+        "berlin:a:70",
+        "berlin:l:40",
+        "berlin:r:30",
+        "hongkong:a:150",
+        "hongkong:r:100",
+        "london:r+s:70"
+      ]
+    },
+    "newyork": {
+      "name": "New York",
+      "city": true,
+      "currency": "us",
+      "routes": [
+        "london:a:100",
+        "london:s:50",
+        "losangeles:a:80",
+        "mexicocity:a:50",
+        "riodejaneiro:a:120",
+        "riodejaneiro:s:70",
+        "sanfrancisco:l:50",
+        "sanfrancisco:r:30"
+      ]
+    },
+    "paris": {
+      "name": "Paris",
+      "city": true,
+      "currency": "fr",
+      "routes": [
+        "berlin:a:40",
+        "berlin:l:10",
+        "london:a:20",
+        "rome:a:30"
+      ]
+    },
+    "perth": {
+      "name": "Perth",
+      "currency": "st",
+      "routes": [
+        "capetown:s:80",
+        "bombay:s:50",
+        "sydney:l:30",
+        "sydney:r:20",
+        "sydney:s:30",
+        "tokyo:s:70"
+      ]
+    },
+    "riodejaneiro": {
+      "name": "Rio de Janeiro",
+      "city": true,
+      "currency": "pe",
+      "routes": [
+        "buenosaires:s:10",
+        "buenosaires:l:30",
+        "casablanca:a:100",
+        "mexicocity:a:100",
+        "newyork:a:120",
+        "newyork:s:70",
+        "sanfrancisco:r+s:110"
+      ]
+    },
+    "rome": {
+      "name": "Rome",
+      "city": true,
+      "currency": "li",
+      "routes": [
+        "berlin:a:50",
+        "berlin:l:20",
+        "bombay:a:80",
+        "cairo:a:30",
+        "paris:a:30"
+      ]
+    },
+    "sanfrancisco": {
+      "name": "San Francisco",
+      "city": true,
+      "currency": "us",
+      "routes": [
+        "buenosaires:s:150",
+        "losangeles:l:10",
+        "newyork:l:50",
+        "newyork:r:30",
+        "riodejaneiro:s+r:110",
+        "tokyo:s:70"
+      ]
+    },
+    "sydney": {
+      "name": "Sydney",
+      "city": true,
+      "currency": "st",
+      "routes": [
+        "bombay:a:150",
+        "bombay:l+s:1000000",
+        "bombay:r+s:70",
+        "bombay:s:80",
+        "capetown:a:150",
+        "capetown:l+s:1000000",
+        "capetown:r+s:1000000",
+        "capetown:s:120",
+        "tokyo:a:100",
+        "tokyo:s:50"
+      ]
+    },
+    "tokyo": {
+      "name": "Tokyo",
+      "city": true,
+      "currency": "ye",
+      "routes": [
+        "bombay:s:100",
+        "capetown:s:150",
+        "hongkong:s:20",
+        "losangeles:a:120",
+        "sanfrancisco:s:70",
+        "sydney:a:100",
+        "sydney:s:50"
+      ]
+    },
+    "vladivostok": {
+      "name": "Vladivokstok",
+      "currency": "ro",
+      "routes": [
+        "hongkong:r:90",
+        "moscow:r:90"
+      ]
+    },
+    "wellington": {
+      "name": "Wellington",
+      "currency": "st",
+      "routes": [
+        "sydney:s:30"
+      ]
+    }
+  },
+  "dots": {
+    "418,193": {
+      "place": "london",
+      "links": [
+        "a:448,200",
+        "s:436,145",
+        "s:395,156",
+        "s:388,232",
+        "a:343,218"
+      ]
+    },
+    "436,145": {
+      "danger": true,
+      "links": [
+        "s:446,108"
+      ]
+    },
+    "446,108": {
+      "links": [
+        "s:467,78"
+      ]
+    },
+    "467,78": {
+      "links": [
+        "s:498,62"
+      ]
+    },
+    "498,62": {
+      "danger": true,
+      "links": [
+        "s:535,65"
+      ]
+    },
+    "535,65": {
+      "links": [
+        "s:563,82"
+      ]
+    },
+    "563,82": {
+      "links": [
+        "s:558,103"
+      ]
+    },
+    "558,103": {
+      "links": [
+        "s:539,120"
+      ]
+    },
+    "539,120": {
+      "links": [
+        "s:540,136"
+      ]
+    },
+    "567,156": {
+      "danger": true,
+      "links": [
+        "r:540,136"
+      ]
+    },
+    "569,194": {
+      "place": "moscow",
+      "links": [
+        "a:582,233",
+        "r:567,156",
+        "r:624,175"
+      ]
+    },
+    "624,175": {
+      "links": [
+        "r:678,192"
+      ]
+    },
+    "738,193": {
+      "links": [
+        "r:790,153",
+        "r:788,213"
+      ]
+    },
+    "790,153": {
+      "links": [
+        "r:846,171"
+      ]
+    },
+    "846,171": {
+      "danger": true,
+      "links": [
+        "r:846,236"
+      ]
+    },
+    "846,236": {
+      "place": "vladivostok"
+    },
+    "788,213": {
+      "links": [
+        "r:783,251"
+      ]
+    },
+    "783,251": {
+      "danger": true,
+      "links": [
+        "r:773,289"
+      ]
+    },
+    "773,289": {
+      "links": [
+        "r:771,322"
+      ]
+    },
+    "771,322": {
+      "place": "hongkong",
+      "links": [
+        "s:801,339",
+        "a:732,298"
+      ]
+    },
+    "448,200": {
+      "links": [
+        "a:469,206"
+      ]
+    },
+    "469,206": {
+      "danger": true,
+      "links": [
+        "a:497,212"
+      ]
+    },
+    "497,212": {
+      "place": "berlin",
+      "links": [
+        "a:522,207",
+        "a:486,236",
+        "r:519,160",
+        "l:519,225"
+      ]
+    },
+    "519,160": {
+      "links": [
+        "r:569,194"
+      ]
+    },
+    "522,207": {
+      "links": [
+        "a:542,201"
+      ]
+    },
+    "542,201": {
+      "danger": true,
+      "links": [
+        "a:569,194"
+      ]
+    },
+    "435,234": {
+      "place": "paris",
+      "links": [
+        "a:418,193",
+        "a:497,212",
+        "l:497,212"
+      ]
+    },
+    "478,264": {
+      "place": "rome",
+      "links": [
+        "a:435,234",
+        "l:503,247"
+      ]
+    },
+    "520,324": {
+      "place": "cairo",
+      "links": [
+        "s:548,352",
+        "a:478,264",
+        "a:555,334",
+        "r:538,374",
+        "l:486,345"
+      ]
+    },
+    "518,288": {
+      "links": [
+        "a:478,264"
+      ]
+    },
+    "544,302": {
+      "danger": true,
+      "links": [
+        "a:518,288"
+      ]
+    },
+    "571,315": {
+      "links": [
+        "a:544,302"
+      ]
+    },
+    "598,333": {
+      "danger": true,
+      "links": [
+        "a:571,315"
+      ]
+    },
+    "555,334": {
+      "danger": true,
+      "links": [
+        "a:580,339"
+      ]
+    },
+    "580,339": {
+      "links": [
+        "a:633,352"
+      ]
+    },
+    "633,352": {
+      "place": "bombay",
+      "links": [
+        "s:651,428",
+        "a:598,333",
+        "a:597,388",
+        "a:681,341"
+      ]
+    },
+    "681,341": {
+      "danger": true,
+      "links": [
+        "a:721,333"
+      ]
+    },
+    "721,333": {
+      "links": [
+        "a:771,322"
+      ]
+    },
+    "582,233": {
+      "links": [
+        "a:595,262"
+      ]
+    },
+    "595,262": {
+      "danger": true,
+      "links": [
+        "a:605,286"
+      ]
+    },
+    "605,286": {
+      "links": [
+        "a:618,315"
+      ]
+    },
+    "615,225": {
+      "danger": true,
+      "links": [
+        "a:569,194"
+      ]
+    },
+    "654,249": {
+      "links": [
+        "a:615,225"
+      ]
+    },
+    "691,273": {
+      "danger": true,
+      "links": [
+        "a:654,249"
+      ]
+    },
+    "732,298": {
+      "links": [
+        "a:691,273"
+      ]
+    },
+    "618,315": {
+      "danger": true,
+      "links": [
+        "a:633,352"
+      ]
+    },
+    "749,407": {
+      "danger": true,
+      "links": [
+        "a:711,388"
+      ]
+    },
+    "676,373": {
+      "danger": true,
+      "links": [
+        "a:633,352"
+      ]
+    },
+    "711,388": {
+      "links": [
+        "a:676,373"
+      ]
+    },
+    "795,428": {
+      "danger": true,
+      "links": [
+        "a:749,407"
+      ]
+    },
+    "801,339": {
+      "danger": true,
+      "links": [
+        "s:827,319"
+      ]
+    },
+    "827,319": {
+      "links": [
+        "s:863,287"
+      ]
+    },
+    "863,287": {
+      "city": true,
+      "place": "tokyo",
+      "links": [
+        "s:935,314",
+        "a:870,337",
+        "a:923,286"
+      ]
+    },
+    "923,286": {
+      "danger": true,
+      "links": [
+        "a:962,284"
+      ]
+    },
+    "962,284": {
+      "danger": true,
+      "links": [
+        "a:12,286"
+      ]
+    },
+    "996,274": {
+      "danger": true,
+      "links": [
+        "s:13,244"
+      ]
+    },
+    "985,332": {
+      "place": "honolulu",
+      "links": [
+        "s:996,274"
+      ]
+    },
+    "935,314": {
+      "links": [
+        "s:985,332"
+      ]
+    },
+    "903,326": {
+      "links": [
+        "s:863,287"
+      ]
+    },
+    "928,344": {
+      "links": [
+        "s:903,326"
+      ]
+    },
+    "957,365": {
+      "links": [
+        "s:928,344"
+      ]
+    },
+    "961,395": {
+      "danger": true,
+      "links": [
+        "s:957,365"
+      ]
+    },
+    "994,405": {
+      "place": "christmasisland",
+      "links": [
+        "s:961,395"
+      ]
+    },
+    "929,419": {
+      "links": [
+        "s:961,395"
+      ]
+    },
+    "948,447": {
+      "links": [
+        "s:929,419"
+      ]
+    },
+    "920,476": {
+      "links": [
+        "s:948,447"
+      ]
+    },
+    "961,479": {
+      "links": [
+        "s:968,514"
+      ]
+    },
+    "930,498": {
+      "links": [
+        "s:961,479"
+      ]
+    },
+    "968,514": {
+      "danger": true,
+      "links": [
+        "s:960,547"
+      ]
+    },
+    "960,547": {
+      "links": [
+        "s:987,553"
+      ]
+    },
+    "987,553": {
+      "place": "wellington"
+    },
+    "870,337": {
+      "danger": true,
+      "links": [
+        "a:875,368"
+      ]
+    },
+    "875,368": {
+      "links": [
+        "a:878,393"
+      ]
+    },
+    "883,428": {
+      "links": [
+        "a:889,461"
+      ]
+    },
+    "889,461": {
+      "danger": true,
+      "links": [
+        "a:893,489"
+      ]
+    },
+    "893,489": {
+      "links": [
+        "a:899,528"
+      ]
+    },
+    "899,528": {
+      "place": "sydney",
+      "links": [
+        "s:904,569",
+        "s:930,498",
+        "s:920,476",
+        "a:863,485",
+        "l:870,506"
+      ]
+    },
+    "904,569": {
+      "links": [
+        "s:871,575"
+      ]
+    },
+    "871,575": {
+      "danger": true,
+      "links": [
+        "s:819,583"
+      ]
+    },
+    "819,583": {
+      "links": [
+        "s:776,569"
+      ]
+    },
+    "797,619": {
+      "danger": true,
+      "links": [
+        "s:819,583"
+      ]
+    },
+    "773,653": {
+      "links": [
+        "s:797,619"
+      ]
+    },
+    "738,672": {
+      "danger": true,
+      "links": [
+        "s:773,653"
+      ]
+    },
+    "702,665": {
+      "place": "heardisland",
+      "links": [
+        "s:738,672"
+      ]
+    },
+    "776,569": {
+      "links": [
+        "s:759,507"
+      ]
+    },
+    "759,507": {
+      "place": "perth",
+      "links": [
+        "r:787,504"
+      ]
+    },
+    "787,504": {
+      "links": [
+        "r:832,499"
+      ]
+    },
+    "832,499": {
+      "danger": true,
+      "links": [
+        "r:862,550"
+      ]
+    },
+    "861,526": {
+      "links": [
+        "a:899,528"
+      ]
+    },
+    "862,550": {
+      "links": [
+        "r:899,528"
+      ]
+    },
+    "808,525": {
+      "danger": true,
+      "links": [
+        "a:861,526"
+      ]
+    },
+    "807,473": {
+      "danger": true,
+      "links": [
+        "l:759,507"
+      ]
+    },
+    "863,485": {
+      "links": [
+        "a:827,445"
+      ]
+    },
+    "870,506": {
+      "links": [
+        "l:807,473"
+      ]
+    },
+    "828,402": {
+      "links": [
+        "s:825,376"
+      ]
+    },
+    "825,376": {
+      "danger": true,
+      "links": [
+        "s:839,343"
+      ]
+    },
+    "839,343": {
+      "links": [
+        "s:863,287"
+      ]
+    },
+    "799,450": {
+      "links": [
+        "s:828,402"
+      ]
+    },
+    "827,445": {
+      "links": [
+        "a:795,428"
+      ]
+    },
+    "768,454": {
+      "danger": true,
+      "links": [
+        "s:799,450"
+      ]
+    },
+    "728,448": {
+      "links": [
+        "s:759,507",
+        "s:768,454"
+      ]
+    },
+    "703,419": {
+      "danger": true,
+      "links": [
+        "s:728,448"
+      ]
+    },
+    "651,428": {
+      "links": [
+        "s:703,419"
+      ]
+    },
+    "625,421": {
+      "links": [
+        "s:623,391"
+      ]
+    },
+    "611,455": {
+      "danger": true,
+      "links": [
+        "s:625,421"
+      ]
+    },
+    "587,473": {
+      "links": [
+        "s:611,455"
+      ]
+    },
+    "557,478": {
+      "place": "madagascar",
+      "links": [
+        "s:587,473"
+      ]
+    },
+    "516,523": {
+      "danger": true,
+      "links": [
+        "s:557,478"
+      ]
+    },
+    "476,508": {
+      "place": "capetown",
+      "links": [
+        "s:477,557",
+        "s:500,551",
+        "s:516,523",
+        "a:491,445",
+        "a:550,512",
+        "l:468,464"
+      ]
+    },
+    "550,512": {
+      "links": [
+        "a:612,515"
+      ]
+    },
+    "612,515": {
+      "links": [
+        "a:662,517"
+      ]
+    },
+    "662,517": {
+      "danger": true,
+      "links": [
+        "a:730,521"
+      ]
+    },
+    "730,521": {
+      "links": [
+        "a:808,525"
+      ]
+    },
+    "749,555": {
+      "links": [
+        "s:759,507"
+      ]
+    },
+    "713,570": {
+      "links": [
+        "s:749,555"
+      ]
+    },
+    "678,547": {
+      "links": [
+        "s:713,570"
+      ]
+    },
+    "640,560": {
+      "links": [
+        "s:678,547"
+      ]
+    },
+    "609,578": {
+      "danger": true,
+      "links": [
+        "s:640,560"
+      ]
+    },
+    "572,580": {
+      "links": [
+        "s:609,578"
+      ]
+    },
+    "536,573": {
+      "links": [
+        "s:572,580"
+      ]
+    },
+    "500,551": {
+      "links": [
+        "s:536,573"
+      ]
+    },
+    "511,473": {
+      "links": [
+        "a:476,508"
+      ]
+    },
+    "540,446": {
+      "danger": true,
+      "links": [
+        "a:511,473"
+      ]
+    },
+    "565,418": {
+      "links": [
+        "a:540,446"
+      ]
+    },
+    "597,388": {
+      "danger": true,
+      "links": [
+        "a:565,418"
+      ]
+    },
+    "595,369": {
+      "danger": true,
+      "links": [
+        "s:633,352"
+      ]
+    },
+    "548,352": {
+      "links": [
+        "s:595,369"
+      ]
+    },
+    "538,374": {
+      "links": [
+        "r:539,412"
+      ]
+    },
+    "539,412": {
+      "place": "mombasa",
+      "links": [
+        "l:515,434"
+      ]
+    },
+    "515,434": {
+      "danger": true,
+      "links": [
+        "l:492,480"
+      ]
+    },
+    "510,366": {
+      "danger": true,
+      "links": [
+        "a:520,324"
+      ]
+    },
+    "501,406": {
+      "links": [
+        "a:510,366"
+      ]
+    },
+    "491,445": {
+      "links": [
+        "a:501,406"
+      ]
+    },
+    "492,480": {
+      "links": [
+        "l:476,508"
+      ]
+    },
+    "468,464": {
+      "links": [
+        "l:460,415"
+      ]
+    },
+    "460,415": {
+      "links": [
+        "l:472,379"
+      ]
+    },
+    "472,379": {
+      "links": [
+        "l:437,361"
+      ]
+    },
+    "486,345": {
+      "danger": true,
+      "links": [
+        "l:472,379"
+      ]
+    },
+    "476,314": {
+      "links": [
+        "l:520,324"
+      ]
+    },
+    "439,290": {
+      "danger": true,
+      "links": [
+        "l:476,314"
+      ]
+    },
+    "419,328": {
+      "links": [
+        "l:391,296"
+      ]
+    },
+    "437,361": {
+      "danger": true,
+      "links": [
+        "l:419,328"
+      ]
+    },
+    "391,296": {
+      "place": "casablanca",
+      "links": [
+        "s:347,321",
+        "a:369,342",
+        "l:439,290"
+      ]
+    },
+    "329,364": {
+      "links": [
+        "s:369,421"
+      ]
+    },
+    "351,378": {
+      "links": [
+        "a:324,437"
+      ]
+    },
+    "369,421": {
+      "links": [
+        "s:373,492",
+        "s:419,445"
+      ]
+    },
+    "419,445": {
+      "links": [
+        "s:428,485"
+      ]
+    },
+    "428,485": {
+      "danger": true,
+      "links": [
+        "s:419,542"
+      ]
+    },
+    "419,542": {
+      "links": [
+        "s:448,563"
+      ]
+    },
+    "448,563": {
+      "links": [
+        "s:476,508"
+      ]
+    },
+    "434,586": {
+      "danger": true,
+      "links": [
+        "s:393,576"
+      ]
+    },
+    "393,576": {
+      "links": [
+        "s:339,611"
+      ]
+    },
+    "339,611": {
+      "links": [
+        "s:296,602"
+      ]
+    },
+    "296,602": {
+      "danger": true,
+      "links": [
+        "s:238,553"
+      ]
+    },
+    "312,566": {
+      "links": [
+        "s:238,553"
+      ]
+    },
+    "346,557": {
+      "danger": true,
+      "links": [
+        "s:312,566"
+      ]
+    },
+    "365,531": {
+      "danger": true,
+      "links": [
+        "a:399,523"
+      ]
+    },
+    "399,523": {
+      "links": [
+        "a:430,518"
+      ]
+    },
+    "373,492": {
+      "links": [
+        "s:346,557",
+        "s:388,461"
+      ]
+    },
+    "339,492": {
+      "danger": true,
+      "links": [
+        "s:294,499"
+      ]
+    },
+    "353,454": {
+      "links": [
+        "s:339,492"
+      ]
+    },
+    "317,399": {
+      "danger": true,
+      "links": [
+        "s:353,454"
+      ]
+    },
+    "276,378": {
+      "links": [
+        "s:317,399"
+      ]
+    },
+    "236,364": {
+      "links": [
+        "a:253,403"
+      ]
+    },
+    "217,318": {
+      "danger": true,
+      "links": [
+        "s:189,337",
+        "a:236,364"
+      ]
+    },
+    "231,291": {
+      "links": [
+        "s:217,318"
+      ]
+    },
+    "189,337": {
+      "place": "bahamas",
+      "links": [
+        "s:196,365",
+        "a:151,336"
+      ]
+    },
+    "196,365": {
+      "links": [
+        "s:276,378"
+      ]
+    },
+    "151,336": {
+      "danger": true,
+      "links": [
+        "a:100,335"
+      ]
+    },
+    "253,403": {
+      "links": [
+        "a:272,447"
+      ]
+    },
+    "272,447": {
+      "danger": true,
+      "links": [
+        "a:294,499"
+      ]
+    },
+    "312,466": {
+      "danger": true,
+      "links": [
+        "a:294,499"
+      ]
+    },
+    "324,437": {
+      "links": [
+        "a:312,466"
+      ]
+    },
+    "294,499": {
+      "place": "riodejaneiro",
+      "links": [
+        "r:225,483",
+        "l:249,525"
+      ]
+    },
+    "289,534": {
+      "danger": true
+    },
+    "277,547": {
+      "links": [
+        "a:329,535"
+      ]
+    },
+    "329,535": {
+      "links": [
+        "a:365,531"
+      ]
+    },
+    "477,557": {
+      "links": [
+        "s:434,586"
+      ]
+    },
+    "260,590": {
+      "links": [
+        "s:239,618"
+      ]
+    },
+    "239,618": {
+      "place": "falklandislands",
+      "links": [
+        "s:224,649"
+      ]
+    },
+    "224,649": {
+      "danger": true,
+      "links": [
+        "s:182,653"
+      ]
+    },
+    "182,653": {
+      "links": [
+        "s:175,605"
+      ]
+    },
+    "175,605": {
+      "links": [
+        "s:173,556"
+      ]
+    },
+    "173,556": {
+      "danger": true,
+      "links": [
+        "s:202,499"
+      ]
+    },
+    "202,499": {
+      "place": "arica",
+      "links": [
+        "s:166,501"
+      ]
+    },
+    "225,483": {
+      "place": "lapaz",
+      "links": [
+        "r:202,499"
+      ]
+    },
+    "222,513": {
+      "links": [
+        "a:210,478"
+      ]
+    },
+    "249,525": {
+      "danger": true,
+      "links": [
+        "l:204,543"
+      ]
+    },
+    "238,553": {
+      "place": "buenosaires",
+      "links": [
+        "s:260,590",
+        "a:222,513",
+        "a:277,547"
+      ]
+    },
+    "204,543": {
+      "links": [
+        "l:238,553"
+      ]
+    },
+    "255,469": {
+      "danger": true,
+      "links": [
+        "a:294,499"
+      ]
+    },
+    "218,437": {
+      "links": [
+        "a:255,469"
+      ]
+    },
+    "185,408": {
+      "links": [
+        "a:218,437"
+      ]
+    },
+    "164,391": {
+      "danger": true,
+      "links": [
+        "a:185,408"
+      ]
+    },
+    "129,362": {
+      "danger": true,
+      "links": [
+        "a:164,391"
+      ]
+    },
+    "100,335": {
+      "place": "mexicocity",
+      "links": [
+        "a:129,362"
+      ]
+    },
+    "148,302": {
+      "danger": true,
+      "links": [
+        "a:100,335"
+      ]
+    },
+    "267,243": {
+      "danger": true,
+      "links": [
+        "a:196,267"
+      ]
+    },
+    "305,231": {
+      "links": [
+        "a:267,243"
+      ]
+    },
+    "343,218": {
+      "danger": true,
+      "links": [
+        "a:305,231"
+      ]
+    },
+    "388,232": {
+      "danger": true,
+      "links": [
+        "s:375,265"
+      ]
+    },
+    "375,265": {
+      "links": [
+        "s:391,296"
+      ]
+    },
+    "486,236": {
+      "danger": true,
+      "links": [
+        "a:478,264"
+      ]
+    },
+    "503,247": {
+      "danger": true,
+      "links": [
+        "l:497,212"
+      ]
+    },
+    "519,225": {
+      "danger": true,
+      "links": [
+        "l:544,226"
+      ]
+    },
+    "544,226": {
+      "links": [
+        "l:569,194"
+      ]
+    },
+    "395,156": {
+      "danger": true,
+      "links": [
+        "s:353,138"
+      ]
+    },
+    "353,138": {
+      "links": [
+        "s:307,154"
+      ]
+    },
+    "307,154": {
+      "danger": true,
+      "links": [
+        "s:274,188"
+      ]
+    },
+    "274,188": {
+      "links": [
+        "s:244,231"
+      ]
+    },
+    "244,231": {
+      "danger": true,
+      "links": [
+        "s:196,267"
+      ]
+    },
+    "179,229": {
+      "danger": true,
+      "links": [
+        "l:196,267"
+      ]
+    },
+    "148,220": {
+      "links": [
+        "l:179,229"
+      ]
+    },
+    "118,207": {
+      "links": [
+        "l:148,220"
+      ]
+    },
+    "77,215": {
+      "danger": true,
+      "links": [
+        "l:118,207"
+      ]
+    },
+    "12,286": {
+      "links": [
+        "a:48,285"
+      ]
+    },
+    "41,431": {
+      "links": [
+        "s:28,400"
+      ]
+    },
+    "64,456": {
+      "links": [
+        "s:41,431"
+      ]
+    },
+    "92,472": {
+      "links": [
+        "s:64,456"
+      ]
+    },
+    "127,486": {
+      "danger": true,
+      "links": [
+        "s:92,472"
+      ]
+    },
+    "166,501": {
+      "links": [
+        "s:127,486"
+      ]
+    },
+    "210,478": {
+      "danger": true,
+      "links": [
+        "a:198,443"
+      ]
+    },
+    "198,443": {
+      "links": [
+        "a:185,408"
+      ]
+    },
+    "91,279": {
+      "links": [
+        "a:48,285"
+      ]
+    },
+    "98,247": {
+      "links": [
+        "r:46,245"
+      ]
+    },
+    "125,234": {
+      "danger": true,
+      "links": [
+        "r:98,247"
+      ]
+    },
+    "158,247": {
+      "links": [
+        "r:125,234"
+      ]
+    },
+    "153,270": {
+      "danger": true,
+      "links": [
+        "a:122,276"
+      ]
+    },
+    "122,276": {
+      "danger": true,
+      "links": [
+        "a:91,279"
+      ]
+    },
+    "623,391": {
+      "danger": true,
+      "links": [
+        "s:633,352"
+      ]
+    },
+    "878,393": {
+      "danger": true,
+      "links": [
+        "a:883,428"
+      ]
+    },
+    "196,267": {
+      "place": "newyork",
+      "links": [
+        "s:231,291",
+        "a:153,270",
+        "a:148,302",
+        "a:217,318",
+        "r:158,247"
+      ]
+    },
+    "46,245": {
+      "place": "sanfrancisco",
+      "links": [
+        "l:77,215",
+        "s:13,244",
+        "s:13,244",
+        "l:48,285"
+      ]
+    },
+    "48,285": {
+      "place": "losangeles"
+    },
+    "265,535": {},
+    "430,518": {
+      "danger": true,
+      "links": [
+        "a:476,508"
+      ]
+    },
+    "540,136": {
+      "place": "archangel"
+    },
+    "13,244": {},
+    "20,357": {
+      "links": [
+        "s:18,320"
+      ]
+    },
+    "28,400": {
+      "danger": true,
+      "links": [
+        "s:20,357"
+      ]
+    },
+    "347,321": {
+      "danger": true,
+      "links": [
+        "s:329,364"
+      ]
+    },
+    "369,342": {
+      "danger": true,
+      "links": [
+        "a:351,378"
+      ]
+    },
+    "388,461": {
+      "place": "ascensionisland",
+      "links": [
+        "s:419,445"
+      ]
+    },
+    "18,320": {
+      "links": [
+        "s:46,245"
+      ]
+    },
+    "678,192": {
+      "danger": true,
+      "links": [
+        "r:738,193"
+      ]
+    }
+  },
+  "lucks": [
+    {
+      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used."
+    }
+  ],
+  "risks": [
+    {
+      "name": "Plane diverted - Land in Perth (Australia). - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected."
+    },
+    {
+      "name": "All transport - Travel sickness. Miss one turn."
+    },
+    {
+      "name": "Customs - Pay duty on all your souvenirs - half the purchase price. - (Pay to bank in any currency)"
+    }
+  ]
+}

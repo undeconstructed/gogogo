@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>go</title>
+
+  <meta name="description" content="Afero">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="theme-color" content="rgb(118, 145, 158)">
+
+  <link rel="stylesheet" href="css/bootstrap-reboot.css">
+  <link rel="stylesheet" href="css/custom.css">
+
+<style>
+  * { padding: 0; margin: 0; }
+  textarea {
+    width: 100%;
+    display: block;
+  }
+  img {
+  }
+  .dot {
+    border: 2px solid white;
+    width: 6px;
+    height: 6px;
+    border-radius: 5px;
+    position: absolute;
+    font-size: 0px;
+  }
+  .line { line-height: 0; }
+</style>
+
+  <script>
+
+let map = null
+let out = null
+let overlay = null
+let data = {}
+
+let selected = null
+let route = null
+
+function split(s) {
+  let ss = s.split(',')
+  return [parseInt(ss[0]), parseInt(ss[1])]
+}
+
+function plot() {
+  selected = null
+  if (overlay) {
+    document.body.removeChild(overlay)
+  }
+  overlay = document.createElement('div')
+  for (let pointId in data.dots) {
+    drawPoint(pointId, data.dots[pointId])
+  }
+  document.body.append(overlay)
+}
+
+function linedraw(x1, y1, x2, y2, border) {
+    if (x2 < x1) {
+        var tmp;
+        tmp = x2 ; x2 = x1 ; x1 = tmp;
+        tmp = y2 ; y2 = y1 ; y1 = tmp;
+    }
+
+    var lineLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    var m = (y2 - y1) / (x2 - x1);
+
+    var degree = Math.atan(m) * 180 / Math.PI;
+
+    let d = document.createElement('div')
+    d.innerHTML += "<div class='line' style='transform-origin: top left; transform: rotate(" + degree + "deg); width: " + lineLength + "px; height: 1px; position: absolute; top: " + y1 + "px; left: " + x1 + "px;'></div>";
+    let l = d.firstChild
+    l.style.borderTop = border
+    overlay.append(l)
+    return l
+}
+
+function drawPoint(pointId, point) {
+  let [x, y] = split(pointId)
+
+  let d = document.createElement("div")
+  d.pointId = pointId
+  d.point = point
+
+  d.classList.add("dot")
+  let size = 6
+  let width = 2
+  if (point.danger) {
+    d.style.borderColor = 'red'
+  }
+  if (point.terminal) {
+    size = 18
+    width = 4
+    d.style.borderColor = 'black'
+  }
+  d.title = pointId
+  if (point.place) {
+    d.title += ' ' + point.place
+  }
+
+  let half = (size/2)+(width)
+  d.style.left = (x-half) + 'px'
+  d.style.top = (y-half) + 'px'
+  d.style.width = size + 'px'
+  d.style.height = size + 'px'
+  d.style.borderWidth = width + 'px'
+  d.style.borderRadius = size + 'px'
+
+  if (point.links) {
+    for (let link of point.links) {
+      drawLink(pointId, link)
+    }
+  }
+
+  d.addEventListener('click', function(e) {
+    if (selected) {
+      selected.style.backgroundColor = 'transparent'
+      if (e.getModifierState('Shift')) {
+        if (!selected.point.links) {
+          selected.point.links = []
+        }
+        let link = 'l:'+pointId
+        selected.point.links.push(link)
+        drawLink(selected.pointId, link)
+      }
+    }
+    selected = d
+    d.style.backgroundColor = '#f0f'
+  })
+
+  overlay.append(d)
+}
+
+function drawLink(pointId, link) {
+  let [x1, y1] = split(pointId)
+  let mode = link.charAt(0)
+  let to = link.substring(2)
+  let [x2, y2] = split(to)
+  let border = '2px dashed white'
+  if (mode == 'a') {
+    border = '2px solid black'
+  } else if (mode == 'l') {
+    border = '2px solid red'
+  } else if (mode == 'r') {
+    border = '2px dotted black'
+  } else if (mode == 's') {
+    border = '2px dashed black'
+  }
+  let e = linedraw(x1, y1, x2, y2, border)
+  e.title = link
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  out = document.getElementById("out")
+  map = document.getElementById("map")
+
+  let inb = document.getElementById("inb")
+  let outb = document.getElementById("outb")
+
+  inb.addEventListener('click', function() {
+    data = JSON.parse(out.value)
+    for (let dot of Object.values(data.dots)) {
+      if (dot.place) {
+        let place = data.places[dot.place]
+        if (place.city) {
+          dot.terminal = true
+        }
+      }
+    }
+    plot()
+  })
+
+  outb.addEventListener('click', function() {
+    out.value = JSON.stringify(data)
+  })
+
+  map.addEventListener("click", function(e) {
+    let pointId = `${e.pageX},${e.pageY}`
+    let point = {}
+    data.dots[pointId] = point
+    drawPoint(pointId, point)
+  })
+
+  document.body.addEventListener('keyup', function(e) {
+    if (selected) {
+      let pointId = selected.pointId
+      if (e.key == 'd') {
+        delete data.dots[pointId]
+        overlay.removeChild(selected)
+      }
+      if (e.key == 'r') {
+        let danger = !selected.point.danger
+        selected.point.danger = danger
+        if (danger) {
+          selected.style.borderColor = 'red'
+        } else {
+          selected.style.borderColor = 'white'
+        }
+      }
+      if (e.key == 'p') {
+        let n = prompt('place', selected.point.place)
+        if (n) {
+          selected.point.place = n
+          selected.title = n
+        } else {
+          delete selected.point.place
+        }
+      }
+      if (e.key == 'c') {
+        let city = !selected.point.city
+        selected.point.city = city
+        if (city) {
+          selected.style.borderColor = 'black'
+        } else {
+          selected.style.borderColor = 'white'
+        }
+      }
+    }
+  })
+})
+
+  </script>
+</head>
+
+<body>
+
+</body>
+
+  <img id="map" src="1000map.png">
+
+  <textarea id="out"></textarea>
+  <div><button type="button" id="inb">in</button><button type="button" id="outb">out</button></div>
+
+</html>
