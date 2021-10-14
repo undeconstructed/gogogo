@@ -1,7 +1,10 @@
 {
   "squares": [
     {
-      "name": "start - bank - bureau de change"
+      "name": "start - bank - bureau de change",
+      "options": [
+        "changemoney"
+      ]
     },
     {
       "name": "currency speculation - receive £100 from the bank in the currency of the country you are visiting",
@@ -12,13 +15,13 @@
     {
       "name": "overland - booking office - car hire co.",
       "options": [
-        "buyland"
+        "buyticket+l"
       ]
     },
     {
       "name": "overseas - shipping agency",
       "options": [
-        "buysea"
+        "buyticket+s"
       ]
     },
     {
@@ -46,10 +49,10 @@
       "name": "bureau - thos. cook and son - de change",
       "options": [
         "changemoney",
-        "buyland",
-        "buysea",
-        "buyair",
-        "buyrail"
+        "buyticket+l",
+        "buyticket+s",
+        "buyticket+a",
+        "buyticket+r"
       ]
     },
     {
@@ -67,13 +70,13 @@
     {
       "name": "overland - booking office - car hire co.",
       "options": [
-        "buyland"
+        "buyticket+l"
       ]
     },
     {
       "name": "international - railways - booking office",
       "options": [
-        "buyrail"
+        "buyticket+r"
       ]
     },
     {
@@ -85,7 +88,7 @@
     {
       "name": "B.O.A.C. - air ticket office",
       "options": [
-        "buyair"
+        "buyticket+a"
       ]
     },
     {
@@ -121,7 +124,7 @@
     {
       "name": "international - railways - booking office",
       "options": [
-        "buyrail"
+        "buyticket+r"
       ]
     },
     {
@@ -140,10 +143,10 @@
       "name": "bureau - thos. cook and son - de change",
       "options": [
         "changemoney",
-        "buyland",
-        "buysea",
-        "buyair",
-        "buyrail"
+        "buyticket+l",
+        "buyticket+s",
+        "buyticket+a",
+        "buyticket+r"
       ]
     },
     {
@@ -155,7 +158,7 @@
     {
       "name": "overseas - shipping agency",
       "options": [
-        "buysea"
+        "buyticket+s"
       ]
     },
     {
@@ -173,7 +176,7 @@
     {
       "name": "B.O.A.C. - air ticket office",
       "options": [
-        "buyair"
+        "buyticket+a"
       ]
     },
     {
@@ -186,10 +189,10 @@
       "name": "bureau - thos. cook and son - de change",
       "options": [
         "changemoney",
-        "buyland",
-        "buysea",
-        "buyair",
-        "buyrail"
+        "buyticket+l",
+        "buyticket+s",
+        "buyticket+a",
+        "buyticket+r"
       ]
     },
     {
@@ -202,424 +205,436 @@
   "currencies": {
     "tc": {
       "name": "Traveller's Cheque",
-      "value": 2000
+      "rate": 10,
+      "units": [ 200 ]
     },
     "st": {
       "name": "Sterling",
-      "value": 10
+      "rate": 10,
+      "units": [ 10, 50, 100 ]
     },
     "us": {
       "name": "US Dollars",
-      "value": 25
+      "rate": 25,
+      "units": [ 25, 50, 100 ]
     },
     "ro": {
       "name": "Roubles",
-      "value": 25
+      "rate": 25,
+      "units": [ 25, 50, 100 ]
     },
     "fr": {
       "name": "Francs",
-      "value": 100
+      "rate": 100,
+      "units": [ 100, 500 ]
     },
     "ma": {
       "name": "Marks",
-      "value": 100
+      "rate": 100,
+      "units": [ 100, 500 ]
     },
     "ru": {
       "name": "Rupees",
-      "value": 100
+      "rate": 100,
+      "units": [ 100, 500 ]
     },
     "pe": {
       "name": "Pesos",
-      "value": 500
+      "rate": 500,
+      "units": [ 500, 1000, 2500 ]
     },
     "hk": {
       "name": "HKDollars",
-      "value": 150
+      "rate": 150,
+      "units": [ 150, 300 ]
     },
     "pi": {
       "name": "Piastres",
-      "value": 1000
+      "rate": 1000,
+      "units": [ 1000, 5000 ]
     },
     "li": {
       "name": "Lire",
-      "value": 10000
+      "rate": 10000,
+      "units": [ 10000, 50000 ]
     },
     "ye": {
       "name": "Yen",
-      "value": 10000
+      "rate": 10000,
+      "units": [ 10000, 50000 ]
     }
   },
   "places": {
     "archangel": {
       "name": "Archangel",
       "currency": "ru",
-      "routes": [
-        "london:s:50",
-        "moscow:r:20"
-      ]
+      "routes": {
+        "london:s": 5,
+        "moscow:r": 2
+      }
     },
     "arica": {
       "name": "Arica",
       "currency": "pe",
-      "routes": [
-        "buenosaires:s:60",
-        "riodejaneiro:r:30",
-        "sanfrancisco:s:90"
-      ]
+      "routes": {
+        "buenosaires:s": 6,
+        "riodejaneiro:r": 3,
+        "sanfrancisco:s": 9
+      }
     },
     "ascensionisland": {
       "name": "Ascension Island",
       "currency": "st",
-      "routes": [
-        "capetown:s:40",
-        "casablanca:s:40",
-        "buenosaires:s:40"
-      ]
+      "routes": {
+        "capetown:s": 4,
+        "casablanca:s": 4,
+        "buenosaires:s": 4
+      }
     },
     "bahamas": {
       "name": "Bahamas",
       "currency": "st",
-      "routes": [
-        "mexicocity:a:30",
-        "newyork:s:20",
-        "riodejaneiro:s:50"
-      ]
+      "routes": {
+        "mexicocity:a": 3,
+        "newyork:s": 2,
+        "riodejaneiro:s": 5
+      }
     },
     "berlin": {
       "name": "Berlin",
       "city": true,
       "currency": "ma",
-      "routes": [
-        "london:a:40",
-        "moscow:r:30",
-        "moscow:a:70",
-        "moscow:l:40",
-        "paris:l:10",
-        "paris:a:40",
-        "rome:l:20",
-        "rome:a:50"
-      ]
+      "routes": {
+        "london:a": 4,
+        "moscow:r": 3,
+        "moscow:a": 7,
+        "moscow:l": 4,
+        "paris:l": 1,
+        "paris:a": 4,
+        "rome:l": 2,
+        "rome:a": 5
+      }
     },
     "bombay": {
       "name": "Bombay",
       "city": true,
       "currency": "ru",
-      "routes": [
-        "cairo:s:40",
-        "cairo:a:50",
-        "capetown:s:50",
-        "capetown:a:100",
-        "hongkong:a:60",
-        "moscow:a:80",
-        "rome:a:80",
-        "sydney:a:150",
-        "sydney:s+r:70",
-        "sydney:s:80",
-        "tokyo:s:100"
-      ]
+      "routes": {
+        "cairo:s": 4,
+        "cairo:a": 5,
+        "capetown:s": 5,
+        "capetown:a": 10,
+        "hongkong:a": 6,
+        "moscow:a": 8,
+        "rome:a": 8,
+        "sydney:a": 15,
+        "sydney:sr": 7,
+        "sydney:s": 8,
+        "tokyo:s": 10
+      }
     },
     "buenosaires": {
       "name": "Buenos Aires",
       "city": true,
       "currency": "pe",
-      "routes": [
-        "capetown:a:100",
-        "capetown:s:50",
-        "casablanca:s:60",
-        "mexicocity:a:100",
-        "riodejaneiro:s:10",
-        "riodejaneiro:l:30",
-        "sanfrancisco:s:150"
-      ]
+      "routes": {
+        "capetown:a": 10,
+        "capetown:s": 5,
+        "casablanca:s": 6,
+        "mexicocity:a": 10,
+        "riodejaneiro:s": 1,
+        "riodejaneiro:l": 3,
+        "sanfrancisco:s": 15
+      }
     },
     "cairo": {
       "name": "Cairo",
       "city": true,
       "currency": "pi",
-      "routes": [
-        "bombay:s:40",
-        "bombay:a:50",
-        "capetown:r+l:1000000",
-        "capetown:a:100",
-        "capetown:l:80",
-        "casablanca:l:40",
-        "rome:a:30"
-      ]
+      "routes": {
+        "bombay:s": 4,
+        "bombay:a": 5,
+        "capetown:rl": -1,
+        "capetown:a": 10,
+        "capetown:l": 8,
+        "casablanca:l": 4,
+        "rome:a": 3
+      }
     },
     "capetown": {
       "name": "Cape Town",
       "city": true,
       "currency": "st",
-      "routes": [
-        "bombay:a:100",
-        "bombay:s:50",
-        "buenosaires:a:100",
-        "buenosaires:s:50",
-        "cairo:l:80",
-        "cairo:a:100",
-        "cairo:l+r:1000000",
-        "casablanca:l:100",
-        "casablanca:s:70",
-        "sydney:a:150",
-        "sydney:s:120",
-        "tokyo:s:150"
-      ]
+      "routes": {
+        "bombay:a": 10,
+        "bombay:s": 5,
+        "buenosaires:a": 10,
+        "buenosaires:s": 5,
+        "cairo:l": 8,
+        "cairo:a": 10,
+        "cairo:lr": -1,
+        "casablanca:l": 10,
+        "casablanca:s": 7,
+        "sydney:a": 15,
+        "sydney:s": 12,
+        "tokyo:s": 15
+      }
     },
     "casablanca": {
       "name": "Casablanca",
       "city": true,
       "currency": "fr",
-      "routes": [
-        "buenosaires:s:60",
-        "cairo:l:40",
-        "capetown:l:100",
-        "capetown:s:70",
-        "london:s:30",
-        "riodejaneiro:a:100"
-      ]
+      "routes": {
+        "buenosaires:s": 6,
+        "cairo:l": 4,
+        "capetown:l": 10,
+        "capetown:s": 7,
+        "london:s": 3,
+        "riodejaneiro:a": 10
+      }
     },
     "christmasisland": {
       "name": "Christmas Island",
       "currency": "st",
-      "routes": [
-        "sydney:s:50",
-        "tokyo:s:50"
-      ]
+      "routes": {
+        "sydney:s": 5,
+        "tokyo:s": 5
+      }
     },
     "falklandislands": {
       "name": "Falkland Islands",
       "currency": "st",
-      "routes": [
-        "buenosaires:s:20",
-        "riodejaneiro:s+r:80",
-        "sanfrancisco:s:130"
-      ]
+      "routes": {
+        "buenosaires:s": 2,
+        "riodejaneiro:sr": 8,
+        "sanfrancisco:s": 13
+      }
     },
     "heardisland": {
       "name": "Heard Island",
       "currency": "st",
-      "routes": [
-        "bombay:s:100",
-        "capetown:s:130",
-        "sydney:s:70",
-        "tokyo:s:120"
-      ]
+      "routes": {
+        "bombay:s": 10,
+        "capetown:s": 13,
+        "sydney:s": 7,
+        "tokyo:s": 12
+      }
     },
     "hongkong": {
       "name": "Hong Kong",
       "city": true,
       "currency": "hk",
-      "routes": [
-        "bombay:a:60",
-        "moscow:a:150",
-        "moscow:r:100",
-        "tokyo:s:20"
-      ]
+      "routes": {
+        "bombay:a": 6,
+        "moscow:a": 15,
+        "moscow:r": 10,
+        "tokyo:s": 2
+      }
     },
     "honolulu": {
       "name": "Honolulu",
       "currency": "us",
-      "routes": [
-        "sanfrancisco:s:40",
-        "tokyo:s:40"
-      ]
+      "routes": {
+        "sanfrancisco:s": 4,
+        "tokyo:s": 4
+      }
     },
     "lapaz": {
       "name": "La Paz",
       "currency": "pe",
-      "routes": [
-        "buenosaires:r+s:70",
-        "riodejaneiro:r:20",
-        "sanfrancisco:r+s:100"
-      ]
+      "routes": {
+        "buenosaires:rs": 7,
+        "riodejaneiro:r": 2,
+        "sanfrancisco:rs": 10
+      }
     },
     "london": {
       "name": "London",
       "city": true,
       "currency": "st",
-      "routes": [
-        "berlin:a:40",
-        "casablanca:s:30",
-        "moscow:s+r:70",
-        "newyork:a:100",
-        "newyork:s:50",
-        "paris:a:20"
-      ]
+      "routes": {
+        "berlin:a": 4,
+        "casablanca:s": 3,
+        "moscow:sr": 7,
+        "newyork:a": 10,
+        "newyork:s": 5,
+        "paris:a": 2
+      }
     },
     "losangeles": {
       "name": "Los Angeles",
       "city": true,
       "currency": "us",
-      "routes": [
-        "mexicocity:l:30",
-        "newyork:a:80",
-        "sanfrancisco:l:10",
-        "tokyo:a:120"
-      ]
+      "routes": {
+        "mexicocity:l": 3,
+        "newyork:a": 8,
+        "sanfrancisco:l": 1,
+        "tokyo:a": 12
+      }
     },
     "madagascar": {
       "name": "Madagascar",
       "currency": "fr",
-      "routes": [
-        "capetown:s:10",
-        "bombay:s:40"
-      ]
+      "routes": {
+        "capetown:s": 1,
+        "bombay:s": 4
+      }
     },
     "mexicocity": {
       "name": "Mexico City",
       "city": true,
       "currency": "pe",
-      "routes": [
-        "buenosaires:a:100",
-        "losangeles:l:30",
-        "newyork:a:50",
-        "riodejaneiro:a:100"
-      ]
+      "routes": {
+        "buenosaires:a": 10,
+        "losangeles:l": 3,
+        "newyork:a": 5,
+        "riodejaneiro:a": 10
+      }
     },
     "mombasa": {
       "name": "Mombasa",
       "currency": "st",
-      "routes": [
-        "cairo:r:20",
-        "capetown:l:30"
-      ]
+      "routes": {
+        "cairo:r": 2,
+        "capetown:l": 3
+      }
     },
     "moscow": {
       "name": "Moscow",
       "city": true,
-      "currency": "roubles",
-      "routes": [
-        "bombay:a:80",
-        "berlin:a:70",
-        "berlin:l:40",
-        "berlin:r:30",
-        "hongkong:a:150",
-        "hongkong:r:100",
-        "london:r+s:70"
-      ]
+      "currency": "ro",
+      "routes": {
+        "bombay:a": 8,
+        "berlin:a": 7,
+        "berlin:l": 4,
+        "berlin:r": 3,
+        "hongkong:a": 15,
+        "hongkong:r": 10,
+        "london:rs": 7
+      }
     },
     "newyork": {
       "name": "New York",
       "city": true,
       "currency": "us",
-      "routes": [
-        "london:a:100",
-        "london:s:50",
-        "losangeles:a:80",
-        "mexicocity:a:50",
-        "riodejaneiro:a:120",
-        "riodejaneiro:s:70",
-        "sanfrancisco:l:50",
-        "sanfrancisco:r:30"
-      ]
+      "routes": {
+        "london:a": 10,
+        "london:s": 5,
+        "losangeles:a": 8,
+        "mexicocity:a": 5,
+        "riodejaneiro:a": 12,
+        "riodejaneiro:s": 7,
+        "sanfrancisco:l": 5,
+        "sanfrancisco:r": 3
+      }
     },
     "paris": {
       "name": "Paris",
       "city": true,
       "currency": "fr",
-      "routes": [
-        "berlin:a:40",
-        "berlin:l:10",
-        "london:a:20",
-        "rome:a:30"
-      ]
+      "routes": {
+        "berlin:a": 4,
+        "berlin:l": 1,
+        "london:a": 2,
+        "rome:a": 3
+      }
     },
     "perth": {
       "name": "Perth",
       "currency": "st",
-      "routes": [
-        "capetown:s:80",
-        "bombay:s:50",
-        "sydney:l:30",
-        "sydney:r:20",
-        "sydney:s:30",
-        "tokyo:s:70"
-      ]
+      "routes": {
+        "capetown:s": 8,
+        "bombay:s": 5,
+        "sydney:l": 3,
+        "sydney:r": 2,
+        "sydney:s": 3,
+        "tokyo:s": 7
+      }
     },
     "riodejaneiro": {
       "name": "Rio de Janeiro",
       "city": true,
       "currency": "pe",
-      "routes": [
-        "buenosaires:s:10",
-        "buenosaires:l:30",
-        "casablanca:a:100",
-        "mexicocity:a:100",
-        "newyork:a:120",
-        "newyork:s:70",
-        "sanfrancisco:r+s:110"
-      ]
+      "routes": {
+        "buenosaires:s": 1,
+        "buenosaires:l": 3,
+        "casablanca:a": 10,
+        "mexicocity:a": 10,
+        "newyork:a": 12,
+        "newyork:s": 7,
+        "sanfrancisco:rs": 11
+      }
     },
     "rome": {
       "name": "Rome",
       "city": true,
       "currency": "li",
-      "routes": [
-        "berlin:a:50",
-        "berlin:l:20",
-        "bombay:a:80",
-        "cairo:a:30",
-        "paris:a:30"
-      ]
+      "routes": {
+        "berlin:a": 5,
+        "berlin:l": 2,
+        "bombay:a": 8,
+        "cairo:a": 3,
+        "paris:a": 3
+      }
     },
     "sanfrancisco": {
       "name": "San Francisco",
       "city": true,
       "currency": "us",
-      "routes": [
-        "buenosaires:s:150",
-        "losangeles:l:10",
-        "newyork:l:50",
-        "newyork:r:30",
-        "riodejaneiro:s+r:110",
-        "tokyo:s:70"
-      ]
+      "routes": {
+        "buenosaires:s": 15,
+        "losangeles:l": 1,
+        "newyork:l": 5,
+        "newyork:r": 3,
+        "riodejaneiro:sr": 11,
+        "tokyo:s": 7
+      }
     },
     "sydney": {
       "name": "Sydney",
       "city": true,
       "currency": "st",
-      "routes": [
-        "bombay:a:150",
-        "bombay:l+s:1000000",
-        "bombay:r+s:70",
-        "bombay:s:80",
-        "capetown:a:150",
-        "capetown:l+s:1000000",
-        "capetown:r+s:1000000",
-        "capetown:s:120",
-        "tokyo:a:100",
-        "tokyo:s:50"
-      ]
+      "routes": {
+        "bombay:a": 15,
+        "bombay:ls": -1,
+        "bombay:rs": 7,
+        "bombay:s": 8,
+        "capetown:a": 15,
+        "capetown:ls": -1,
+        "capetown:rs": -1,
+        "capetown:s": 12,
+        "tokyo:a": 10,
+        "tokyo:s": 5
+      }
     },
     "tokyo": {
       "name": "Tokyo",
       "city": true,
       "currency": "ye",
-      "routes": [
-        "bombay:s:100",
-        "capetown:s:150",
-        "hongkong:s:20",
-        "losangeles:a:120",
-        "sanfrancisco:s:70",
-        "sydney:a:100",
-        "sydney:s:50"
-      ]
+      "routes": {
+        "bombay:s": 10,
+        "capetown:s": 15,
+        "hongkong:s": 2,
+        "losangeles:a": 12,
+        "sanfrancisco:s": 7,
+        "sydney:a": 10,
+        "sydney:s": 5
+      }
     },
     "vladivostok": {
       "name": "Vladivokstok",
       "currency": "ro",
-      "routes": [
-        "hongkong:r:90",
-        "moscow:r:90"
-      ]
+      "routes": {
+        "hongkong:r": 9,
+        "moscow:r": 9
+      }
     },
     "wellington": {
       "name": "Wellington",
       "currency": "st",
-      "routes": [
-        "sydney:s:30"
-      ]
+      "routes": {
+        "sydney:s": 3
+      }
     }
   },
   "dots": {
@@ -1605,11 +1620,15 @@
       "place": "riodejaneiro",
       "links": [
         "r:225,483",
-        "l:249,525"
+        "l:249,525",
+        "s:289,534"
       ]
     },
     "289,534": {
-      "danger": true
+      "danger": true,
+      "links": [
+        "s:265,535"
+      ]
     },
     "277,547": {
       "links": [
@@ -1938,14 +1957,20 @@
       "links": [
         "l:77,215",
         "s:13,244",
-        "s:13,244",
         "l:48,285"
       ]
     },
     "48,285": {
-      "place": "losangeles"
+      "place": "losangeles",
+      "links": [
+        "l:100,335"
+      ]
     },
-    "265,535": {},
+    "265,535": {
+      "links": [
+        "s:238,553"
+      ]
+    },
     "430,518": {
       "danger": true,
       "links": [

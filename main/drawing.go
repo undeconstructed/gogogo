@@ -63,7 +63,7 @@ func (g *game) Draw(file string) error {
 		drawCircle(x, y, 4, color.NRGBA{255, 0, 0, 255})
 	}
 
-	for k, dot := range g.world {
+	for k, dot := range g.dots {
 		x, y := 0, 0
 		fmt.Sscanf(k, "%d,%d", &x, &y)
 		if dot.Place != "" {
