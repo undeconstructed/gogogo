@@ -2024,21 +2024,225 @@
   },
   "lucks": [
     {
+      "name": "Advance four spaces. - Keep until needed."
+    },
+    {
+      "name": "Free sea ticket - One journey only. - Keep until needed then surrender."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Free air ticket - Los Angeles to Tokyyo. - Keep until needed then surrender."
+    },
+    {
+      "name": "Free train ticket - One journey only. - Retain until needed then surrender."
+    },
+    {
+      "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional."
+    },
+    {
+      "name": "Advance three spaces. - Keep until needed."
+    },
+    {
+      "name": "Free air lift - This card enables you to move from where you are now directly to Cape Town free of charge. But you must either use it now or return the card to the pack."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque."
+    },
+    {
+      "name": "Priority! - Move direct to you destination without throwing the dice. - Keep until needed."
+    },
+    {
+      "name": "Advance two spaces. - Keep until needed."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Hidden treasure - You discover £500 in Sterling. - (Obtain from Banker)"
+    },
+    {
+      "name": "Advance two spaces. - Keep until needed."
+    },
+    {
+      "name": "Advance three spaces. - Keep until needed."
+    },
+    {
+      "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional."
+    },
+    {
+      "name": "Currency speculation - Collect £10 from each player in any currency they may wish to give you."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Free insurance policy - In case of diversion or accident, collect from Bank twice price of fare in Sterling. - Use only one then surrender."
+    },
+    {
+      "name": "Free air ticket - Sydney to Bombay. - Keep until needed then surrender."
+    },
+    {
+      "name": "Advanced one space. - Keep until needed."
+    },
+    {
+      "name": "Free car ticket - One journey only. - Keep until needed then surrender."
+    },
+    {
+      "name": "Free sea ticket - Casablanca to London. Keep until needed then surrender."
+    },
+    {
+      "name": "Free air ticket - Cape Town to Buenos Aires. Keep until needed then surrender."
+    },
+    {
+      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used."
+    },
+    {
+      "name": "Diplomatic immunity - This card enables you to pass through customs without examination. - Ignore instructions if you land on customs square. - Keep until needed then surrender."
+    },
+    {
+      "name": "Free air ticket - One journey only. - Keep until needed then surrender."
+    },
+    {
       "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used."
     }
   ],
   "risks": [
     {
-      "name": "Plane diverted - Land in Perth (Australia). - Surrender ticket for present journey. - Purchase new ticket to leave."
-    },
-    {
-      "name": "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected."
+      "name": "Customs - Pay duty on all your souvenirs - half the purchase price. - (Pay to bank in any currency)"
     },
     {
       "name": "All transport - Travel sickness. Miss one turn."
     },
     {
-      "name": "Customs - Pay duty on all your souvenirs - half the purchase price. - (Pay to bank in any currency)"
+      "name": "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected."
+    },
+    {
+      "name": "Plane diverted - Land in Perth (Australia). - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Shipwreck - Your lifeboat is washed ashore on Honolulu Island in the Pacific. - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Cars only - Clear roads. - No traffic delays. - Proceed immediately to your destination."
+    },
+    {
+      "name": "Trains only - Taken wrong train. - You are stranded in Vladivokstok. - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Ships and planes only - Hurricane. Seek refuse in Madagascar (E. Africa). - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Planes only - Technical stop. - Plane makes unscheduled landing on Christmas Island (Pacfic Ocean). - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "All transport - Excess baggage. - 100 kilos overweight. - Pay £40 (or equivalent in local currency)"
+    },
+    {
+      "name": "Ships and planes only - Hurricane. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Ships and planes only - Cyclone. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Ships and planes only - Severe storm. - You are diverted to Arica (S. America). - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "All transport - Travel sickness. - Return to point of departure for treatment. - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Planes and ships only - Favourable weather. - Wind in your favour - Proceed immediately to your destination."
+    },
+    {
+      "name": "Plane diverted by storms - Land of Christmas Island (Pacific Ocean). - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Planes only - Headwinds. - Miss one turn through delay."
+    },
+    {
+      "name": "Car breakdown - Miss one turn."
+    },
+    {
+      "name": "Train derailed - Return to point of departure and start again. - No new ticket required."
+    },
+    {
+      "name": "Cablegram - Urgent Business - Return to London at once! - All tickets forfeited."
+    },
+    {
+      "name": "All transport - You have lost your ticket! - A new one must be purchased before continuing journey."
+    },
+    {
+      "name": "Plane changes course - Diverted to Falkand Isles. - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Ships only - Severe storm. - Your ship seeks refuge in Archangel (U.S.S.R.) - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Train derailed - Return to point of departure and start again. - No new ticket required."
+    },
+    {
+      "name": "Ships and planes only - Freak storm. - You are diverted to Mombasa (E. Africa). - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Planes only - Cyclone. - You are diverted to La Paz in South America. - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "You look tired - Go to Bahamas for a rest. - Free passage. - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Car breakdown - Return to point of departure to obtain a new car. - No new ticket required."
+    },
+    {
+      "name": "Trains only - Train ahead of schedule. - Proceed immediately to your destination."
+    },
+    {
+      "name": "You need a rest - Go to Honolulu (Pacific). - Free passage. - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Ships and planes only - Fog. - Diverted to Arica (S, America). - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Car crash - Return to point of departure and hire a new car. - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Train breakdown - Miss two turns whilst waiting for relief."
+    },
+    {
+      "name": "Shipwreck - You washed ashore on Heard Island. - Surrender ticket for present journey. - Purchase new ticket to leave."
+    },
+    {
+      "name": "Ships and planes only - Severe storm. - Seek refuge in Ascension Island (Atlantic). - Surrender ticket for present journey. Purchase new ticket to leave."
+    },
+    {
+      "name": "Customs - One souvenir confiscated."
+    },
+    {
+      "name": "Customs - Pay duty on all your souvenirs - Half the purchase price. - (Pay to Bank in any currency)"
     }
   ]
 }
