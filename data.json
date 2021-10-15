@@ -304,6 +304,7 @@
       "name": "Berlin",
       "city": true,
       "currency": "ma",
+      "souvenir": "stein",
       "routes": {
         "london:a": 4,
         "moscow:r": 3,
@@ -319,6 +320,7 @@
       "name": "Bombay",
       "city": true,
       "currency": "ru",
+      "souvenir": "elephant",
       "routes": {
         "cairo:s": 4,
         "cairo:a": 5,
@@ -337,6 +339,7 @@
       "name": "Buenos Aires",
       "city": true,
       "currency": "pe",
+      "souvenir": "cowboy",
       "routes": {
         "capetown:a": 10,
         "capetown:s": 5,
@@ -351,6 +354,7 @@
       "name": "Cairo",
       "city": true,
       "currency": "pi",
+      "souvenir": "pyramidart",
       "routes": {
         "bombay:s": 4,
         "bombay:a": 5,
@@ -365,6 +369,7 @@
       "name": "Cape Town",
       "city": true,
       "currency": "st",
+      "souvenir": "springbok",
       "routes": {
         "bombay:a": 10,
         "bombay:s": 5,
@@ -384,6 +389,7 @@
       "name": "Casablanca",
       "city": true,
       "currency": "fr",
+      "souvenir": "arch",
       "routes": {
         "buenosaires:s": 6,
         "cairo:l": 4,
@@ -424,6 +430,7 @@
       "name": "Hong Kong",
       "city": true,
       "currency": "hk",
+      "souvenir": "dragon",
       "routes": {
         "bombay:a": 6,
         "moscow:a": 15,
@@ -465,6 +472,7 @@
       "name": "Los Angeles",
       "city": true,
       "currency": "us",
+      "souvenir": "movie",
       "routes": {
         "mexicocity:l": 3,
         "newyork:a": 8,
@@ -484,6 +492,7 @@
       "name": "Mexico City",
       "city": true,
       "currency": "pe",
+      "souvenir": "donkey",
       "routes": {
         "buenosaires:a": 10,
         "losangeles:l": 3,
@@ -503,6 +512,7 @@
       "name": "Moscow",
       "city": true,
       "currency": "ro",
+      "souvenir": "bell",
       "routes": {
         "bombay:a": 8,
         "berlin:a": 7,
@@ -517,6 +527,7 @@
       "name": "New York",
       "city": true,
       "currency": "us",
+      "souvenir": "liberty",
       "routes": {
         "london:a": 10,
         "london:s": 5,
@@ -532,6 +543,7 @@
       "name": "Paris",
       "city": true,
       "currency": "fr",
+      "souvenir": "eiffel",
       "routes": {
         "berlin:a": 4,
         "berlin:l": 1,
@@ -555,6 +567,7 @@
       "name": "Rio de Janeiro",
       "city": true,
       "currency": "pe",
+      "souvenir": "toucan",
       "routes": {
         "buenosaires:s": 1,
         "buenosaires:l": 3,
@@ -569,6 +582,7 @@
       "name": "Rome",
       "city": true,
       "currency": "li",
+      "souvenir": "fountain",
       "routes": {
         "berlin:a": 5,
         "berlin:l": 2,
@@ -581,6 +595,7 @@
       "name": "San Francisco",
       "city": true,
       "currency": "us",
+      "souvenir": "bridge",
       "routes": {
         "buenosaires:s": 15,
         "losangeles:l": 1,
@@ -594,6 +609,7 @@
       "name": "Sydney",
       "city": true,
       "currency": "st",
+      "souvenir": "kangaroo",
       "routes": {
         "bombay:a": 15,
         "bombay:ls": -1,
@@ -611,6 +627,7 @@
       "name": "Tokyo",
       "city": true,
       "currency": "ye",
+      "souvenir": "geisha",
       "routes": {
         "bombay:s": 10,
         "capetown:s": 15,
@@ -2024,126 +2041,197 @@
   },
   "lucks": [
     {
-      "name": "Advance four spaces. - Keep until needed."
+      "name": "Advance four spaces. - Keep until needed.",
+      "code": "advance+4",
+      "retain": true
     },
     {
-      "name": "Free sea ticket - One journey only. - Keep until needed then surrender."
+      "name": "Free sea ticket - One journey only. - Keep until needed then surrender.",
+      "code": "freeticket+s",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque."
+      "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque.",
+      "code": "gonow+consulate"
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Free air ticket - Los Angeles to Tokyyo. - Keep until needed then surrender."
+      "name": "Free air ticket - Los Angeles to Tokyyo. - Keep until needed then surrender.",
+      "code": "freeticket+losangeles:tokyo:a",
+      "retain": true
     },
     {
-      "name": "Free train ticket - One journey only. - Retain until needed then surrender."
+      "name": "Free train ticket - One journey only. - Retain until needed then surrender.",
+      "code": "freeticket+r",
+      "retain": true
     },
     {
-      "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional."
+      "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional.",
+      "code": "insurance+10",
+      "retain": true
     },
     {
-      "name": "Advance three spaces. - Keep until needed."
+      "name": "Advance three spaces. - Keep until needed.",
+      "code": "advance+3",
+      "retain": true
     },
     {
-      "name": "Free air lift - This card enables you to move from where you are now directly to Cape Town free of charge. But you must either use it now or return the card to the pack."
+      "name": "Free air lift - This card enables you to move from where you are now directly to Cape Town free of charge. But you must either use it now or return the card to the pack.",
+      "code": "airlift"
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque."
+      "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque.",
+      "code": "gonow+consulate"
     },
     {
-      "name": "Priority! - Move direct to you destination without throwing the dice. - Keep until needed."
+      "name": "Priority! - Move direct to you destination without throwing the dice. - Keep until needed.",
+      "code": "godestination",
+      "retain": true
     },
     {
-      "name": "Advance two spaces. - Keep until needed."
+      "name": "Advance two spaces. - Keep until needed.",
+      "code": "advance+2",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Hidden treasure - You discover £500 in Sterling. - (Obtain from Banker)"
+      "name": "Hidden treasure - You discover £500 in Sterling. - (Obtain from Banker)",
+      "code": "getmoney+500:st"
     },
     {
-      "name": "Advance two spaces. - Keep until needed."
+      "name": "Advance two spaces. - Keep until needed.",
+      "code": "advance+2",
+      "retain": true
     },
     {
-      "name": "Advance three spaces. - Keep until needed."
+      "name": "Advance three spaces. - Keep until needed.",
+      "code": "advance+3",
+      "retain": true
     },
     {
-      "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional."
+      "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional.",
+      "code": "insurance+10",
+      "retain": true
     },
     {
-      "name": "Currency speculation - Collect £10 from each player in any currency they may wish to give you."
+      "name": "Currency speculation - Collect £10 from each player in any currency they may wish to give you.",
+      "code": "speculation"
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Free insurance policy - In case of diversion or accident, collect from Bank twice price of fare in Sterling. - Use only one then surrender."
+      "name": "Free insurance policy - In case of diversion or accident, collect from Bank twice price of fare in Sterling. - Use only one then surrender.",
+      "code": "insurance+0",
+      "retain": true
     },
     {
-      "name": "Free air ticket - Sydney to Bombay. - Keep until needed then surrender."
+      "name": "Free air ticket - Sydney to Bombay. - Keep until needed then surrender.",
+      "code": "freeticket+sydney:bombay:a",
+      "retain": true
     },
     {
-      "name": "Advanced one space. - Keep until needed."
+      "name": "Advanced one space. - Keep until needed.",
+      "code": "advance+1",
+      "retain": true
     },
     {
-      "name": "Free car ticket - One journey only. - Keep until needed then surrender."
+      "name": "Free car ticket - One journey only. - Keep until needed then surrender.",
+      "code": "freeticket+l",
+      "retain": true
     },
     {
-      "name": "Free sea ticket - Casablanca to London. Keep until needed then surrender."
+      "name": "Free sea ticket - Casablanca to London. Keep until needed then surrender.",
+      "code": "freeticket+s",
+      "retain": true
     },
     {
-      "name": "Free air ticket - Cape Town to Buenos Aires. Keep until needed then surrender."
+      "name": "Free air ticket - Cape Town to Buenos Aires. Keep until needed then surrender.",
+      "code": "freeticket+a",
+      "retain": true
     },
     {
-      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used."
+      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used.",
+      "code": "inoculation",
+      "retain": true
     },
     {
-      "name": "Diplomatic immunity - This card enables you to pass through customs without examination. - Ignore instructions if you land on customs square. - Keep until needed then surrender."
+      "name": "Diplomatic immunity - This card enables you to pass through customs without examination. - Ignore instructions if you land on customs square. - Keep until needed then surrender.",
+      "code": "immunity",
+      "retain": true
     },
     {
-      "name": "Free air ticket - One journey only. - Keep until needed then surrender."
+      "name": "Free air ticket - One journey only. - Keep until needed then surrender.",
+      "code": "freeticket+a",
+      "retain": true
     },
     {
-      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used."
+      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used.",
+      "code": "inoculation",
+      "retain": true
     }
   ],
   "risks": [
     {
-      "name": "Customs - Pay duty on all your souvenirs - half the purchase price. - (Pay to bank in any currency)"
+      "name": "Customs - Pay duty on all your souvenirs - half the purchase price. - (Pay to bank in any currency)",
+      "code": "customs+half"
     },
     {
-      "name": "All transport - Travel sickness. Miss one turn."
+      "name": "All transport - Travel sickness. Miss one turn.",
+      "code": "miss+1"
     },
     {
-      "name": "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected."
+      "name": "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected.",
+      "code": "fog??"
     },
     {
-      "name": "Plane diverted - Land in Perth (Australia). - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "Plane diverted - Land in Perth (Australia). - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "gonow+perth"
     },
     {
       "name": "Shipwreck - Your lifeboat is washed ashore on Honolulu Island in the Pacific. - Surrender ticket for present journey. - Purchase new ticket to leave."

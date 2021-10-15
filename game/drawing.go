@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"fmt"
@@ -30,6 +30,28 @@ func (c *circle) At(x, y int) color.Color {
 	return color.Alpha{0}
 }
 
+// type Line struct {
+// 	p1, p2 image.Point
+// }
+//
+// func (l *Line) ColorModel() color.Model {
+// 	return color.AlphaModel
+// }
+//
+// func (l *Line) Bounds() image.Rectangle {
+// 	x1, x2, y1, y2 := l.p1.X, l.p2.X, l.p1.Y, l.p2.Y
+// 	if x2 > x1 {
+// 		x1, x2 = x2, x1
+// 	}
+// 	if y2 > y1 {
+// 		y1, y2 = y2, y1
+// 	}
+// 	return image.Rect(x1, y1, x2, y2)
+// }
+//
+// func (l *Line) At(x, y int) color.Color {
+// }
+
 func (g *game) Draw(file string) error {
 	img := image.NewNRGBA(image.Rect(0, 0, 1000, 700))
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Src)
@@ -44,6 +66,10 @@ func (g *game) Draw(file string) error {
 		p := image.Point{x, y}
 		draw.DrawMask(img, img.Bounds(), &image.Uniform{c}, image.ZP, &circle{p, r}, image.ZP, draw.Over)
 	}
+
+	// drawLine := func(x1, y1, x2, y2 int) {
+	//
+	// }
 
 	drawCity := func(x, y int) {
 		drawCircle(x, y, 15, color.Black)

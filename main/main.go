@@ -7,28 +7,37 @@ import (
 	"strings"
 	"time"
 
+	"github.com/undeconstructed/gogogo/game"
+
 	rl "github.com/chzyer/readline"
 )
 
 func main() {
 
-	rand.Seed(time.Now().Unix())
-	g := NewGame()
+	data := game.LoadJson()
 
-	// g.AddPlayer("phil", "red")
-	// s, _ := g.Start()
-	// printState(s)
+	rand.Seed(time.Now().Unix())
+	g := game.NewGame(data)
+
+	g.AddPlayer("phil", "red")
+	// g.AddPlayer("bear", "blue")
+	s, _ := g.Start()
+	printSummary(s)
 
 	completer := rl.NewPrefixCompleter(
 		rl.PcItem("addplayer"),
 		rl.PcItem("start"),
-		rl.PcItem("state"),
-		rl.PcItem("draw"),
-		rl.PcItem("getprices"),
-		rl.PcItem("findroute"),
+		// rl.PcItem("draw"),
+		rl.PcItem("describeplace"),
+		rl.PcItem("describeplayer"),
+		rl.PcItem("describeturn"),
+		// rl.PcItem("findroute"),
 		rl.PcItem("do",
+			rl.PcItem("stay"),
+			rl.PcItem("takerisk"),
+			rl.PcItem("takeluck"),
+			rl.PcItem("useluck"),
 			rl.PcItem("dicemove"),
-			rl.PcItem("cardmove"),
 			rl.PcItem("buyticket"),
 			rl.PcItem("changemoney"),
 			rl.PcItem("buysouvenir"),
@@ -54,18 +63,58 @@ func main() {
 	gameRepl(l, g)
 }
 
-func printState(state PlayState) {
-	fmt.Printf("Player: %s\nMoney:  %v\nSquare: %s\nPlace:  %s\nTicket: %#v\nMoved:  %d\n", state.player, state.money, state.square, state.place, state.ticket, state.moved)
+func printSummary(state game.AboutATurn) {
+	where := "track"
+	if state.OnMap {
+		where = "map"
+	}
+	stayed := "not stopped"
+	if state.Stayed {
+		stayed = "stopped"
+	}
+	must := ""
+	if len(state.Must) > 0 {
+		must = fmt.Sprintf(", and must %v", state.Must)
+	}
+	fmt.Printf("%s is moving on the %s, has %s%s\n", state.Player, where, stayed, must)
 }
 
-func gameRepl(l *rl.Instance, g *game) {
+func printTurn(state game.AboutATurn) {
+	fmt.Printf("Player: %s\n", state.Player)
+	fmt.Printf("Map?:   %t\n", state.OnMap)
+	fmt.Printf("Stayed: %t\n", state.Stayed)
+	fmt.Printf("Must:   %s\n", state.Must)
+}
+
+func printPlace(state game.AboutAPlace) {
+	fmt.Printf("Place:    %s\n", state.Name)
+	fmt.Printf("Currency: %s\n", state.Currency)
+	if state.Souvenir != "" {
+		fmt.Printf("Souvenir: %s\n", state.Souvenir)
+	}
+	fmt.Printf("Routes:\n")
+	for k, v := range state.Prices {
+		fmt.Printf("\t%s: %d\n", k, v)
+	}
+}
+
+func printPlayer(state game.AboutAPlayer) {
+	fmt.Printf("Player: %s\n", state.Name)
+	fmt.Printf("Money:  %v\n", state.Money)
+	fmt.Printf("Lucks:  %v\n", state.Lucks)
+	fmt.Printf("Square: %s\n", state.Square)
+	fmt.Printf("Dot:    %s\n", state.Dot)
+	fmt.Printf("Ticket: %s\n", state.Ticket)
+}
+
+func gameRepl(l *rl.Instance, g game.Game) {
 
 	rootCfg := *l.Config
 	player := ""
 
-	updatePlayer := func(s PlayState) {
-		if player != s.player {
-			player = s.player
+	updatePlayer := func(s game.AboutATurn) {
+		if player != s.Player {
+			player = s.Player
 			playerCfg := rootCfg
 			playerCfg.Prompt = "\033[31m" + player + "»\033[0m "
 			l.SetConfig(&playerCfg)
@@ -90,6 +139,7 @@ func gameRepl(l *rl.Instance, g *game) {
 		if len(parts) == 2 {
 			rest = parts[1]
 		}
+
 		switch {
 		case cmd == "addplayer":
 			var name, colour string
@@ -110,53 +160,61 @@ func gameRepl(l *rl.Instance, g *game) {
 				fmt.Printf("error: %v\n", err)
 				continue
 			}
-			printState(state)
+			printSummary(state)
 			updatePlayer(state)
-		case cmd == "getprices":
-			var from string
-			_, err := fmt.Sscan(rest, &from)
+		case cmd == "describeplace":
+			var name string
+			_, err := fmt.Sscan(rest, &name)
 			if err != nil {
-				fmt.Printf("getprices <from>\n")
+				fmt.Printf("describeplace <name>\n")
 				continue
 			}
 
-			currency, ps := g.GetPrices(from)
-			for k, v := range ps {
-				fmt.Printf("%s = %d %s\n", k, v, currency)
-			}
-		case cmd == "findroute":
-			var from, to, mode string
-			_, err := fmt.Sscan(rest, &from, &to, &mode)
+			about := g.DescribePlace(name)
+			printPlace(about)
+		case cmd == "describeplayer":
+			var name string
+			_, err := fmt.Sscan(rest, &name)
 			if err != nil {
-				fmt.Printf("findroute <from> <to> <mode>\n")
+				fmt.Printf("describeplayer <name>\n")
 				continue
 			}
 
-			r := g.FindRoute(from, to, mode)
-			if r == nil {
-				fmt.Printf("no route from %s to %s by %s\n", from, to, mode)
-				continue
-			}
-			fmt.Printf("route from %s to %s by %s:\n", from, to, mode)
-			for _, p := range r {
-				fmt.Printf("%s\n", p)
-			}
-		case cmd == "draw":
-			var outfile string
-			_, err := fmt.Sscan(rest, &outfile)
-			if err != nil {
-				fmt.Printf("draw <outfile>\n")
-				continue
-			}
-
-			err = g.Draw(outfile)
-			if err != nil {
-				fmt.Printf("error: %v\n", err)
-				continue
-			}
-		case cmd == "state":
-			state := g.State()
-			printState(state)
+			state := g.DescribePlayer(name)
+			printPlayer(state)
+		case cmd == "describeturn":
+			state := g.DescribeTurn()
+			printTurn(state)
+		// case cmd == "findroute":
+		// 	var from, to, mode string
+		// 	_, err := fmt.Sscan(rest, &from, &to, &mode)
+		// 	if err != nil {
+		// 		fmt.Printf("findroute <from> <to> <mode>\n")
+		// 		continue
+		// 	}
+		//
+		// 	r := g.FindRoute(from, to, mode)
+		// 	if r == nil {
+		// 		fmt.Printf("no route from %s to %s by %s\n", from, to, mode)
+		// 		continue
+		// 	}
+		// 	fmt.Printf("route from %s to %s by %s:\n", from, to, mode)
+		// 	for _, p := range r {
+		// 		fmt.Printf("%s\n", p)
+		// 	}
+		// case cmd == "draw":
+		// 	var outfile string
+		// 	_, err := fmt.Sscan(rest, &outfile)
+		// 	if err != nil {
+		// 		fmt.Printf("draw <outfile>\n")
+		// 		continue
+		// 	}
+		//
+		// 	err = g.Draw(outfile)
+		// 	if err != nil {
+		// 		fmt.Printf("error: %v\n", err)
+		// 		continue
+		// 	}
 		case cmd == "do":
 			ss := strings.SplitN(rest, " ", 2)
 			var options = ""
@@ -164,25 +222,51 @@ func gameRepl(l *rl.Instance, g *game) {
 				options = ss[1]
 			}
 
-			err := g.Turn(Command{ss[0], options})
+			res, err := g.Turn(game.Command{Command: ss[0], Options: options})
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
-				continue
+				if err == game.ErrNotStayed {
+					// try to auto stay
+					res, err = g.Turn(game.Command{Command: "stay"})
+					if err != nil {
+						fmt.Printf("error: %v\n", err)
+						continue
+					}
+					fmt.Printf("Result: %s\n", res)
+
+					// retry command
+					res, err = g.Turn(game.Command{Command: ss[0], Options: options})
+					if err != nil {
+						fmt.Printf("error: %v\n", err)
+						continue
+					}
+				} else {
+					fmt.Printf("error: %v\n", err)
+					continue
+				}
 			}
-			state := g.State()
-			printState(state)
+			fmt.Printf("Result: %s\n", res)
+			state := g.DescribeTurn()
+			printSummary(state)
 			updatePlayer(state)
 		case line == "":
-			// shorcut for ending a turn
-			fmt.Printf("end turn\n")
-			err := g.Turn(Command{"end", ""})
-			if err != nil {
-				fmt.Printf("error: %v\n", err)
-				continue
+			// continue
+
+			// shortcut for ending a turn
+			// fmt.Printf("end turn\n")
+			// err := g.Turn(Command{"end", ""})
+			// if err != nil {
+			// 	fmt.Printf("error: %v\n", err)
+			// 	continue
+			// }
+			// state := g.State()
+			// printState(state)
+			// updatePlayer(state)
+
+			// shortcut for seeing player state
+			if player != "" {
+				state := g.DescribePlayer(player)
+				printPlayer(state)
 			}
-			state := g.State()
-			printState(state)
-			updatePlayer(state)
 		default:
 			fmt.Printf("unknown\n")
 		}

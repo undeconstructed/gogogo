@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>go</title>
+  <title>gogogo</title>
 
   <meta name="description" content="Afero">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -13,12 +13,29 @@
   <link rel="stylesheet" href="css/custom.css">
 
 <style>
-  * { padding: 0; margin: 0; }
-  textarea {
+  body {
+    padding: 10px;
+  }
+
+  div#maparea {
+    border: 10px solid black;
+    width: 1000px;
+    margin: auto;
+    padding: 0;
+    position: relative;
+  }
+  div#jsonarea {
+    border: 10px solid black;
+    width: 1000px;
+    margin: auto;
+  }
+  div#jsonarea textarea {
+    height: 100px;
     width: 100%;
     display: block;
   }
-  img {
+  img#map {
+    display: block;
   }
   .dot {
     border: 2px solid white;
@@ -33,6 +50,7 @@
 
   <script>
 
+let maparea = null
 let map = null
 let out = null
 let overlay = null
@@ -49,13 +67,13 @@ function split(s) {
 function plot() {
   selected = null
   if (overlay) {
-    document.body.removeChild(overlay)
+    maparea.removeChild(overlay)
   }
   overlay = document.createElement('div')
   for (let pointId in data.dots) {
     drawPoint(pointId, data.dots[pointId])
   }
-  document.body.append(overlay)
+  maparea.append(overlay)
 }
 
 function linedraw(x1, y1, x2, y2, border) {
@@ -155,6 +173,8 @@ function drawLink(pointId, link) {
 
 document.addEventListener('DOMContentLoaded', function() {
   out = document.getElementById("out")
+
+  maparea = document.getElementById("maparea")
   map = document.getElementById("map")
 
   let inb = document.getElementById("inb")
@@ -178,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
   })
 
   map.addEventListener("click", function(e) {
-    let pointId = `${e.pageX},${e.pageY}`
+    let pointId = `${e.offsetX},${e.offsetY}`
     let point = {}
     data.dots[pointId] = point
     drawPoint(pointId, point)
@@ -229,9 +249,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 
-  <img id="map" src="1000map.png">
+  <div id="maparea">
+    <img id="map" src="1000map.png">
+  </div>
 
-  <textarea id="out"></textarea>
-  <div><button type="button" id="inb">in</button><button type="button" id="outb">out</button></div>
+  <div id="jsonarea">
+    <textarea id="out"></textarea>
+    <div><button type="button" id="inb">in</button><button type="button" id="outb">out</button></div>
+  </div>
 
 </html>
