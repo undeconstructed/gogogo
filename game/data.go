@@ -5,9 +5,46 @@ import (
 	"io/ioutil"
 )
 
+type AboutABank struct {
+	Money     map[string]int
+	Souvenirs map[string]int
+}
+
+type AboutAPlace struct {
+	Name     string
+	Currency string
+	Souvenir string
+	Prices   map[string]int
+}
+
+type AboutAPlayer struct {
+	Name      string
+	Colour    string
+	Money     map[string]int
+	Souvenirs []string
+	Lucks     map[int]string
+	Square    string
+	Dot       string
+	Ticket    string
+}
+
+type AboutATurn struct {
+	Number  int
+	Player  string
+	Colour  string
+	OnMap   bool
+	Stopped bool
+	Must    []string
+}
+
 type Command struct {
 	Command string
 	Options string
+}
+
+type CommandResult struct {
+	Text string
+	Err  error
 }
 
 func LoadJson() GameData {
@@ -40,6 +77,7 @@ type luckCard struct {
 
 type riskCard struct {
 	Name string `json:"name"`
+	Code string `json:"code"`
 }
 
 type currency struct {
@@ -48,6 +86,7 @@ type currency struct {
 }
 
 type trackSquare struct {
+	Type    string   `json:"type"`
 	Name    string   `json:"name"`
 	Options []string `json:"options"`
 }

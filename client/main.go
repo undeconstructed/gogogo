@@ -12,6 +12,23 @@ import (
 	rl "github.com/chzyer/readline"
 )
 
+const (
+	RED   = "[31m"
+	BLUE  = "[34m"
+	WHITE = "[37m"
+)
+
+func col(s string) string {
+	switch s {
+	case "red":
+		return RED
+	case "blue":
+		return BLUE
+	default:
+		return "[0m"
+	}
+}
+
 func main() {
 
 	data := game.LoadJson()
@@ -21,19 +38,18 @@ func main() {
 
 	g.AddPlayer("phil", "red")
 	// g.AddPlayer("bear", "blue")
-	s, _ := g.Start()
-	printSummary(s)
 
 	completer := rl.NewPrefixCompleter(
 		rl.PcItem("addplayer"),
 		rl.PcItem("start"),
 		// rl.PcItem("draw"),
+		rl.PcItem("describebank"),
 		rl.PcItem("describeplace"),
 		rl.PcItem("describeplayer"),
 		rl.PcItem("describeturn"),
 		// rl.PcItem("findroute"),
 		rl.PcItem("do",
-			rl.PcItem("stay"),
+			rl.PcItem("stop"),
 			rl.PcItem("takerisk"),
 			rl.PcItem("takeluck"),
 			rl.PcItem("useluck"),
@@ -41,14 +57,17 @@ func main() {
 			rl.PcItem("buyticket"),
 			rl.PcItem("changemoney"),
 			rl.PcItem("buysouvenir"),
-			rl.PcItem("docustoms"),
-			rl.PcItem("payfine"),
+			rl.PcItem("gamble"),
+			rl.PcItem("pay"),
+			rl.PcItem("declare"),
 			rl.PcItem("end"),
 		),
 	)
 
+	// "\033[31m»\033[0m "
+
 	l, err := rl.NewEx(&rl.Config{
-		Prompt:            "\033[31m»\033[0m ",
+		Prompt:            "» ",
 		HistoryFile:       "hist.txt",
 		AutoComplete:      completer,
 		InterruptPrompt:   "^C",
@@ -68,21 +87,26 @@ func printSummary(state game.AboutATurn) {
 	if state.OnMap {
 		where = "map"
 	}
-	stayed := "not stopped"
-	if state.Stayed {
-		stayed = "stopped"
+	stopped := "not stopped"
+	if state.Stopped {
+		stopped = "stopped"
 	}
 	must := ""
 	if len(state.Must) > 0 {
 		must = fmt.Sprintf(", and must %v", state.Must)
 	}
-	fmt.Printf("%s is moving on the %s, has %s%s\n", state.Player, where, stayed, must)
+	fmt.Printf("%s is moving on the %s, has %s%s\n", state.Player, where, stopped, must)
+}
+
+func printBank(state game.AboutABank) {
+	fmt.Printf("Money:     %v\n", state.Money)
+	fmt.Printf("Souvenirs: %v\n", state.Souvenirs)
 }
 
 func printTurn(state game.AboutATurn) {
 	fmt.Printf("Player: %s\n", state.Player)
 	fmt.Printf("Map?:   %t\n", state.OnMap)
-	fmt.Printf("Stayed: %t\n", state.Stayed)
+	fmt.Printf("Stayed: %t\n", state.Stopped)
 	fmt.Printf("Must:   %s\n", state.Must)
 }
 
@@ -99,29 +123,48 @@ func printPlace(state game.AboutAPlace) {
 }
 
 func printPlayer(state game.AboutAPlayer) {
-	fmt.Printf("Player: %s\n", state.Name)
-	fmt.Printf("Money:  %v\n", state.Money)
-	fmt.Printf("Lucks:  %v\n", state.Lucks)
-	fmt.Printf("Square: %s\n", state.Square)
-	fmt.Printf("Dot:    %s\n", state.Dot)
-	fmt.Printf("Ticket: %s\n", state.Ticket)
+	fmt.Printf("Player:    %s\n", state.Name)
+	fmt.Printf("Money:     %v\n", state.Money)
+	fmt.Printf("Souvenirs: %v\n", state.Souvenirs)
+	fmt.Printf("Lucks:     %v\n", state.Lucks)
+	fmt.Printf("Square:    %s\n", state.Square)
+	fmt.Printf("Dot:       %s\n", state.Dot)
+	fmt.Printf("Ticket:    %s\n", state.Ticket)
 }
 
 func gameRepl(l *rl.Instance, g game.Game) {
-
-	rootCfg := *l.Config
 	player := ""
 
 	updatePlayer := func(s game.AboutATurn) {
-		if player != s.Player {
-			player = s.Player
-			playerCfg := rootCfg
-			playerCfg.Prompt = "\033[31m" + player + "»\033[0m "
-			l.SetConfig(&playerCfg)
+		number := s.Number
+		player = s.Player
+		loc := "track"
+		if s.OnMap {
+			loc = "map"
 		}
+		phase := "moving"
+		if s.Stopped {
+			phase = "stopped"
+		}
+		must := ""
+		if len(s.Must) > 0 {
+			must = " !"
+		}
+		colour := col(s.Colour)
+		prompt := fmt.Sprintf("%d \033%s%s|%s|%s%s»\033[0m ", number, colour, player, loc, phase, must)
+		l.SetPrompt(prompt)
 	}
 
 	for {
+		if player != "" {
+			state := g.DescribeTurn()
+			// printSummary(state)
+			updatePlayer(state)
+			if len(state.Must) > 0 {
+				fmt.Printf("Tasks: %v\n", state.Must)
+			}
+		}
+
 		line, err := l.Readline()
 		if err == rl.ErrInterrupt {
 			if len(line) == 0 {
@@ -151,17 +194,20 @@ func gameRepl(l *rl.Instance, g game.Game) {
 
 			err = g.AddPlayer(name, colour)
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				fmt.Printf("Error: %v\n", err)
 				continue
 			}
 		case cmd == "start":
 			state, err := g.Start()
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				fmt.Printf("Error: %v\n", err)
 				continue
 			}
-			printSummary(state)
+
 			updatePlayer(state)
+		case cmd == "describebank":
+			state := g.DescribeBank()
+			printBank(state)
 		case cmd == "describeplace":
 			var name string
 			_, err := fmt.Sscan(rest, &name)
@@ -212,7 +258,7 @@ func gameRepl(l *rl.Instance, g game.Game) {
 		//
 		// 	err = g.Draw(outfile)
 		// 	if err != nil {
-		// 		fmt.Printf("error: %v\n", err)
+		// 		fmt.Printf("Error: %v\n", err)
 		// 		continue
 		// 	}
 		case cmd == "do":
@@ -224,11 +270,11 @@ func gameRepl(l *rl.Instance, g game.Game) {
 
 			res, err := g.Turn(game.Command{Command: ss[0], Options: options})
 			if err != nil {
-				if err == game.ErrNotStayed {
-					// try to auto stay
-					res, err = g.Turn(game.Command{Command: "stay"})
+				if err == game.ErrNotStopped {
+					// try to auto stop
+					res, err = g.Turn(game.Command{Command: "stop"})
 					if err != nil {
-						fmt.Printf("error: %v\n", err)
+						fmt.Printf("Error: %v\n", err)
 						continue
 					}
 					fmt.Printf("Result: %s\n", res)
@@ -236,18 +282,15 @@ func gameRepl(l *rl.Instance, g game.Game) {
 					// retry command
 					res, err = g.Turn(game.Command{Command: ss[0], Options: options})
 					if err != nil {
-						fmt.Printf("error: %v\n", err)
+						fmt.Printf("Error: %v\n", err)
 						continue
 					}
 				} else {
-					fmt.Printf("error: %v\n", err)
+					fmt.Printf("Error: %v\n", err)
 					continue
 				}
 			}
 			fmt.Printf("Result: %s\n", res)
-			state := g.DescribeTurn()
-			printSummary(state)
-			updatePlayer(state)
 		case line == "":
 			// continue
 
@@ -255,7 +298,7 @@ func gameRepl(l *rl.Instance, g game.Game) {
 			// fmt.Printf("end turn\n")
 			// err := g.Turn(Command{"end", ""})
 			// if err != nil {
-			// 	fmt.Printf("error: %v\n", err)
+			// 	fmt.Printf("Error: %v\n", err)
 			// 	continue
 			// }
 			// state := g.State()

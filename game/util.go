@@ -47,3 +47,15 @@ func stringListWithout(l []string, s string) ([]string, bool) {
 	}
 	return l, false
 }
+
+func intListWithout(l []int, s int) ([]int, bool) {
+	for i, x := range l {
+		if x == s {
+			var out []int
+			out = append(out, l[0:i]...)
+			out = append(out, l[i+1:]...)
+			return out, true
+		}
+	}
+	return l, false
+}

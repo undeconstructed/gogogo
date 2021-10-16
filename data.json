@@ -1,204 +1,236 @@
 {
   "squares": [
     {
-      "name": "start - bank - bureau de change",
+      "type": "bank",
+      "name": "start - bank - Bureau de Change",
       "options": [
-        "changemoney"
+        "can:changemoney"
       ]
     },
     {
-      "name": "currency speculation - receive £100 from the bank in the currency of the country you are visiting",
+      "type": "curspec",
+      "name": "Currency speculation - receive £100 from the bank in the currency of the country you are visiting",
       "options": [
-        "gain100"
+        "auto:gainlocal10"
       ]
     },
     {
-      "name": "overland - booking office - car hire co.",
+      "type": "overland",
+      "name": "Overland Car Hire co. booking office",
       "options": [
-        "buyticket+l"
+        "can:buyticket:l"
       ]
     },
     {
-      "name": "overseas - shipping agency",
+      "type": "oversea",
+      "name": "Overseas Shipping Agency",
       "options": [
-        "buyticket+s"
+        "can:buyticket:s"
       ]
     },
     {
-      "name": "luck",
+      "type": "luck",
+      "name": "Luck",
       "options": [
-        "takeluck"
+        "must:takeluck"
       ]
     },
     {
-      "name": "bureau de change",
+      "type": "bdc",
+      "name": "Bureau de Change",
       "options": [
-        "changemoney"
+        "can:changemoney"
       ]
     },
     {
-      "name": "british consulate"
+      "type": "consuluate",
+      "name": "British Consulate"
     },
     {
-      "name": "quarantined - suspected smallpox - miss one turn",
+      "type": "quarantine",
+      "name": "Quarantined - Suspected smallpox - Miss one turn",
       "options": [
-        "missturn"
+        "auto:miss:1"
       ]
     },
     {
-      "name": "bureau - thos. cook and son - de change",
+      "type": "cooks",
+      "name": "Thos. Cook and son / Bureau de change",
       "options": [
-        "changemoney",
-        "buyticket+l",
-        "buyticket+s",
-        "buyticket+a",
-        "buyticket+r"
+        "can:changemoney",
+        "can:buyticket:l",
+        "can:buyticket:s",
+        "can:buyticket:a",
+        "can:buyticket:r"
       ]
     },
     {
-      "name": "casino - place bet & throw dice - 3 or under you lose, 4 or over pays 2 to 1",
+      "type": "casino",
+      "name": "Casino - place bet & throw dice - 3 or under you lose, 4 or over pays 2 to 1",
       "options": [
-        "gamble"
+        "can:gamble"
       ]
     },
     {
-      "name": "luck",
+      "type": "luck",
+      "name": "Luck",
       "options": [
-        "takeluck"
+        "must:takeluck"
       ]
     },
     {
-      "name": "overland - booking office - car hire co.",
+      "type": "overland",
+      "name": "Overland Car Hire co. booking office",
       "options": [
-        "buyticket+l"
+        "can:buyticket:l"
       ]
     },
     {
-      "name": "international - railways - booking office",
+      "type": "railway",
+      "name": "International Railways booking office",
       "options": [
-        "buyticket+r"
+        "can:buyticket:r"
       ]
     },
     {
-      "name": "bureau de change",
+      "type": "bdc",
+      "name": "Bureau de Change",
       "options": [
-        "changemoney"
+        "can:changemoney"
       ]
     },
     {
-      "name": "B.O.A.C. - air ticket office",
+      "type": "boac",
+      "name": "B.O.A.C. air ticket office",
       "options": [
-        "buyticket+a"
+        "can:buyticket:a"
       ]
     },
     {
-      "name": "customs - pay £100 duty - (in any currency)",
+      "type": "customs1",
+      "name": "Customs - pay £100 duty (in any currency)",
       "options": [
-        "pay100"
+        "must:pay:x:10"
       ]
     },
     {
-      "name": "luck",
+      "type": "luck",
+      "name": "Luck",
       "options": [
-        "takeluck"
+        "must:takeluck"
       ]
     },
     {
-      "name": "short cut - to cooks",
+      "type": "gocooks",
+      "name": "Short cut to Cooks",
       "options": [
-        "gocooks"
+        "auto:go:cooks"
       ]
     },
     {
-      "name": "city hospital - you need a rest - miss one turn",
+      "type": "hospital",
+      "name": "City hospital - You need a rest - Miss one turn",
       "options": [
-        "missturn"
+        "auto:miss:1"
       ]
     },
     {
-      "name": "bureau de change",
+      "type": "bdc",
+      "name": "Bureau de Change",
       "options": [
-        "changemoney"
+        "can:changemoney"
       ]
     },
     {
-      "name": "international - railways - booking office",
+      "type": "railway",
+      "name": "International Railways booking office",
       "options": [
-        "buyticket+r"
+        "can:buyticket:r"
       ]
     },
     {
-      "name": "luck",
+      "type": "luck",
+      "name": "Luck",
       "options": [
-        "takeluck"
+        "must:takeluck"
       ]
     },
     {
-      "name": "hotel bill - £100 - payable in local currency",
+      "type": "hotel",
+      "name": "Hotel bill - £100 - Payable in local currency",
       "options": [
-        "pay100"
+        "must:pay:local:10"
       ]
     },
     {
-      "name": "bureau - thos. cook and son - de change",
+      "type": "cooks",
+      "name": "Thos. Cook and son / Bureau de change",
       "options": [
-        "changemoney",
-        "buyticket+l",
-        "buyticket+s",
-        "buyticket+a",
-        "buyticket+r"
+        "can:changemoney",
+        "can:buyticket:l",
+        "can:buyticket:s",
+        "can:buyticket:a",
+        "can:buyticket:r"
       ]
     },
     {
-      "name": "short cut to bank",
+      "type": "gobank",
+      "name": "Short cut to Bank",
       "options": [
-        "gobank"
+        "auto:go:bank"
       ]
     },
     {
-      "name": "overseas - shipping agency",
+      "type": "overseas",
+      "name": "Overseas Shipping Agency",
       "options": [
-        "buyticket+s"
+        "can:buyticket:s"
       ]
     },
     {
-      "name": "bureau de change",
+      "type": "bdc",
+      "name": "Bureau de Change",
       "options": [
-        "changemoney"
+        "can:changemoney"
       ]
     },
     {
-      "name": "luck",
+      "type": "luck",
+      "name": "Luck",
       "options": [
-        "takeluck"
+        "must:takeluck"
       ]
     },
     {
-      "name": "B.O.A.C. - air ticket office",
+      "type": "boac",
+      "name": "B.O.A.C. air ticket office",
       "options": [
-        "buyticket+a"
+        "can:buyticket:a"
       ]
     },
     {
-      "name": "your papers are not in order - go back to the british consulate",
+      "type": "badpapers",
+      "name": "Your papers are not in order - go back to the british consulate",
       "options": [
-        "goconsulate"
+        "auto:goconsulate"
       ]
     },
     {
-      "name": "bureau - thos. cook and son - de change",
+      "type": "cooks",
+      "name": "Thos. Cook and son / Bureau de change",
       "options": [
-        "changemoney",
-        "buyticket+l",
-        "buyticket+s",
-        "buyticket+a",
-        "buyticket+r"
+        "can:changemoney",
+        "can:buyticket:l",
+        "can:buyticket:s",
+        "can:buyticket:a",
+        "can:buyticket:r"
       ]
     },
     {
-      "name": "customs - one souvenir confiscated",
+      "type": "customs2",
+      "name": "Customs - one souvenir confiscated",
       "options": [
-        "losesouvenir"
+        "must:declare"
       ]
     }
   ],
@@ -2042,46 +2074,46 @@
   "lucks": [
     {
       "name": "Advance four spaces. - Keep until needed.",
-      "code": "advance+4",
+      "code": "advance:4",
       "retain": true
     },
     {
       "name": "Free sea ticket - One journey only. - Keep until needed then surrender.",
-      "code": "freeticket+s",
+      "code": "freeticket:x:x:s",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque.",
-      "code": "gonow+consulate"
+      "code": "go:consulate"
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Free air ticket - Los Angeles to Tokyyo. - Keep until needed then surrender.",
-      "code": "freeticket+losangeles:tokyo:a",
+      "code": "freeticket:losangeles:tokyo:a",
       "retain": true
     },
     {
       "name": "Free train ticket - One journey only. - Retain until needed then surrender.",
-      "code": "freeticket+r",
+      "code": "freeticket:x:x:r",
       "retain": true
     },
     {
@@ -2091,7 +2123,7 @@
     },
     {
       "name": "Advance three spaces. - Keep until needed.",
-      "code": "advance+3",
+      "code": "advance:3",
       "retain": true
     },
     {
@@ -2100,55 +2132,55 @@
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Advance to nearest British Consulate. - If you pass the Bank collect £200 traveller's cheque.",
-      "code": "gonow+consulate"
+      "code": "go:consulate"
     },
     {
       "name": "Priority! - Move direct to you destination without throwing the dice. - Keep until needed.",
-      "code": "godestination",
+      "code": "dest",
       "retain": true
     },
     {
       "name": "Advance two spaces. - Keep until needed.",
-      "code": "advance+2",
+      "code": "advance:2",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Hidden treasure - You discover £500 in Sterling. - (Obtain from Banker)",
-      "code": "getmoney+500:st"
+      "code": "getmoney:st:50"
     },
     {
       "name": "Advance two spaces. - Keep until needed.",
-      "code": "advance+2",
+      "code": "advance:2",
       "retain": true
     },
     {
       "name": "Advance three spaces. - Keep until needed.",
-      "code": "advance+3",
+      "code": "advance:3",
       "retain": true
     },
     {
       "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional.",
-      "code": "insurance+10",
+      "code": "insurance:x:10",
       "retain": true
     },
     {
@@ -2157,42 +2189,42 @@
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Free insurance policy - In case of diversion or accident, collect from Bank twice price of fare in Sterling. - Use only one then surrender.",
-      "code": "insurance+0",
+      "code": "insurance:x:0",
       "retain": true
     },
     {
       "name": "Free air ticket - Sydney to Bombay. - Keep until needed then surrender.",
-      "code": "freeticket+sydney:bombay:a",
+      "code": "freeticket:sydney:bombay:a",
       "retain": true
     },
     {
       "name": "Advanced one space. - Keep until needed.",
-      "code": "advance+1",
+      "code": "advance:1",
       "retain": true
     },
     {
       "name": "Free car ticket - One journey only. - Keep until needed then surrender.",
-      "code": "freeticket+l",
+      "code": "freeticket:x:x:l",
       "retain": true
     },
     {
       "name": "Free sea ticket - Casablanca to London. Keep until needed then surrender.",
-      "code": "freeticket+s",
+      "code": "freeticket:casablanca:london:s",
       "retain": true
     },
     {
       "name": "Free air ticket - Cape Town to Buenos Aires. Keep until needed then surrender.",
-      "code": "freeticket+a",
+      "code": "freeticket:capetown:buenosaires:a",
       "retain": true
     },
     {
@@ -2207,7 +2239,7 @@
     },
     {
       "name": "Free air ticket - One journey only. - Keep until needed then surrender.",
-      "code": "freeticket+a",
+      "code": "freeticket:x:x:a",
       "retain": true
     },
     {
@@ -2219,11 +2251,11 @@
   "risks": [
     {
       "name": "Customs - Pay duty on all your souvenirs - half the purchase price. - (Pay to bank in any currency)",
-      "code": "customs+half"
+      "code": "payhalf"
     },
     {
       "name": "All transport - Travel sickness. Miss one turn.",
-      "code": "miss+1"
+      "code": "miss:1"
     },
     {
       "name": "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected.",
@@ -2231,106 +2263,135 @@
     },
     {
       "name": "Plane diverted - Land in Perth (Australia). - Surrender ticket for present journey. - Purchase new ticket to leave.",
-      "code": "gonow+perth"
+      "code": "a/go:perth"
     },
     {
-      "name": "Shipwreck - Your lifeboat is washed ashore on Honolulu Island in the Pacific. - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "Shipwreck - Your lifeboat is washed ashore on Honolulu Island in the Pacific. - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "s/go:honolulu"
     },
     {
-      "name": "Cars only - Clear roads. - No traffic delays. - Proceed immediately to your destination."
+      "name": "Cars only - Clear roads. - No traffic delays. - Proceed immediately to your destination.",
+      "code": "l/dest"
     },
     {
-      "name": "Trains only - Taken wrong train. - You are stranded in Vladivokstok. - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "Trains only - Taken wrong train. - You are stranded in Vladivokstok. - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "r/go:vladivostok"
     },
     {
-      "name": "Ships and planes only - Hurricane. Seek refuse in Madagascar (E. Africa). - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "Ships and planes only - Hurricane. Seek refuse in Madagascar (E. Africa). - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "sa/go:madagascar"
     },
     {
-      "name": "Planes only - Technical stop. - Plane makes unscheduled landing on Christmas Island (Pacfic Ocean). - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "Planes only - Technical stop. - Plane makes unscheduled landing on Christmas Island (Pacfic Ocean). - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "a/go:christmasisland"
     },
     {
-      "name": "All transport - Excess baggage. - 100 kilos overweight. - Pay £40 (or equivalent in local currency)"
+      "name": "All transport - Excess baggage. - 100 kilos overweight. - Pay £40 (or equivalent in local currency)",
+      "code": "must:pay:x:4"
     },
     {
-      "name": "Ships and planes only - Hurricane. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Ships and planes only - Hurricane. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "sa/go:wellington"
     },
     {
-      "name": "Ships and planes only - Cyclone. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Ships and planes only - Cyclone. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "sa/go:wellington"
     },
     {
-      "name": "Ships and planes only - Severe storm. - You are diverted to Arica (S. America). - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Ships and planes only - Severe storm. - You are diverted to Arica (S. America). - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "sa/go:arica"
     },
     {
-      "name": "All transport - Travel sickness. - Return to point of departure for treatment. - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "All transport - Travel sickness. - Return to point of departure for treatment. - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "start"
     },
     {
-      "name": "Planes and ships only - Favourable weather. - Wind in your favour - Proceed immediately to your destination."
+      "name": "Planes and ships only - Favourable weather. - Wind in your favour - Proceed immediately to your destination.",
+      "code": "sa/dest"
     },
     {
-      "name": "Plane diverted by storms - Land of Christmas Island (Pacific Ocean). - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Plane diverted by storms - Land of Christmas Island (Pacific Ocean). - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "a/go:christmasisland"
     },
     {
-      "name": "Planes only - Headwinds. - Miss one turn through delay."
+      "name": "Planes only - Headwinds. - Miss one turn through delay.",
+      "code": "a/miss:1"
     },
     {
-      "name": "Car breakdown - Miss one turn."
+      "name": "Car breakdown - Miss one turn.",
+      "code": "l/miss:1"
     },
     {
-      "name": "Train derailed - Return to point of departure and start again. - No new ticket required."
+      "name": "Train derailed - Return to point of departure and start again. - No new ticket required.",
+      "code": "???"
     },
     {
-      "name": "Cablegram - Urgent Business - Return to London at once! - All tickets forfeited."
+      "name": "Cablegram - Urgent Business - Return to London at once! - All tickets forfeited.",
+      "code": "go:london"
     },
     {
-      "name": "All transport - You have lost your ticket! - A new one must be purchased before continuing journey."
+      "name": "All transport - You have lost your ticket! - A new one must be purchased before continuing journey.",
+      "code": "???"
     },
     {
-      "name": "Plane changes course - Diverted to Falkand Isles. - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Plane changes course - Diverted to Falkand Isles. - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "sa/go:wellington"
     },
     {
-      "name": "Ships only - Severe storm. - Your ship seeks refuge in Archangel (U.S.S.R.) - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Ships only - Severe storm. - Your ship seeks refuge in Archangel (U.S.S.R.) - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "s/go:archangel"
     },
     {
-      "name": "Train derailed - Return to point of departure and start again. - No new ticket required."
+      "name": "Train derailed - Return to point of departure and start again. - No new ticket required.",
+      "code": "r/startx"
     },
     {
-      "name": "Ships and planes only - Freak storm. - You are diverted to Mombasa (E. Africa). - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Ships and planes only - Freak storm. - You are diverted to Mombasa (E. Africa). - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "sa/go:mombasa"
     },
     {
-      "name": "Planes only - Cyclone. - You are diverted to La Paz in South America. - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Planes only - Cyclone. - You are diverted to La Paz in South America. - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "a/go:lapaz"
     },
     {
-      "name": "You look tired - Go to Bahamas for a rest. - Free passage. - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "You look tired - Go to Bahamas for a rest. - Free passage. - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "go:bahamas"
     },
     {
-      "name": "Car breakdown - Return to point of departure to obtain a new car. - No new ticket required."
+      "name": "Car breakdown - Return to point of departure to obtain a new car. - No new ticket required.",
+      "code": "???"
     },
     {
-      "name": "Trains only - Train ahead of schedule. - Proceed immediately to your destination."
+      "name": "Trains only - Train ahead of schedule. - Proceed immediately to your destination.",
+      "code": "r/dest"
     },
     {
-      "name": "You need a rest - Go to Honolulu (Pacific). - Free passage. - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "You need a rest - Go to Honolulu (Pacific). - Free passage. - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "go:honolulu"
     },
     {
-      "name": "Ships and planes only - Fog. - Diverted to Arica (S, America). - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Ships and planes only - Fog. - Diverted to Arica (S, America). - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "sa/go:arica"
     },
     {
-      "name": "Car crash - Return to point of departure and hire a new car. - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "Car crash - Return to point of departure and hire a new car. - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "l/start"
     },
     {
-      "name": "Train breakdown - Miss two turns whilst waiting for relief."
+      "name": "Train breakdown - Miss two turns whilst waiting for relief.",
+      "code": "r/miss:2"
     },
     {
-      "name": "Shipwreck - You washed ashore on Heard Island. - Surrender ticket for present journey. - Purchase new ticket to leave."
+      "name": "Shipwreck - You washed ashore on Heard Island. - Surrender ticket for present journey. - Purchase new ticket to leave.",
+      "code": "s/go:heardisland"
     },
     {
-      "name": "Ships and planes only - Severe storm. - Seek refuge in Ascension Island (Atlantic). - Surrender ticket for present journey. Purchase new ticket to leave."
+      "name": "Ships and planes only - Severe storm. - Seek refuge in Ascension Island (Atlantic). - Surrender ticket for present journey. Purchase new ticket to leave.",
+      "code": "sa/go:ascensionisland"
     },
     {
-      "name": "Customs - One souvenir confiscated."
-    },
-    {
-      "name": "Customs - Pay duty on all your souvenirs - Half the purchase price. - (Pay to Bank in any currency)"
+      "name": "Customs - One souvenir confiscated.",
+      "code": "must:declare"
     }
   ]
 }

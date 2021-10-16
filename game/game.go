@@ -9,39 +9,17 @@ import (
 
 const SouvenirPrice = 6
 
-// ErrNotStayed means haven't elected to stop moving
-var ErrNotStayed = errors.New("not stayed")
+// ErrNotStopped means haven't elected to stop moving
+var ErrNotStopped = errors.New("not stopped")
 var ErrMustDo = errors.New("must do things")
-
-type AboutAPlace struct {
-	Name     string
-	Currency string
-	Souvenir string
-	Prices   map[string]int
-}
-
-type AboutAPlayer struct {
-	Name      string
-	Money     map[string]int
-	Souvenirs []string
-	Lucks     map[int]string
-	Square    string
-	Dot       string
-	Ticket    string
-}
-
-type AboutATurn struct {
-	Player string
-	OnMap  bool
-	Stayed bool
-	Must   []string
-}
 
 type Game interface {
 	AddPlayer(name string, colour string) error
 	Start() (AboutATurn, error)
 	Turn(c Command) (string, error)
-	DescribePlace(from string) AboutAPlace
+
+	DescribeBank() AboutABank
+	DescribePlace(id string) AboutAPlace
 	DescribePlayer(name string) AboutAPlayer
 	DescribeTurn() AboutATurn
 }
@@ -59,6 +37,7 @@ type game struct {
 
 	bank    bank
 	players []player
+	turnNo  int
 	turn    *turn
 }
 
@@ -120,8 +99,8 @@ func NewGame(data GameData) Game {
 		souvenirs: map[string]int{},
 	}
 
-	for id := range g.currencies {
-		g.bank.money[id] = 10000
+	for id, currency := range g.currencies {
+		g.bank.money[id] = 0 * currency.Rate
 	}
 
 	for id, place := range g.places {
@@ -138,6 +117,201 @@ func NewGame(data GameData) Game {
 	// fmt.Printf("%#v\n", g)
 
 	return g
+}
+
+// AddPlayer adds a player
+func (g *game) AddPlayer(name string, colour string) error {
+	// XXX - unhardcode
+	baseCurrency := "st" // XXX sterling
+	baseMoney := 400
+	basePlace := "418,193" // XXX London
+
+	newp := player{
+		name:   name,
+		colour: colour,
+		money:  map[string]int{},
+		onDot:  basePlace,
+	}
+	g.moveMoney(g.bank.money, newp.money, baseCurrency, baseMoney)
+
+	g.players = append(g.players, newp)
+
+	return nil
+}
+
+// Start starts the game
+func (g *game) Start() (AboutATurn, error) {
+	if g.turn != nil {
+		return AboutATurn{}, errors.New("already started")
+	}
+	if len(g.players) < 1 {
+		return AboutATurn{}, errors.New("no players")
+	}
+
+	rand.Shuffle(len(g.players), func(i, j int) {
+		g.players[i], g.players[j] = g.players[j], g.players[i]
+	})
+
+	g.toNextPlayer()
+
+	return g.DescribeTurn(), nil
+}
+
+// Turn is current player doing things
+func (g *game) Turn(c Command) (string, error) {
+	t := g.turn
+	if t == nil {
+		return "", errors.New("game not started")
+	}
+
+	if !t.onMap {
+		// on track
+		switch c.Command {
+		case "dicemove":
+			return g.turn_dicemove_track(t)
+		case "useluck":
+			return g.turn_useluck_track(t, c.Options)
+		case "stop":
+			return g.turn_stop_track(t)
+		}
+	} else {
+		// on map
+		switch c.Command {
+		case "dicemove":
+			return g.turn_dicemove_map(t)
+		case "useluck":
+			return g.turn_useluck_map(t, c.Options)
+		case "stop":
+			return g.turn_stop_map(t)
+		}
+	}
+
+	switch c.Command {
+	case "buysouvenir":
+		return g.turn_buysouvenir(t)
+	case "buyticket":
+		return g.turn_buyticket(t, c.Options)
+	case "changemoney":
+		return g.turn_changemoney(t, c.Options)
+	case "pay":
+		return g.turn_pay(t, c.Options)
+	case "declare":
+		return g.turn_declare(t, c.Options)
+	case "takeluck":
+		return g.turn_takeluck(t)
+	case "gamble":
+		return g.turn_gamble(t, c.Options)
+	case "takerisk":
+		return g.turn_takerisk(t)
+	case "end":
+		if !t.stopped {
+			return "", ErrNotStopped
+		}
+		if len(t.must) > 0 {
+			return "", ErrMustDo
+		}
+		g.toNextPlayer()
+		return "turn ended", nil
+	}
+
+	return "", errors.New("bad command: " + c.Command)
+}
+
+func (g *game) moveMoney(from, to map[string]int, currency string, amount int) error {
+	from[currency] -= amount
+	to[currency] += amount
+
+	// TODO - should this check balances?
+	return nil
+}
+
+func (g *game) rollDice() int {
+	return rand.Intn(5) + 1
+}
+
+func (g *game) moveOnTrack(t *turn, n int) (string, error) {
+	tp := t.player.onSquare
+	tp1 := (tp + n) % len(g.squares)
+	if tp1 < tp {
+		// passed go
+		// XXX - unhardcode
+		g.moveMoney(g.bank.money, t.player.money, "tc", 200)
+	}
+	t.player.onSquare = tp1
+	t.moved += n
+
+	square := g.squares[t.player.onSquare]
+
+	return fmt.Sprintf("moved %d to %s", n, square.Name), nil
+}
+
+func (g *game) jumpOnTrack(t *turn, to string, forward bool) error {
+	tp := t.player.onSquare
+	if forward {
+		for {
+			tp = (tp + 1) % len(g.squares)
+			square := g.squares[tp]
+			if tp == 0 {
+				// passed go
+				// XXX - duplicate
+				// XXX - unhardcode
+				g.moveMoney(g.bank.money, t.player.money, "tc", 200)
+			}
+			t.moved += 1
+			if square.Type == to {
+				t.player.onSquare = tp
+				return nil
+			}
+		}
+	} else {
+		for {
+			tp = tp - 1
+			if tp < 0 {
+				tp = len(g.squares) - 1
+			}
+			t.moved -= 1
+			square := g.squares[tp]
+			if square.Type == to {
+				t.player.onSquare = tp
+				return nil
+			}
+		}
+	}
+}
+
+func (g *game) moveOnMap(t *turn, n int) (string, error) {
+	need := len(t.player.ticket.route)
+	if n > need {
+		// overshot
+		return fmt.Sprintf("tried to move %d, overshot", n), nil
+	} else if n == need {
+		// reached
+		dest := t.player.ticket.to
+		t.player.onDot = t.player.ticket.route[need-1]
+		t.player.ticket = nil
+		t.moved += n
+		// stop - there are no possible actions
+		t.stopped = true
+		// new city, can buy souvenir again
+		t.player.hasBought = false
+		// XXX - is this always the end of the turn?
+		return fmt.Sprintf("moved %d, reached %s", n, dest), nil
+	} else {
+		t.player.onDot = t.player.ticket.route[n-1]
+		t.player.ticket.route = t.player.ticket.route[n:]
+		t.moved += n
+
+		return fmt.Sprintf("moved %d to %s", n, t.player.onDot), nil
+	}
+}
+
+func (g *game) jumpOnMap(t *turn, dest string) error {
+	destDot := g.places[dest].Dot
+	t.player.onDot = destDot
+	// new city, can buy souvenir again
+	// XXX duplicate
+	t.player.hasBought = false
+	return nil
 }
 
 // finds a price and a currency, with the price converted into that currency
@@ -157,379 +331,36 @@ func (g *game) findPrice(from, to, modes string) (currency string, n int) {
 	return pl.Currency, price
 }
 
-func (g *game) AddPlayer(name string, colour string) error {
-	// TODO - colour assign
-
-	newp := player{
-		name:   name,
-		colour: colour,
-		money: map[string]int{
-			"st": 400, // XXX sterling
-		},
-		onDot: "418,193", // XXX London
-	}
-	g.players = append(g.players, newp)
-
-	return nil
-}
-
-func (g *game) Start() (AboutATurn, error) {
-	if g.turn != nil {
-		return AboutATurn{}, errors.New("already started")
-	}
-	if len(g.players) < 1 {
-		return AboutATurn{}, errors.New("no players")
-	}
-
-	g.turn = &turn{
-		player: 0,
-	}
-
-	return g.DescribeTurn(), nil
-}
-
-// Turn is current player doing things
-func (g *game) Turn(c Command) (string, error) {
-	if g.turn == nil {
-		return "", errors.New("game not started")
-	}
-
-	p := &g.players[g.turn.player]
-
-	if !g.turn.onMap {
-		// on track
-		switch c.Command {
-		case "dicemove":
-			return g.turn_dicemove_track(p)
-		case "useluck":
-			return g.turn_useluck_track(p)
-		case "stay":
-			return g.turn_stay_track(p)
-		case "buyticket":
-			return g.turn_buyticket(p, c.Options)
-		case "changemoney":
-			return g.turn_changemoney(p, c.Options)
-		case "buysouvenir":
-			return g.turn_buysouvenir(p)
-		case "docustoms":
-			return "", errors.New("TODO")
-		case "payfine":
-			return "", errors.New("TODO")
-		case "takeluck":
-			return g.turn_takeluck(p)
-		}
-	} else {
-		// on map
-		switch c.Command {
-		case "dicemove":
-			return g.turn_dicemove_map(p)
-		case "useluck":
-			return g.turn_useluck_map(p)
-		case "takerisk":
-			return g.turn_takerisk(p)
-		case "stay":
-			return g.turn_stay_map(p)
-		}
-	}
-
-	switch c.Command {
-	case "end":
-		if !g.turn.stayed {
-			return "", ErrNotStayed
-		}
-		if len(g.turn.must) > 0 {
-			return "", ErrMustDo
-		}
-		g.toNextPlayer()
-		return "turn ended", nil
-	}
-
-	return "", errors.New("bad command")
-}
-
-func (g *game) turn_dicemove_track(p *player) (string, error) {
-	if g.turn.stayed {
-		return "", errors.New("moving is over")
-	}
-	if g.turn.diced {
-		return "", errors.New("already used dice")
-	}
-
-	roll := rand.Intn(5) + 1
-	tp := p.onSquare
-	tp1 := (tp + roll) % len(g.squares)
-	if tp1 < tp {
-		// passed go
-		p.money["tc"] += 200
-	}
-	p.onSquare = tp1
-	g.turn.moved += roll
-	g.turn.diced = true
-
-	square := g.squares[p.onSquare]
-
-	return fmt.Sprintf("moved %d to %s", roll, square.Name), nil
-}
-
-func (g *game) turn_useluck_track(p *player) (string, error) {
-	// TODO
-	return "", errors.New("TODO")
-}
-
-func (g *game) turn_stay_track(p *player) (string, error) {
-	if g.turn.stayed {
-		return "", errors.New("already stayed")
-	}
-	if g.turn.moved == 0 {
-		return "", errors.New("must move")
-	}
-
-	g.turn.stayed = true
-
-	// TODO - automatic actions
-	square := g.squares[p.onSquare]
-	if square.hasOption("takeluck") {
-		g.turn.must = append(g.turn.must, "takeluck")
-	}
-
-	return "stayed at " + square.Name, nil
-}
-
-func (g *game) turn_buyticket(p *player, options string) (string, error) {
-	if !g.turn.stayed {
-		return "", ErrNotStayed
-	}
-
-	from := g.dots[p.onDot].Place
-	var to, modes string
-	_, err := fmt.Sscan(options, &to, &modes)
-	if err != nil {
-		return "", errors.New("buyticket <to> <mode>")
-	}
-
-	if p.ticket != nil {
-		return "", errors.New("already have ticket")
-	}
-
-	square := g.squares[p.onSquare]
-	// loop, because multimode is multiple letters
-	canBuy := false
-	for _, mode0 := range modes {
-		if square.hasOption("buyticket+" + string(mode0)) {
-			canBuy = true
-		}
-	}
-	if !canBuy {
-		return "", errors.New("not here")
-	}
-
-	currency, price := g.findPrice(from, to, modes)
-	if price < 0 {
-		return "", fmt.Errorf("no price %s %s %s", from, to, modes)
-	}
-
-	route := g.FindRoute(from, to, modes)
-	if len(route) < 2 {
-		return "", fmt.Errorf("no route %s %s %s", from, to, modes)
-	}
-	// should be already at the first dot
-	route = route[1:]
-
-	haveMoney := p.money[currency]
-	if haveMoney < price {
-		return "", errors.New("not enough money")
-	}
-
-	p.money[currency] -= price
-	p.ticket = &ticket{
-		mode:  modes,
-		from:  from,
-		to:    to,
-		route: route,
-	}
-
-	return "bought ticket", nil
-}
-
-func (g *game) turn_changemoney(p *player, options string) (string, error) {
-	if !g.turn.stayed {
-		return "", ErrNotStayed
-	}
-
-	var from string
-	var amount int
-	_, err := fmt.Sscan(options, &from, &amount)
-	if err != nil {
-		return "", errors.New("changemoney <from> <amount(from)>")
-	}
-	to := g.places[g.dots[p.onDot].Place].Currency
-
-	square := g.squares[p.onSquare]
-	if !square.hasOption("changemoney") {
-		return "", errors.New("not here")
-	}
-
-	haveMoney := p.money[from]
-	if haveMoney < amount {
-		return "", errors.New("not enough money")
-	}
-
-	fromRate := g.currencies[from].Rate
-	toRate := g.currencies[to].Rate
-
-	toAmount := (amount * toRate) / fromRate
-
-	p.money[from] -= amount
-	p.money[to] += toAmount
-
-	return "changed money", nil
-}
-
-func (g *game) turn_buysouvenir(p *player) (string, error) {
-	// XXX - when is this allowed?!?
-	if !g.turn.stayed {
-		return "", ErrNotStayed
-	}
-
-	// TODO - if already bought one in this stay -> error
-
-	currency := g.places[g.dots[p.onDot].Place].Currency
-	rate := g.currencies[currency].Rate
-	price := SouvenirPrice * rate
-
-	haveMoney := p.money[currency]
-	if haveMoney < price {
-		return "", errors.New("not enough money")
-	}
-
-	// TODO
-
-	return "", errors.New("TODO")
-}
-
-func (g *game) turn_takeluck(p *player) (string, error) {
-	if !g.turn.stayed {
-		return "", ErrNotStayed
-	}
-
-	must, changed := stringListWithout(g.turn.must, "takeluck")
-	if !changed {
-		return "", errors.New("not now")
-	}
-
-	g.turn.must = must
-
-	cardId, pile := g.luckPile.Take()
-	if cardId < 0 {
-		return "no luck cards", nil
-	}
-	g.luckPile = pile
-
-	card := g.lucks[cardId]
-	if card.Retain {
-		p.luckCards = append(p.luckCards, cardId)
-		return fmt.Sprintf("got: %d - %s", cardId, card.Name), nil
-	}
-
-	// TODO - auto card actions
-	g.luckPile = g.luckPile.Return(cardId)
-
-	return fmt.Sprintf("should have done: %s", card.Name), nil
-}
-
-func (g *game) turn_dicemove_map(p *player) (string, error) {
-	if g.turn.stayed {
-		return "", errors.New("already stayed")
-	}
-	if g.turn.diced {
-		return "", errors.New("already used dice")
-	}
-
-	roll := rand.Intn(5) + 1
-	g.turn.diced = true
-
-	need := len(p.ticket.route)
-	if roll > need {
-		// overshot
-		return fmt.Sprintf("rolled %d, overshot", roll), nil
-	} else if roll == need {
-		// reached
-		dest := p.ticket.to
-		p.onDot = p.ticket.route[need-1]
-		p.ticket = nil
-		g.turn.moved += roll
-		// stay - there are no possible actions
-		g.turn.stayed = true
-		// XXX - is this always the end of the turn?
-		return fmt.Sprintf("rolled %d, reached %s", roll, dest), nil
-	} else {
-		p.onDot = p.ticket.route[roll-1]
-		p.ticket.route = p.ticket.route[roll:]
-		g.turn.moved += roll
-
-		return fmt.Sprintf("moved %d to %s", roll, p.onDot), nil
-	}
-}
-
-func (g *game) turn_useluck_map(p *player) (string, error) {
-	return "", errors.New("TODO")
-}
-
-func (g *game) turn_takerisk(p *player) (string, error) {
-	must, changed := stringListWithout(g.turn.must, "takerisk")
-	if !changed {
-		return "", errors.New("not now")
-	}
-
-	g.turn.must = must
-
-	cardId, pile := g.riskPile.Take()
-	if cardId < 0 {
-		return "no risk cards", nil
-	}
-	g.riskPile = pile
-
-	card := g.risks[cardId]
-
-	// TODO - everything
-
-	g.riskPile = g.riskPile.Return(cardId)
-
-	return fmt.Sprintf("should have done: %s", card.Name), nil
-}
-
-func (g *game) turn_stay_map(p *player) (string, error) {
-	if g.turn.stayed {
-		return "", errors.New("already stayed")
-	}
-	if g.turn.moved == 0 && !g.turn.diced {
-		return "", errors.New("must try to move")
-	}
-
-	g.turn.stayed = true
-
-	onDot := g.dots[p.onDot]
-	if onDot.Danger {
-		g.turn.must = append(g.turn.must, "takerisk")
-	}
-
-	return "stayed at " + p.onDot, nil
-}
-
 func (g *game) toNextPlayer() {
-	np := g.turn.player
+	np := -1
+	if g.turn != nil {
+		np = g.turn.playerId
+	}
+
 	for {
+		g.turnNo++
+
 		np1 := (np + 1) % len(g.players)
-		p1 := g.players[np1]
+		p1 := &g.players[np1]
 		if p1.missTurns > 0 {
 			p1.missTurns--
 			continue
 		}
 		g.turn = &turn{
-			player: np1,
-			onMap:  g.players[np1].ticket != nil,
+			no:       g.turnNo,
+			playerId: np1,
+			player:   p1,
+			onMap:    p1.ticket != nil,
 		}
 		return
+	}
+}
+
+func (g *game) DescribeBank() AboutABank {
+	// XXX - returns real money, souvenirs
+	return AboutABank{
+		Money:     g.bank.money,
+		Souvenirs: g.bank.souvenirs,
 	}
 }
 
@@ -580,8 +411,10 @@ func (g *game) DescribePlayer(name string) AboutAPlayer {
 		ticket = fmt.Sprintf("%s -> %s by %s", player.ticket.from, player.ticket.to, player.ticket.mode)
 	}
 
+	// XXX - returns real money, souvenirs
 	return AboutAPlayer{
 		Name:      name,
+		Colour:    player.colour,
 		Money:     player.money,
 		Souvenirs: player.souvenirs,
 		Lucks:     lucks,
@@ -596,13 +429,15 @@ func (g *game) DescribeTurn() AboutATurn {
 		return AboutATurn{}
 	}
 
-	p := &g.players[g.turn.player]
+	p := g.turn.player
 
 	return AboutATurn{
-		Player: p.name,
-		OnMap:  g.turn.onMap,
-		Stayed: g.turn.stayed,
-		Must:   g.turn.must,
+		Number:  g.turn.no,
+		Player:  p.name,
+		Colour:  p.colour,
+		OnMap:   g.turn.onMap,
+		Stopped: g.turn.stopped,
+		Must:    g.turn.must,
 	}
 }
 
@@ -670,11 +505,19 @@ func (g *game) FindRoute(from, to, modes string) []string {
 }
 
 type turn struct {
-	player int
-	onMap  bool
-	diced  bool
-	moved  int
-	stayed bool
+	// static state
+	no       int
+	playerId int
+	player   *player // XXX - turn is not serializable
+	onMap    bool
+
+	// changing state
+	diced   bool
+	moved   int
+	stopped bool
+
+	// what has happened in the turn
+	// log []string
 
 	// things that must be done before the turn can end
 	must []string
@@ -692,6 +535,7 @@ type player struct {
 	missTurns int
 	onSquare  int
 	onDot     string
+	hasBought bool
 
 	money     map[string]int
 	souvenirs []string
