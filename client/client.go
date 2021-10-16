@@ -1,12 +1,11 @@
-package main
+package client
 
 import (
 	"fmt"
 	"io"
-	"math/rand"
 	"strings"
-	"time"
 
+	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
 
 	rl "github.com/chzyer/readline"
@@ -29,16 +28,28 @@ func col(s string) string {
 	}
 }
 
-func main() {
+type Client interface {
+	Run() error
+}
 
-	data := game.LoadJson()
+func NewClient(name string, reqCh comms.GameReqChan) Client {
+	return &client{
+		name:  name,
+		reqCh: reqCh,
+	}
+}
 
-	rand.Seed(time.Now().Unix())
-	g := game.NewGame(data)
+type client struct {
+	name  string
+	reqCh comms.GameReqChan
+}
 
-	g.AddPlayer("phil", "red")
-	// g.AddPlayer("bear", "blue")
+func (c *client) Run() error {
+	c.main()
+	return nil
+}
 
+func (c *client) main() {
 	completer := rl.NewPrefixCompleter(
 		rl.PcItem("addplayer"),
 		rl.PcItem("start"),
@@ -64,8 +75,6 @@ func main() {
 		),
 	)
 
-	// "\033[31m»\033[0m "
-
 	l, err := rl.NewEx(&rl.Config{
 		Prompt:            "» ",
 		HistoryFile:       "hist.txt",
@@ -79,7 +88,9 @@ func main() {
 	}
 	defer l.Close()
 
-	gameRepl(l, g)
+	proxy := NewGameProxy(c)
+
+	c.gameRepl(l, proxy)
 }
 
 func printSummary(state game.AboutATurn) {
@@ -132,7 +143,7 @@ func printPlayer(state game.AboutAPlayer) {
 	fmt.Printf("Ticket:    %s\n", state.Ticket)
 }
 
-func gameRepl(l *rl.Instance, g game.Game) {
+func (c *client) gameRepl(l *rl.Instance, g GameClient) {
 	player := ""
 
 	updatePlayer := func(s game.AboutATurn) {
