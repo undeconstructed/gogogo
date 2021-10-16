@@ -1,52 +1,106 @@
 package comms
 
-import "github.com/undeconstructed/gogogo/game"
+import (
+	"encoding/gob"
+	"errors"
 
-type GameReqChan chan interface{}
+	"github.com/undeconstructed/gogogo/game"
+)
 
-type GameReq struct {
-	Who string
+func init() {
+	gob.Register(ReqConnect{})
+	gob.Register(ResConnect{})
+	gob.Register(GameReq{})
+	gob.Register(GameRes{})
+	gob.Register(GameUpdate{})
+	gob.Register(TextMessage{})
+	gob.Register(ReqStart{})
+	gob.Register(ResStart{})
+	gob.Register(ReqTurn{})
+	gob.Register(ResTurn{})
+	gob.Register(ReqDescribeBank{})
+	gob.Register(game.AboutABank{})
+	gob.Register(ReqDescribePlace{})
+	gob.Register(game.AboutAPlace{})
+	gob.Register(ReqDescribePlayer{})
+	gob.Register(game.AboutAPlayer{})
+	gob.Register(ReqDescribeTurn{})
+	gob.Register(game.AboutATurn{})
 }
 
-type ReqAddPlayer struct {
+func ReError(errString string) error {
+	switch errString {
+	case "":
+		return nil
+	case game.ErrNotStopped.Error():
+		return game.ErrNotStopped
+	case game.ErrMustDo.Error():
+		return game.ErrMustDo
+	default:
+		return errors.New(errString)
+	}
+}
+
+type GameMsg struct {
+	Msg interface{}
+}
+
+type GameChan chan GameMsg
+
+type ReqConnect struct {
 	Name   string
 	Colour string
-	Rep    chan error
+}
+
+type ResConnect struct {
+	Err string
+}
+
+type TextMessage struct {
+	Text string
+}
+
+type GameReq struct {
+	ID  int
+	Req interface{}
+}
+
+type GameRes struct {
+	ID  int
+	Res interface{}
+}
+
+type GameUpdate struct {
+	Text string
 }
 
 type ReqStart struct {
-	Rep chan ResStart
 }
 
 type ResStart struct {
 	Res game.AboutATurn
-	Err error
+	Err string
 }
 
 type ReqTurn struct {
 	Command game.Command
-	Rep     chan ResTurn
 }
 
 type ResTurn struct {
 	Res string
-	Err error
+	Err string
 }
 
 type ReqDescribeBank struct {
-	Rep chan game.AboutABank
 }
 
 type ReqDescribePlace struct {
-	Id  string
-	Rep chan game.AboutAPlace
+	Id string
 }
 
 type ReqDescribePlayer struct {
 	Name string
-	Rep  chan game.AboutAPlayer
 }
 
 type ReqDescribeTurn struct {
-	Rep chan game.AboutATurn
 }

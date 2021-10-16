@@ -1,8 +1,10 @@
 package client
 
 import (
+	"encoding/gob"
 	"fmt"
 	"io"
+	"net"
 	"strings"
 
 	"github.com/undeconstructed/gogogo/comms"
@@ -32,26 +34,151 @@ type Client interface {
 	Run() error
 }
 
-func NewClient(name string, reqCh comms.GameReqChan) Client {
+func NewClient(name, colour string, server string) Client {
+	locCh := make(chan reqRep)
 	return &client{
-		name:  name,
-		reqCh: reqCh,
+		name:   name,
+		colour: colour,
+		locCh:  locCh,
+		server: server,
+		reqs:   map[int]reqRep{},
 	}
 }
 
+type reqRep struct {
+	req comms.GameReq
+	rep chan interface{}
+}
+
 type client struct {
-	name  string
-	reqCh comms.GameReqChan
+	name   string
+	colour string
+	server string
+
+	locCh   chan reqRep
+	upCh    comms.GameChan
+	downCh  comms.GameChan
+	updates []string
+
+	reqNo int
+	reqs  map[int]reqRep
 }
 
 func (c *client) Run() error {
-	c.main()
+	conn, err := net.Dial("unix", c.server)
+	if err != nil {
+		return err
+	}
+
+	upGob := gob.NewEncoder(conn)
+	downGob := gob.NewDecoder(conn)
+
+	err = upGob.Encode(comms.ReqConnect{
+		Name:   c.name,
+		Colour: c.colour,
+	})
+	if err != nil {
+		return err
+	}
+	res1 := comms.ResConnect{}
+	err = downGob.Decode(&res1)
+	if err != nil {
+		return err
+	} else {
+		err := comms.ReError(res1.Err)
+		if err != nil {
+			return err
+		}
+	}
+
+	c.upCh = make(comms.GameChan)
+	c.downCh = make(comms.GameChan)
+
+	go func() {
+		// read upCh, write to conn
+		for req := range c.upCh {
+			err := upGob.Encode(&req)
+			if err != nil {
+				fmt.Printf("gob encode error: %v\n", err)
+				break
+			}
+		}
+	}()
+
+	go func() {
+		defer close(c.downCh)
+
+		// read conn, write to downCh
+		for {
+			msg := comms.GameMsg{}
+			err := downGob.Decode(&msg)
+			if err != nil {
+				fmt.Printf("gob decode error: %v\n", err)
+				break
+			}
+			c.downCh <- msg
+		}
+	}()
+
+	proxy := NewGameProxy(c)
+
+	stopUI, err := c.startUI(proxy)
+	if err != nil {
+		return err
+	}
+	defer stopUI()
+
+	// this is the client's main loop
+loop:
+	for {
+		select {
+		case rr, ok := <-c.locCh:
+			if !ok {
+				break loop
+			}
+			rr.req.ID = c.reqNo
+			c.reqs[rr.req.ID] = rr
+			c.upCh <- comms.GameMsg{rr.req}
+		case msg, ok := <-c.downCh:
+			if !ok {
+				fmt.Printf("down channel closed\n")
+				break loop
+			}
+			switch m := msg.Msg.(type) {
+			case comms.TextMessage:
+				c.updates = append(c.updates, m.Text)
+			case comms.GameRes:
+				id := m.ID
+				rr := c.reqs[id]
+				delete(c.reqs, id)
+				rr.rep <- m.Res
+			case comms.GameUpdate:
+				fmt.Printf("got update: %s\n", m.Text)
+			}
+		}
+	}
+
 	return nil
 }
 
-func (c *client) main() {
+func (c *client) sendReq(msg interface{}) chan interface{} {
+	rr := reqRep{comms.GameReq{Req: msg}, make(chan interface{}, 1)}
+	c.locCh <- rr
+	return rr.rep
+}
+
+func (c *client) printUpdates() {
+	// XXX - race
+	for _, u := range c.updates {
+		fmt.Println(u)
+	}
+}
+
+func (c *client) startUI(g GameClient) (func() error, error) {
 	completer := rl.NewPrefixCompleter(
-		rl.PcItem("addplayer"),
+		rl.PcItem("send"),
+		rl.PcItem("updates"),
+		// rl.PcItem("addplayer"),
 		rl.PcItem("start"),
 		// rl.PcItem("draw"),
 		rl.PcItem("describebank"),
@@ -84,13 +211,16 @@ func (c *client) main() {
 		HistorySearchFold: true,
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	defer l.Close()
 
-	proxy := NewGameProxy(c)
+	go func() {
+		defer l.Close()
+		c.gameRepl(l, g)
+		close(c.locCh)
+	}()
 
-	c.gameRepl(l, proxy)
+	return l.Close, nil
 }
 
 func printSummary(state game.AboutATurn) {
@@ -143,7 +273,7 @@ func printPlayer(state game.AboutAPlayer) {
 	fmt.Printf("Ticket:    %s\n", state.Ticket)
 }
 
-func (c *client) gameRepl(l *rl.Instance, g GameClient) {
+func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 	player := ""
 
 	updatePlayer := func(s game.AboutATurn) {
@@ -195,19 +325,23 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) {
 		}
 
 		switch {
-		case cmd == "addplayer":
-			var name, colour string
-			_, err := fmt.Sscan(rest, &name, &colour)
-			if err != nil {
-				fmt.Printf("addplayer <name> <colour>\n")
-				continue
-			}
-
-			err = g.AddPlayer(name, colour)
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-				continue
-			}
+		// case cmd == "addplayer":
+		// 	var name, colour string
+		// 	_, err := fmt.Sscan(rest, &name, &colour)
+		// 	if err != nil {
+		// 		fmt.Printf("addplayer <name> <colour>\n")
+		// 		continue
+		// 	}
+		//
+		// 	err = g.AddPlayer(name, colour)
+		// 	if err != nil {
+		// 		fmt.Printf("Error: %v\n", err)
+		// 		continue
+		// 	}
+		case cmd == "send":
+			c.upCh <- comms.GameMsg{comms.TextMessage{rest}}
+		case cmd == "updates":
+			c.printUpdates()
 		case cmd == "start":
 			state, err := g.Start()
 			if err != nil {
@@ -325,4 +459,6 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) {
 			fmt.Printf("unknown\n")
 		}
 	}
+
+	return nil
 }
