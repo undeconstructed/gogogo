@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -13,7 +14,7 @@ import (
 type UserMsg struct {
 	Who string
 	Msg comms.GameMsg
-	Rep comms.GameChan
+	Rep chan interface{}
 }
 
 type ConnectMsg struct {
@@ -28,13 +29,12 @@ type DisconnectMsg struct {
 }
 
 type clientBundle struct {
-	downCh comms.GameChan
+	downCh chan interface{}
 }
 
 // Server serves just one game, that's enough
 type Server interface {
 	Run() error
-	LocalConnect(addr string) (comms.GameChan, comms.GameChan, error)
 }
 
 func NewServer(game game.Game) Server {
@@ -95,17 +95,35 @@ func (s *server) Run() error {
 			switch inner := gameMsg.Msg.(type) {
 			case comms.TextMessage:
 				text := msg.Who + " says " + inner.Text
-				out := comms.TextMessage{text}
-				for _, c := range clients {
-					c.downCh <- comms.GameMsg{out}
+				out := comms.TextMessage{Text: text}
+				for n, c := range clients {
+					if n == msg.Who {
+						continue
+					}
+					c.downCh <- out
 				}
 			case comms.GameReq:
-				s.handleRequest(msg, inner)
+				res := s.handleRequest(msg, inner)
+				msg.Rep <- comms.GameRes{ID: inner.ID, Res: res}
+				// TODO - real notification system
+				if t, ok := res.(comms.ResTurn); ok {
+					if t.Res != "" {
+						text := msg.Who + " gets " + t.Res
+						out := comms.TextMessage{Text: text}
+						for n, c := range clients {
+							if n == msg.Who {
+								continue
+							}
+							c.downCh <- out
+						}
+					}
+				}
 			}
+
+			// after every single user message ?!
 			state := s.game.DescribeTurn()
 			for _, c := range clients {
-				// XXX - lost sender info
-				c.downCh <- comms.GameMsg{state}
+				c.downCh <- state
 			}
 		}
 	}
@@ -113,26 +131,28 @@ func (s *server) Run() error {
 	return nil
 }
 
-func (s *server) handleRequest(msg UserMsg, req comms.GameReq) {
+func (s *server) handleRequest(msg UserMsg, req comms.GameReq) interface{} {
 	switch umsg := req.Req.(type) {
 	case comms.ReqStart:
 		res, err := s.game.Start()
-		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, comms.ResStart{res, errString(err)}}}
+		return comms.ResStart{Res: res, Err: errString(err)}
 	case comms.ReqTurn:
 		res, err := s.game.Turn(msg.Who, umsg.Command)
-		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, comms.ResTurn{res, errString(err)}}}
+		return comms.ResTurn{Res: res, Err: errString(err)}
 	case comms.ReqDescribeBank:
 		res := s.game.DescribeBank()
-		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, res}}
+		return res
 	case comms.ReqDescribePlace:
 		res := s.game.DescribePlace(umsg.Id)
-		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, res}}
+		return res
 	case comms.ReqDescribePlayer:
 		res := s.game.DescribePlayer(umsg.Name)
-		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, res}}
+		return res
 	case comms.ReqDescribeTurn:
 		res := s.game.DescribeTurn()
-		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, res}}
+		return res
+	default:
+		return errors.New("unknown request")
 	}
 }
 
@@ -140,7 +160,7 @@ func (s *server) remoteConnect(conn net.Conn) error {
 	addr := conn.RemoteAddr()
 	fmt.Printf("connection from: %s\n", addr)
 
-	downCh := make(comms.GameChan)
+	downCh := make(chan interface{}, 100)
 
 	upGob := gob.NewDecoder(conn)
 	downGob := gob.NewEncoder(conn)
@@ -164,7 +184,7 @@ func (s *server) remoteConnect(conn net.Conn) error {
 			err := <-resCh
 			if err != nil {
 				fmt.Printf("refusing %s\n", addr)
-				downGob.Encode(comms.ResConnect{errString(err)})
+				downGob.Encode(comms.ResConnect{Err: errString(err)})
 				return
 			}
 
@@ -172,9 +192,10 @@ func (s *server) remoteConnect(conn net.Conn) error {
 		}
 
 		go func() {
-			for res := range downCh {
-				// read downCh, write to conn
-				err := downGob.Encode(&res)
+			// read downCh, write to conn
+			for m := range downCh {
+				msg := comms.GameMsg{Msg: m}
+				err := downGob.Encode(msg)
 				if err != nil {
 					fmt.Printf("gob encode error: %v\n", err)
 					break
@@ -199,45 +220,4 @@ func (s *server) remoteConnect(conn net.Conn) error {
 	}()
 
 	return nil
-}
-
-func (s *server) LocalConnect(addr string) (comms.GameChan, comms.GameChan, error) {
-	fmt.Printf("connection from: %s\n", addr)
-
-	upCh := make(comms.GameChan)
-	downCh := make(comms.GameChan)
-
-	go func() {
-		defer fmt.Printf("connection gone: %s\n", addr)
-		defer close(upCh)
-
-		var name, colour string
-
-		msg1 := <-upCh
-		if r, ok := msg1.Msg.(comms.ReqConnect); ok {
-			name = r.Name
-			colour = r.Colour
-
-			resCh := make(chan error)
-			s.coreCh <- ConnectMsg{name, colour, clientBundle{downCh}, resCh}
-			err := <-resCh
-			if err != nil {
-				fmt.Printf("refusing %s\n", addr)
-				downCh <- comms.GameMsg{comms.ResConnect{errString(err)}}
-				return
-			}
-			downCh <- comms.GameMsg{comms.ResConnect{}}
-		} else {
-			fmt.Printf("bad first message from %s\n", addr)
-			return
-		}
-
-		for msg := range upCh {
-			s.coreCh <- UserMsg{name, msg, downCh}
-		}
-
-		s.coreCh <- DisconnectMsg{name}
-	}()
-
-	return upCh, downCh, nil
 }

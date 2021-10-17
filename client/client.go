@@ -1,10 +1,13 @@
 package client
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"os/signal"
 	"strings"
 
 	"github.com/undeconstructed/gogogo/comms"
@@ -45,13 +48,15 @@ type Client interface {
 }
 
 func NewClient(name, colour string, server string) Client {
+	updateCh := make(chan string)
 	locCh := make(chan reqRep)
 	return &client{
-		name:   name,
-		colour: colour,
-		locCh:  locCh,
-		server: server,
-		reqs:   map[int]reqRep{},
+		name:     name,
+		colour:   colour,
+		locCh:    locCh,
+		server:   server,
+		updateCh: updateCh,
+		reqs:     map[int]reqRep{},
 	}
 }
 
@@ -65,11 +70,13 @@ type client struct {
 	colour string
 	server string
 
-	locCh   chan reqRep
-	upCh    comms.GameChan
-	downCh  comms.GameChan
-	updates []string
-	turn    game.AboutATurn
+	locCh  chan reqRep
+	upCh   chan interface{}
+	downCh chan interface{}
+	turn   game.AboutATurn
+
+	updateCh chan string
+	updates  []string
 
 	reqNo int
 	reqs  map[int]reqRep
@@ -102,15 +109,16 @@ func (c *client) Run() error {
 		}
 	}
 
-	c.upCh = make(comms.GameChan)
+	c.upCh = make(chan interface{}, 1)
 	defer close(c.upCh)
-	c.downCh = make(comms.GameChan)
+	c.downCh = make(chan interface{}, 1)
 
 	go func() {
 		// read upCh, write to conn
 	loop:
 		for req := range c.upCh {
-			err := upGob.Encode(&req)
+			msg := comms.GameMsg{Msg: req}
+			err := upGob.Encode(msg)
 			if err != nil {
 				fmt.Printf("gob encode error: %v\n", err)
 				break loop
@@ -132,7 +140,7 @@ func (c *client) Run() error {
 				}
 				break loop
 			}
-			c.downCh <- msg
+			c.downCh <- msg.Msg
 		}
 	}()
 
@@ -154,17 +162,23 @@ loop:
 			}
 			rr.req.ID = c.reqNo
 			c.reqs[rr.req.ID] = rr
-			c.upCh <- comms.GameMsg{rr.req}
+			c.upCh <- rr.req
 		case msg, ok := <-c.downCh:
 			if !ok {
 				fmt.Printf("down channel closed\n")
 				break loop
 			}
-			switch m := msg.Msg.(type) {
+
+			switch m := msg.(type) {
 			case game.AboutATurn:
 				c.setTurn(m)
 			case comms.TextMessage:
-				c.updates = append(c.updates, m.Text)
+				select {
+				case c.updateCh <- m.Text:
+					// if ui is following
+				default:
+					c.updates = append(c.updates, m.Text)
+				}
 			case comms.GameRes:
 				id := m.ID
 				rr := c.reqs[id]
@@ -201,9 +215,22 @@ func (c *client) printUpdates() {
 	}
 }
 
+func (c *client) followUpdates() {
+	ctx, _ := signal.NotifyContext(context.TODO(), os.Interrupt)
+	for {
+		select {
+		case m := <-c.updateCh:
+			fmt.Println(">", m)
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
 func (c *client) startUI(g GameClient) (func() error, error) {
 	completer := rl.NewPrefixCompleter(
 		rl.PcItem("send"),
+		rl.PcItem("follow"),
 		rl.PcItem("start"),
 		rl.PcItem("describe",
 			rl.PcItem("bank"),
@@ -356,6 +383,8 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 			line = "describe bank"
 		} else if line == "l" {
 			line = "describe place " + line[2:]
+		} else if line == "f" {
+			line = "follow"
 		}
 
 		parts := strings.SplitN(strings.TrimSpace(line), " ", 2)
@@ -367,7 +396,10 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 
 		switch cmd {
 		case "send":
-			c.upCh <- comms.GameMsg{comms.TextMessage{rest}}
+			c.upCh <- comms.TextMessage{Text: rest}
+		case "follow":
+			c.printUpdates()
+			c.followUpdates()
 		case "start":
 			err := g.Start()
 			if err != nil {
