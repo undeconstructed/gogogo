@@ -94,12 +94,18 @@ func (s *server) Run() error {
 			gameMsg := msg.Msg
 			switch inner := gameMsg.Msg.(type) {
 			case comms.TextMessage:
+				text := msg.Who + " says " + inner.Text
+				out := comms.TextMessage{text}
 				for _, c := range clients {
-					// XXX - lost sender info
-					c.downCh <- comms.GameMsg{inner}
+					c.downCh <- comms.GameMsg{out}
 				}
 			case comms.GameReq:
 				s.handleRequest(msg, inner)
+			}
+			state := s.game.DescribeTurn()
+			for _, c := range clients {
+				// XXX - lost sender info
+				c.downCh <- comms.GameMsg{state}
 			}
 		}
 	}
@@ -113,7 +119,7 @@ func (s *server) handleRequest(msg UserMsg, req comms.GameReq) {
 		res, err := s.game.Start()
 		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, comms.ResStart{res, errString(err)}}}
 	case comms.ReqTurn:
-		res, err := s.game.Turn(umsg.Command)
+		res, err := s.game.Turn(msg.Who, umsg.Command)
 		msg.Rep <- comms.GameMsg{comms.GameRes{req.ID, comms.ResTurn{res, errString(err)}}}
 	case comms.ReqDescribeBank:
 		res := s.game.DescribeBank()

@@ -6,13 +6,12 @@ import (
 )
 
 type GameClient interface {
-	Start() (game.AboutATurn, error)
+	Start() error
 	Turn(c game.Command) (string, error)
 
 	DescribeBank() game.AboutABank
 	DescribePlace(id string) game.AboutAPlace
 	DescribePlayer(name string) game.AboutAPlayer
-	DescribeTurn() game.AboutATurn
 }
 
 type gameProxy struct {
@@ -23,13 +22,13 @@ func NewGameProxy(client *client) GameClient {
 	return &gameProxy{client: client}
 }
 
-func (gp *gameProxy) Start() (game.AboutATurn, error) {
+func (gp *gameProxy) Start() error {
 	ch := gp.client.sendReq(comms.ReqStart{})
 	r := <-ch
 	res := r.(comms.ResStart)
 
 	err := comms.ReError(res.Err)
-	return res.Res, err
+	return err
 }
 
 func (gp *gameProxy) Turn(command game.Command) (string, error) {
@@ -67,14 +66,6 @@ func (gp *gameProxy) DescribePlayer(name string) game.AboutAPlayer {
 	})
 	r := <-ch
 	res := r.(game.AboutAPlayer)
-
-	return res
-}
-
-func (gp *gameProxy) DescribeTurn() game.AboutATurn {
-	ch := gp.client.sendReq(comms.ReqDescribeTurn{})
-	r := <-ch
-	res := r.(game.AboutATurn)
 
 	return res
 }

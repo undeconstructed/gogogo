@@ -24,7 +24,6 @@ func init() {
 	gob.Register(game.AboutAPlace{})
 	gob.Register(ReqDescribePlayer{})
 	gob.Register(game.AboutAPlayer{})
-	gob.Register(ReqDescribeTurn{})
 	gob.Register(game.AboutATurn{})
 }
 

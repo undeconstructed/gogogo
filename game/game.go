@@ -16,7 +16,7 @@ var ErrMustDo = errors.New("must do things")
 type Game interface {
 	AddPlayer(name string, colour string) error
 	Start() (AboutATurn, error)
-	Turn(c Command) (string, error)
+	Turn(player string, c Command) (string, error)
 
 	DescribeBank() AboutABank
 	DescribePlace(id string) AboutAPlace
@@ -158,10 +158,14 @@ func (g *game) Start() (AboutATurn, error) {
 }
 
 // Turn is current player doing things
-func (g *game) Turn(c Command) (string, error) {
+func (g *game) Turn(player string, c Command) (string, error) {
 	t := g.turn
 	if t == nil {
 		return "", errors.New("game not started")
+	}
+
+	if t.player.name != player {
+		return "", errors.New("not your turn")
 	}
 
 	if !t.onMap {
@@ -340,15 +344,15 @@ func (g *game) toNextPlayer() {
 	for {
 		g.turnNo++
 
-		np1 := (np + 1) % len(g.players)
-		p1 := &g.players[np1]
+		np = (np + 1) % len(g.players)
+		p1 := &g.players[np]
 		if p1.missTurns > 0 {
 			p1.missTurns--
 			continue
 		}
 		g.turn = &turn{
 			no:       g.turnNo,
-			playerId: np1,
+			playerId: np,
 			player:   p1,
 			onMap:    p1.ticket != nil,
 		}
