@@ -2,44 +2,46 @@ package game
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"strings"
 )
 
 type AboutABank struct {
-	Money     map[string]int
-	Souvenirs map[string]int
+	Money     map[string]int `json:"money"`
+	Souvenirs map[string]int `json:"souvenirs"`
 }
 
 type AboutAPlace struct {
-	Name     string
-	Currency string
-	Souvenir string
-	Prices   map[string]int
+	Name     string         `json:"name"`
+	Currency string         `json:"currency"`
+	Souvenir string         `json:"souvenir"`
+	Prices   map[string]int `json:"prices"`
 }
 
 type AboutAPlayer struct {
-	Name      string
-	Colour    string
-	Money     map[string]int
-	Souvenirs []string
-	Lucks     map[int]string
-	Square    string
-	Dot       string
-	Ticket    string
+	Name      string         `json:"name"`
+	Colour    string         `json:"colour"`
+	Money     map[string]int `json:"money"`
+	Souvenirs []string       `json:"souvenirs"`
+	Lucks     map[int]string `json:"lucks"`
+	Square    string         `json:"square"`
+	Dot       string         `json:"dot"`
+	Ticket    string         `json:"ticket"`
 }
 
 type AboutATurn struct {
-	Number  int
-	Player  string
-	Colour  string
-	OnMap   bool
-	Stopped bool
-	Must    []string
+	Number  int      `json:"number"`
+	Player  string   `json:"player"`
+	Colour  string   `json:"colour"`
+	OnMap   bool     `json:"onmap"`
+	Stopped bool     `json:"stopped"`
+	Must    []string `json:"must"`
 }
 
 type Command struct {
-	Command string
-	Options string
+	Command string `json:"command"`
+	Options string `json:"options"`
 }
 
 type CommandResult struct {
@@ -73,6 +75,38 @@ type luckCard struct {
 	Name   string `json:"name"`
 	Code   string `json:"code"`
 	Retain bool   `json:"retain"`
+}
+
+func (lc luckCard) ParseCode() interface{} {
+	code := lc.Code
+	switch {
+	case strings.HasPrefix(code, "go:"):
+		return LuckGo{code[3:]}
+	case strings.HasPrefix(code, "getmoney:"):
+		var currencyId string
+		var amount int
+		code = strings.ReplaceAll(code, ":", " ") // UGC
+		_, err := fmt.Sscanf(code, "getmoney %s %d", &currencyId, &amount)
+		if err != nil {
+			return fmt.Errorf("invalid luck code: %s, %w", lc.Code, err)
+		}
+		return LuckGetMoney{currencyId, amount}
+	default:
+		return LuckCode{code}
+	}
+}
+
+type LuckCode struct {
+	Code string
+}
+
+type LuckGo struct {
+	Dest string
+}
+
+type LuckGetMoney struct {
+	CurrencyId string
+	Amount     int
 }
 
 type riskCard struct {

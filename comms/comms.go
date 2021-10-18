@@ -1,105 +1,215 @@
 package comms
 
 import (
-	"encoding/gob"
+	"encoding/binary"
+	"encoding/json"
 	"errors"
-
-	"github.com/undeconstructed/gogogo/game"
+	"io"
+	"strings"
 )
 
-func init() {
-	gob.Register(ReqConnect{})
-	gob.Register(ResConnect{})
-	gob.Register(GameReq{})
-	gob.Register(GameRes{})
-	gob.Register(GameUpdate{})
-	gob.Register(TextMessage{})
-	gob.Register(ReqStart{})
-	gob.Register(ResStart{})
-	gob.Register(ReqTurn{})
-	gob.Register(ResTurn{})
-	gob.Register(ReqDescribeBank{})
-	gob.Register(game.AboutABank{})
-	gob.Register(ReqDescribePlace{})
-	gob.Register(game.AboutAPlace{})
-	gob.Register(ReqDescribePlayer{})
-	gob.Register(game.AboutAPlayer{})
-	gob.Register(game.AboutATurn{})
+type ErrorCoder interface {
+	ErrorCode() string
 }
 
-func ReError(errString string) error {
-	switch errString {
-	case "":
+type CommsError struct {
+	Code  string
+	Cause error
+}
+
+func WrapError(err error) *CommsError {
+	if err == nil {
 		return nil
-	case game.ErrNotStopped.Error():
-		return game.ErrNotStopped
-	case game.ErrMustDo.Error():
-		return game.ErrMustDo
-	default:
-		return errors.New(errString)
+	}
+	if ec, ok := err.(ErrorCoder); ok {
+		return &CommsError{ec.ErrorCode(), err}
+	}
+	return &CommsError{"TODO", err}
+}
+
+func (e *CommsError) ErrorCode() string { return e.Code }
+func (e *CommsError) String() string    { return e.Code + ": " + e.Error() }
+func (e *CommsError) Error() string     { return e.Cause.Error() }
+
+func (e *CommsError) MarshalJSON() ([]byte, error) {
+	x := struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}{
+		Code:    e.Code,
+		Message: e.Cause.Error(),
+	}
+	return json.Marshal(x)
+}
+
+func (e *CommsError) UnmarshalJSON(b []byte) error {
+	x := struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}{}
+	if err := json.Unmarshal(b, &x); err != nil {
+		return err
+	}
+	e.Code = x.Code
+	if x.Message != "" {
+		e.Cause = errors.New(x.Message)
+	}
+	return nil
+}
+
+type Head string
+
+func headFromType(mtype string) Head {
+	return Head(mtype)
+}
+
+func headFromFields(fields []string) Head {
+	return Head(strings.Join(fields, ":"))
+}
+
+func headFromBytes(bytes []byte) Head {
+	return Head(bytes)
+}
+
+func (h Head) Fields() []string {
+	return strings.Split(string(h), ":")
+}
+
+func (h Head) Length() int {
+	return len([]byte(h))
+}
+
+func (h Head) Bytes() []byte {
+	return []byte(h)
+}
+
+type Message struct {
+	Head Head
+	Data []byte
+}
+
+func (m Message) Type() string {
+	return m.Head.Fields()[0]
+}
+
+func Encode(mtype string, message interface{}) (Message, error) {
+	var data []byte
+	if mdata, ok := message.([]byte); ok {
+		// already serial
+		data = mdata
+	} else {
+		// encode to JSON
+		jdata, err := json.Marshal(message)
+		if err != nil {
+			return Message{}, err
+		}
+		data = jdata
+	}
+
+	return Message{
+		Head: headFromType(mtype),
+		Data: data,
+	}, nil
+}
+
+func Decode(m Message, v interface{}) error {
+	err := json.Unmarshal(m.Data, v)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type Encoder struct {
+	out io.Writer
+}
+
+func NewEncoder(out io.Writer) *Encoder {
+	return &Encoder{
+		out: out,
 	}
 }
 
-type GameMsg struct {
-	Msg interface{}
+func (enc *Encoder) Encode(mtype string, e interface{}) error {
+	msg, err := Encode(mtype, e)
+	if err != nil {
+		return err
+	}
+
+	return enc.Send(msg)
 }
 
-type GameChan chan GameMsg
+func (enc *Encoder) Send(msg Message) error {
+	headLength := uint32(msg.Head.Length())
+	dataLength := uint32(len(msg.Data))
+	length := headLength + dataLength + 12
 
-type ReqConnect struct {
-	Name   string
-	Colour string
+	sizeBuf := make([]byte, 12)
+	binary.BigEndian.PutUint32(sizeBuf, length)
+	binary.BigEndian.PutUint32(sizeBuf[4:], headLength)
+	binary.BigEndian.PutUint32(sizeBuf[8:], dataLength)
+
+	_, err := enc.out.Write(sizeBuf)
+	if err != nil {
+		return err
+	}
+	_, err = enc.out.Write(msg.Head.Bytes())
+	if err != nil {
+		return err
+	}
+	_, err = enc.out.Write(msg.Data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-type ResConnect struct {
-	Err string
+type Decoder struct {
+	in io.Reader
 }
 
-type TextMessage struct {
-	Text string
+func NewDecoder(in io.Reader) *Decoder {
+	return &Decoder{
+		in: in,
+	}
 }
 
-type GameReq struct {
-	ID  int
-	Req interface{}
+func (dec *Decoder) Decode() (Message, error) {
+	sizeBuf := make([]byte, 12)
+	_, err := dec.in.Read(sizeBuf)
+	if err != nil {
+		return Message{}, err
+	}
+
+	length := binary.BigEndian.Uint32(sizeBuf)
+	typeLength := binary.BigEndian.Uint32(sizeBuf[4:])
+	dataLength := binary.BigEndian.Uint32(sizeBuf[8:])
+
+	if length != typeLength+dataLength+12 {
+		return Message{}, errors.New("bad data in pipe")
+	}
+
+	typeBuf := make([]byte, typeLength)
+	_, err = dec.in.Read(typeBuf)
+	if err != nil {
+		return Message{}, err
+	}
+
+	dataBuf := make([]byte, dataLength)
+	_, err = dec.in.Read(dataBuf)
+	if err != nil {
+		return Message{}, err
+	}
+
+	return Message{headFromBytes(typeBuf), dataBuf}, nil
 }
 
-type GameRes struct {
-	ID  int
-	Res interface{}
+type ConnectRequest struct {
+	Msg string `json:"message"`
 }
 
-type GameUpdate struct {
-	Text string
-}
-
-type ReqStart struct {
-}
-
-type ResStart struct {
-	Res game.AboutATurn
-	Err string
-}
-
-type ReqTurn struct {
-	Command game.Command
-}
-
-type ResTurn struct {
-	Res string
-	Err string
-}
-
-type ReqDescribeBank struct {
-}
-
-type ReqDescribePlace struct {
-	Id string
-}
-
-type ReqDescribePlayer struct {
-	Name string
-}
-
-type ReqDescribeTurn struct {
+type ConnectResponse struct {
+	Msg string      `json:"message"`
+	Err *CommsError `json:"error"`
 }

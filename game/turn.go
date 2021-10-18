@@ -319,31 +319,25 @@ func (g *game) turn_takeluck(t *turn) (string, error) {
 		return fmt.Sprintf("got: %d - %s", cardId, card.Name), nil
 	}
 
-	// non-retinaned cards happen right away
+	// non-retained cards happen right away
+	defer func() { g.luckPile = g.luckPile.Return(cardId) }()
 
-	code := card.Code
-	switch {
-	case strings.HasPrefix(code, "go:"):
-		gox := code[3:]
-		g.luckPile = g.luckPile.Return(cardId)
-		// XXX - always forward?!
-		// XXX - doesn't reveal the card!
-		err := g.jumpOnTrack(t, gox, true)
+	switch code := card.ParseCode().(type) {
+	case LuckGo:
+		err := g.jumpOnTrack(t, code.Dest, true)
 		if err != nil {
 			return "", err
 		}
 		return card.Name, nil
-	case strings.HasPrefix(code, "getmoney:"):
-		var currencyId string
-		var amount int
-		fmt.Sscanf(code, "getmoney:%s:%d", &currencyId, &amount)
-		currency := g.currencies[currencyId]
-		amount = amount * currency.Rate
-		g.moveMoney(g.bank.money, t.player.money, currencyId, amount)
+	case LuckGetMoney:
+		currency := g.currencies[code.CurrencyId]
+		amount := code.Amount * currency.Rate
+		g.moveMoney(g.bank.money, t.player.money, code.CurrencyId, amount)
 		return fmt.Sprintf("discovered %d %s", amount, currency.Name), nil
-	default:
-		g.luckPile = g.luckPile.Return(cardId)
+	case LuckCode:
 		return fmt.Sprintf("should have done: %s", card.Name), nil
+	default:
+		return "", errors.New("bad luck card: " + card.Code)
 	}
 }
 

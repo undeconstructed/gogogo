@@ -1,17 +1,13 @@
 package client
 
 import (
-	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
 )
 
 type GameClient interface {
 	Start() error
-	Turn(c game.Command) (string, error)
-
-	DescribeBank() game.AboutABank
-	DescribePlace(id string) game.AboutAPlace
-	DescribePlayer(name string) game.AboutAPlayer
+	Play(c game.Command) (string, error)
+	Query(cmd string, resp interface{}) error
 }
 
 type gameProxy struct {
@@ -23,49 +19,29 @@ func NewGameProxy(client *client) GameClient {
 }
 
 func (gp *gameProxy) Start() error {
-	ch := gp.client.sendReq(comms.ReqStart{})
-	r := <-ch
-	res := r.(comms.ResStart)
-
-	err := comms.ReError(res.Err)
-	return err
+	res := game.StartResult{}
+	err := gp.client.doRequest("start", nil, &res)
+	if err != nil {
+		return err
+	}
+	if res.Err != nil {
+		return game.ReError(res.Err)
+	}
+	return nil
 }
 
-func (gp *gameProxy) Turn(command game.Command) (string, error) {
-	ch := gp.client.sendReq(comms.ReqTurn{
-		Command: command,
-	})
-	r := <-ch
-	res := r.(comms.ResTurn)
-
-	err := comms.ReError(res.Err)
-	return res.Res, err
+func (gp *gameProxy) Play(command game.Command) (string, error) {
+	res := game.PlayResult{}
+	err := gp.client.doRequest("play", command, &res)
+	if err != nil {
+		return "", err
+	}
+	if res.Err != nil {
+		return "", game.ReError(res.Err)
+	}
+	return res.Msg, nil
 }
 
-func (gp *gameProxy) DescribeBank() game.AboutABank {
-	ch := gp.client.sendReq(comms.ReqDescribeBank{})
-	r := <-ch
-	res := r.(game.AboutABank)
-
-	return res
-}
-
-func (gp *gameProxy) DescribePlace(id string) game.AboutAPlace {
-	ch := gp.client.sendReq(comms.ReqDescribePlace{
-		Id: id,
-	})
-	r := <-ch
-	res := r.(game.AboutAPlace)
-
-	return res
-}
-
-func (gp *gameProxy) DescribePlayer(name string) game.AboutAPlayer {
-	ch := gp.client.sendReq(comms.ReqDescribePlayer{
-		Name: name,
-	})
-	r := <-ch
-	res := r.(game.AboutAPlayer)
-
-	return res
+func (gp *gameProxy) Query(cmd string, resp interface{}) error {
+	return gp.client.doRequest("query:"+cmd, nil, resp)
 }

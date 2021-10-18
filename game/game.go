@@ -9,17 +9,32 @@ import (
 
 const SouvenirPrice = 6
 
-// ErrNotStopped means haven't elected to stop moving
-var ErrNotStopped = errors.New("not stopped")
-var ErrMustDo = errors.New("must do things")
+type GameError struct {
+	Code string
+	Msg  string
+}
+
+func (e *GameError) ErrorCode() string { return e.Code }
+func (e *GameError) Error() string     { return e.Msg }
+
+var (
+	// ErrNotStopped means haven't elected to stop moving
+	ErrAlreadyStarted = &GameError{"ALREADYSTARTED", "game has already started"}
+	// ErrNotStopped means haven't elected to stop moving
+	ErrNotStopped = &GameError{"NOTSTOPPED", "not stopped"}
+	// ErrMustDo means tasks left
+	ErrMustDo = &GameError{"MUSTDO", "must do things"}
+)
 
 type Game interface {
 	AddPlayer(name string, colour string) error
 	Start() (AboutATurn, error)
-	Turn(player string, c Command) (string, error)
+	Play(player string, c Command) (string, error)
 
 	DescribeBank() AboutABank
+	ListPlaces() []string
 	DescribePlace(id string) AboutAPlace
+	ListPlayers() []string
 	DescribePlayer(name string) AboutAPlayer
 	DescribeTurn() AboutATurn
 }
@@ -114,6 +129,15 @@ func NewGame(data GameData) Game {
 	g.luckPile = NewCardStack(len(g.lucks))
 	g.riskPile = NewCardStack(len(g.risks))
 
+	// verify
+
+	for _, lc := range g.lucks {
+		code := lc.ParseCode()
+		if _, ok := code.(error); ok {
+			panic("invalid luck code: " + lc.Code)
+		}
+	}
+
 	// fmt.Printf("%#v\n", g)
 
 	return g
@@ -142,7 +166,7 @@ func (g *game) AddPlayer(name string, colour string) error {
 // Start starts the game
 func (g *game) Start() (AboutATurn, error) {
 	if g.turn != nil {
-		return AboutATurn{}, errors.New("already started")
+		return AboutATurn{}, ErrAlreadyStarted
 	}
 	if len(g.players) < 1 {
 		return AboutATurn{}, errors.New("no players")
@@ -158,7 +182,7 @@ func (g *game) Start() (AboutATurn, error) {
 }
 
 // Turn is current player doing things
-func (g *game) Turn(player string, c Command) (string, error) {
+func (g *game) Play(player string, c Command) (string, error) {
 	t := g.turn
 	if t == nil {
 		return "", errors.New("game not started")
@@ -368,6 +392,14 @@ func (g *game) DescribeBank() AboutABank {
 	}
 }
 
+func (g *game) ListPlaces() []string {
+	var out []string
+	for pl := range g.places {
+		out = append(out, pl)
+	}
+	return out
+}
+
 // DescribePlace says what's up in a place
 func (g *game) DescribePlace(from string) AboutAPlace {
 	place, ok := g.places[from]
@@ -389,6 +421,14 @@ func (g *game) DescribePlace(from string) AboutAPlace {
 		Souvenir: place.Souvenir,
 		Prices:   routes,
 	}
+}
+
+func (g *game) ListPlayers() []string {
+	var out []string
+	for _, pl := range g.players {
+		out = append(out, pl.name+"/"+pl.colour)
+	}
+	return out
 }
 
 func (g *game) DescribePlayer(name string) AboutAPlayer {
