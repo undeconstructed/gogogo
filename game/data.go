@@ -65,13 +65,18 @@ func LoadJson() GameData {
 }
 
 type GameData struct {
-	Actions    map[string]action
-	Squares    []trackSquare
-	Currencies map[string]currency
-	Places     map[string]worldPlace
-	Dots       map[string]worldDot
-	Lucks      []luckCard
-	Risks      []riskCard
+	Settings   settings              `json:"settings"`
+	Actions    map[string]action     `json:"actions"`
+	Squares    []trackSquare         `json:"squares"`
+	Currencies map[string]currency   `json:"currencies"`
+	Places     map[string]worldPlace `json:"places"`
+	Dots       map[string]worldDot   `json:"dots"`
+	Lucks      []luckCard            `json:"lucks"`
+	Risks      []riskCard            `json:"risks"`
+}
+
+type settings struct {
+	Home string `json:"home"`
 }
 
 type action struct {

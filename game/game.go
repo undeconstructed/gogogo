@@ -44,6 +44,7 @@ type Game interface {
 }
 
 type game struct {
+	home       string
 	squares    []trackSquare
 	currencies map[string]currency
 	places     map[string]worldPlace
@@ -64,6 +65,8 @@ func NewGame(data GameData) Game {
 	g := &game{}
 
 	// import data
+
+	g.home = data.Settings.Home
 
 	g.squares = data.Squares
 	g.currencies = data.Currencies
@@ -142,17 +145,16 @@ func NewGame(data GameData) Game {
 		}
 	}
 
-	// fmt.Printf("%#v\n", g)
-
 	return g
 }
 
 // AddPlayer adds a player
 func (g *game) AddPlayer(name string, colour string) error {
-	// XXX - unhardcode
-	baseCurrency := "st" // XXX sterling
+	homePlace := g.places[g.home]
+
+	basePlace := homePlace.Dot
+	baseCurrency := homePlace.Currency
 	baseMoney := 400
-	basePlace := "418,193" // XXX London
 
 	newp := player{
 		name:   name,

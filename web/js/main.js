@@ -115,7 +115,7 @@ function markOnMap(colour, dot) {
 
   let marker = select(svg, '#playerring')
   let nmarker = marker.cloneNode()
-  delete nmarker.id
+  nmarker.id = 'player-' + colour
   nmarker.setAttributeNS(null, 'cx', x);
   nmarker.setAttributeNS(null, 'cy', y);
   nmarker.style.stroke = colour
@@ -124,7 +124,11 @@ function markOnMap(colour, dot) {
   state.mapMarks.set(colour, nmarker)
   layer.append(nmarker)
 
-  // marker.scrollIntoView({ behavior: 'smooth' })
+  let scroller = select(document, '.map')
+  let scrollee = scroller.firstElementChild
+  let sLeft = (x/1000)*scrollee.offsetWidth-scroller.offsetWidth/2
+  let sTop = (y/700)*scrollee.offsetHeight-scroller.offsetHeight/2
+  scroller.scrollTo({ top: sTop, left: sLeft, behavior: 'smooth' })
 }
 
 function select(parent, selector) {
@@ -152,22 +156,37 @@ function plot(data) {
   let layer = select(svg, '#dotslayer')
 
   let normaldot = select(svg, '#traveldot-normal')
+  let terminaldot = select(svg, '#traveldot-place')
   let dangerdot = select(svg, '#traveldot-danger')
 
   let drawPoint = (pointId, point) => {
-    let [x, y] = split(pointId)
-    let ndot = null
-    if (point.danger) {
-      ndot = dangerdot.cloneNode()
-    } else {
-      ndot = normaldot.cloneNode()
+    if (point.city) {
+      // city marks are already in the SVG
+      return
     }
-    delete ndot.id
-    ndot.setAttributeNS(null, 'cx', x);
-    ndot.setAttributeNS(null, 'cy', y);
-    ndot.title = pointId
-    ndot.addEventListener('click', e => { alert(pointId) })
-    layer.append(ndot)
+
+    let [x, y] = split(pointId)
+
+    if (point.terminal) {
+      let ndot = terminaldot.cloneNode(true)
+      ndot.id = "dot-"+pointId
+      ndot.setAttributeNS(null, 'x', x-10);
+      ndot.setAttributeNS(null, 'y', y-10);
+      ndot.addEventListener('click', e => { alert(pointId) })
+      layer.append(ndot)
+    } else {
+      let ndot = null
+      if (point.danger) {
+        ndot = dangerdot.cloneNode()
+      } else {
+        ndot = normaldot.cloneNode()
+      }
+      ndot.id = "dot-"+pointId
+      ndot.setAttributeNS(null, 'cx', x);
+      ndot.setAttributeNS(null, 'cy', y);
+      ndot.addEventListener('click', e => { alert(pointId) })
+      layer.append(ndot)
+    }
   }
 
   for (let pointId in data.dots) {
@@ -226,8 +245,24 @@ function doPlay(cmd, action) {
   })
 }
 
+function fixup(indata) {
+  for (let dotId in indata.dots) {
+    let dot = indata.dots[dotId]
+    if (dot.place) {
+      let place = indata.places[dot.place]
+      dot.terminal = true
+      if (place.city) {
+        dot.city = true
+      }
+    }
+  }
+
+  return indata
+}
+
 function setup(inData) {
-  state.data = inData
+  state.data = fixup(inData)
+  console.log(state)
 
   makeSquares(state.data)
   // img.contentDocument.addEventListener('load', e => {
