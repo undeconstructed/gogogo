@@ -4,49 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net"
 
 	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
 )
-
-type toSend struct {
-	mtype string
-	data  interface{}
-}
-
-type ConnectMsg struct {
-	Name   string
-	Colour string
-	Client clientBundle
-	Rep    chan error
-}
-
-type DisconnectMsg struct {
-	Name string
-}
-
-type TextFromUser struct {
-	Who  string
-	Text string
-}
-
-type RequestFromUser struct {
-	Who  string
-	ID   string
-	Cmd  []string
-	Body interface{}
-}
-
-type ResponseToUser struct {
-	ID   string
-	Body interface{}
-}
-
-type clientBundle struct {
-	downCh chan interface{}
-}
 
 // Server serves just one game, that's enough
 type Server interface {
@@ -73,22 +34,8 @@ func (s *server) Run() error {
 	fmt.Printf("server running\n")
 	defer fmt.Printf("server stopping\n")
 
-	// ln, err := net.Listen("unix", "game.socket")
-	ln, err := net.Listen("tcp", "0.0.0.0:1234")
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				fmt.Printf("listener error: %v\n", err)
-				continue
-			}
-			s.remoteConnect(conn)
-		}
-	}()
+	_ = runTcpGateway(s, "0.0.0.0:1234")
+	_ = runWsGateway(s, "0.0.0.0:1235")
 
 	s.clients = clients{}
 
@@ -191,7 +138,7 @@ func (s *server) processRequest(in RequestFromUser) (res interface{}, changed bo
 		if data, ok := in.Body.([]byte); ok {
 			if err := json.Unmarshal(data, &gameCommand); err != nil {
 				// bad command
-				return comms.WrapError(errors.New("bad body")), false
+				return comms.WrapError(fmt.Errorf("bad body: %w", err)), false
 			}
 			res, err := s.game.Play(in.Who, gameCommand)
 			changed = err == nil
@@ -216,115 +163,4 @@ func (s *server) broadcast(msg comms.Message, skip string) {
 		}
 		c.downCh <- msg
 	}
-}
-
-func (s *server) remoteConnect(conn net.Conn) error {
-	addr := conn.RemoteAddr()
-	fmt.Printf("connection from: %s\n", addr)
-
-	downCh := make(chan interface{}, 100)
-
-	upStream := comms.NewDecoder(conn)
-	dnStream := comms.NewEncoder(conn)
-
-	go func() {
-		var name, colour string
-
-		msg1, err := upStream.Decode()
-		if err != nil {
-			fmt.Printf("bad first message from %s\n", addr)
-			return
-		} else {
-			fields := msg1.Head.Fields()
-			if len(fields) != 3 || fields[0] != "connect" {
-				fmt.Printf("bad first message head from %s\n", addr)
-				return
-			}
-
-			// cheat and just use header for everything
-			name = fields[1]
-			colour = fields[2]
-
-			resCh := make(chan error)
-			s.coreCh <- ConnectMsg{name, colour, clientBundle{downCh}, resCh}
-			err = <-resCh
-			if err != nil {
-				fmt.Printf("refusing %s\n", addr)
-				dnStream.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
-				return
-			}
-
-			dnStream.Encode("connected", comms.ConnectResponse{})
-		}
-
-		go func() {
-			// read downCh, write to conn
-			for down := range downCh {
-				switch msg := down.(type) {
-				case comms.Message:
-					// send preformatted message
-					err := dnStream.Send(msg)
-					if err != nil {
-						fmt.Printf("send error: %v\n", err)
-						break
-					}
-				case ResponseToUser:
-					// send response
-					mtype := "response:" + msg.ID
-					err := dnStream.Encode(mtype, msg.Body)
-					if err != nil {
-						fmt.Printf("encode error: %v\n", err)
-						break
-					}
-				case toSend:
-					// send anything
-					err := dnStream.Encode(msg.mtype, msg.data)
-					if err != nil {
-						fmt.Printf("encode error: %v\n", err)
-						break
-					}
-				default:
-					fmt.Printf("cannot send: %#v\n", msg)
-					break
-				}
-			}
-		}()
-
-		// this is the connection's main loop
-		for {
-			// read conn, despatch into server
-			msg, err := upStream.Decode()
-			if err != nil {
-				if err != io.EOF {
-					fmt.Printf("decode error: %#v\n", err)
-				}
-				break
-			}
-			fmt.Printf("received from %s: %s %s\n", name, msg.Head, string(msg.Data))
-
-			f := msg.Head.Fields()
-			switch f[0] {
-			case "text":
-				var text string
-				err := comms.Decode(msg, &text)
-				if err != nil {
-					fmt.Printf("bad text message: %v\n", err)
-					return
-				}
-				s.coreCh <- TextFromUser{name, text}
-			case "request":
-				id := f[1]
-				rest := f[2:]
-				// cannot decode body yet?!
-				body := msg.Data
-				s.coreCh <- RequestFromUser{name, id, rest, body}
-			default:
-				fmt.Printf("junk from client: %v\n", f)
-			}
-		}
-
-		s.coreCh <- DisconnectMsg{name}
-	}()
-
-	return nil
 }

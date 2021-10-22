@@ -48,9 +48,10 @@ type Client interface {
 	Run() error
 }
 
-func NewClient(name, colour string, server string) Client {
+func NewClient(data game.GameData, name, colour string, server string) Client {
 	coreCh := make(chan interface{}, 100)
 	return &client{
+		data:   data,
 		name:   name,
 		colour: colour,
 		server: server,
@@ -80,6 +81,7 @@ type ResponseFromServer struct {
 }
 
 type client struct {
+	data   game.GameData
 	name   string
 	colour string
 	server string
@@ -313,6 +315,7 @@ func (c *client) startUI(g GameClient) (func() error, error) {
 			rl.PcItem("player"),
 		),
 		rl.PcItem("do",
+			// TODO - make this from data
 			rl.PcItem("stop"),
 			rl.PcItem("takerisk"),
 			rl.PcItem("takeluck"),
@@ -389,12 +392,17 @@ func printPlace(state game.AboutAPlace) {
 	}
 }
 
-func printPlayer(state game.AboutAPlayer) {
+func printPlayer(data game.GameData, state game.AboutAPlayer) {
 	fmt.Printf("Player:    %s\n", state.Name)
 	fmt.Printf("Money:     %v\n", state.Money)
 	fmt.Printf("Souvenirs: %v\n", state.Souvenirs)
-	fmt.Printf("Lucks:     %v\n", state.Lucks)
-	fmt.Printf("Square:    %s\n", state.Square)
+	if len(state.Lucks) > 0 {
+		fmt.Printf("Lucks:\n")
+		for _, id := range state.Lucks {
+			fmt.Printf("\t%d: %s\n", id, data.Lucks[id].Name)
+		}
+	}
+	fmt.Printf("Square:    %s\n", data.Squares[state.Square].Name)
 	fmt.Printf("Dot:       %s\n", state.Dot)
 	fmt.Printf("Ticket:    %s\n", state.Ticket)
 }
@@ -547,7 +555,7 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 					fmt.Printf("error: %v\n", err)
 					continue
 				}
-				printPlayer(about)
+				printPlayer(c.data, about)
 			}
 		case "do":
 			ss := strings.SplitN(rest, " ", 2)
@@ -557,23 +565,30 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 				options = ss[1]
 			}
 
-			res, err := g.Play(game.Command{Command: cmd, Options: options})
+			_, err := g.Play(game.Command{Command: cmd, Options: options})
 			if err != nil {
 				if err == game.ErrNotStopped {
 					// try to auto stop
-					res, err = g.Play(game.Command{Command: "stop"})
+					_, err = g.Play(game.Command{Command: "stop"})
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
 					}
-					fmt.Printf("%s\n", res)
+					// fmt.Printf("%s\n", res)
 
 					// retry command
-					res, err = g.Play(game.Command{Command: cmd, Options: options})
+					_, err = g.Play(game.Command{Command: cmd, Options: options})
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
 					}
+				} else if err == game.ErrBadRequest {
+					a, ok := c.data.Actions[cmd]
+					if !ok {
+						fmt.Printf("Bad request.")
+						continue
+					}
+					fmt.Printf("Usage: %s %s\n", cmd, a.Help)
 				} else {
 					fmt.Printf("Error: %v\n", err)
 					continue

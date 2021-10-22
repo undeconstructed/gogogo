@@ -1,0 +1,112 @@
+
+body {
+  background-color: #0d8db0;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba2b2 transparent;
+}
+
+#maparea {
+  box-sizing: content-box;
+  width: 1000px;
+  border: 10px solid black;
+  margin: auto;
+  padding: 0;
+  position: relative;
+}
+#maparea * {
+  box-sizing: content-box;
+}
+#maparea img {
+  display: block;
+}
+
+#jsonarea {
+  border: 10px solid black;
+  width: 1000px;
+  margin: auto;
+}
+#jsonarea textarea {
+  height: 100px;
+  width: 100%;
+  display: block;
+}
+
+.dot {
+  border: 2px solid white;
+  width: 6px;
+  height: 6px;
+  border-radius: 5px;
+  position: absolute;
+  font-size: 0px;
+}
+.line {
+  line-height: 0;
+}
+
+.board {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  align-content: stretch;
+  height: calc(100vh - 10em);
+}
+
+.squares {
+  padding: 10px;
+  overflow-y: auto;
+  max-height: 100%;
+  flex: 0 0 18em;
+  gap: .5em;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.squares > div {
+  background-color: #fffaf6;
+  height: 12em;
+  padding: 1em;
+  text-align: center;
+  flex: 1 0 8em;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.squares .mark {
+  height: 1em;
+  width: 1em;
+}
+
+.map {
+  flex-grow: 1;
+  overflow: auto;
+  line-height: 0;
+}
+.map > object {
+  height: 1000px;
+}
+
+.other {
+  background-color: white;
+  height: 10em;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.state {
+  display: flex;
+  flex-flow: row nowrap;
+}
+.state .colour {
+  width: 2em;
+}
+.state .name {
+}
+.state .text {
+}
+
+.messages {
+  flex-grow: 10;
+  overflow: auto;
+}

@@ -25,7 +25,7 @@ func (g *game) turn_useluck_track(t *turn, options string) (string, error) {
 	var cardId int
 	_, err := fmt.Sscan(options, &cardId)
 	if err != nil {
-		return "", errors.New("useluck <cardId>")
+		return "", ErrBadRequest
 	}
 
 	luckList, changed := intListWithout(t.player.luckCards, cardId)
@@ -112,7 +112,7 @@ func (g *game) turn_buyticket(t *turn, options string) (string, error) {
 	var to, modes string
 	_, err := fmt.Sscan(options, &to, &modes)
 	if err != nil {
-		return "", errors.New("buyticket <to> <mode>")
+		return "", ErrBadRequest
 	}
 
 	if t.player.ticket != nil {
@@ -173,7 +173,7 @@ func (g *game) turn_changemoney(t *turn, options string) (string, error) {
 	var amount int
 	_, err := fmt.Sscan(options, &from, &amount)
 	if err != nil {
-		return "", errors.New("changemoney <from> <amount(from)>")
+		return "", ErrBadRequest
 	}
 	to := g.places[g.dots[t.player.onDot].Place].Currency
 
@@ -267,7 +267,7 @@ func (g *game) turn_declare(t *turn, options string) (string, error) {
 	var place string
 	_, err := fmt.Sscan(options, &place)
 	if err != nil {
-		return "", errors.New("declare <place>, declare none")
+		return "", ErrBadRequest
 	}
 
 	must, changed := stringListWithout(t.must, "declare")
@@ -292,7 +292,7 @@ func (g *game) turn_declare(t *turn, options string) (string, error) {
 	g.bank.souvenirs[place]++
 	t.must = must
 
-	return "customs avoided", nil
+	return fmt.Sprintf("souvenir from %s lost", place), nil
 }
 
 func (g *game) turn_takeluck(t *turn) (string, error) {
@@ -350,7 +350,7 @@ func (g *game) turn_gamble(t *turn, options string) (string, error) {
 	var amount int
 	_, err := fmt.Sscan(options, &currency, &amount)
 	if err != nil {
-		return "", errors.New("gamble <currency> <amount>")
+		return "", ErrBadRequest
 	}
 
 	haveMoney := t.player.money[currency]
@@ -388,7 +388,7 @@ func (g *game) turn_useluck_map(t *turn, options string) (string, error) {
 	var cardId int
 	_, err := fmt.Sscan(options, &cardId)
 	if err != nil {
-		return "", errors.New("useluck <cardId>")
+		return "", ErrBadRequest
 	}
 
 	luckList, changed := intListWithout(t.player.luckCards, cardId)

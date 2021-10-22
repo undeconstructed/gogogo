@@ -24,8 +24,8 @@ type AboutAPlayer struct {
 	Colour    string         `json:"colour"`
 	Money     map[string]int `json:"money"`
 	Souvenirs []string       `json:"souvenirs"`
-	Lucks     map[int]string `json:"lucks"`
-	Square    string         `json:"square"`
+	Lucks     []int          `json:"lucks"`
+	Square    int            `json:"square"`
 	Dot       string         `json:"dot"`
 	Ticket    string         `json:"ticket"`
 }
@@ -35,6 +35,8 @@ type AboutATurn struct {
 	Player  string   `json:"player"`
 	Colour  string   `json:"colour"`
 	OnMap   bool     `json:"onmap"`
+	Square  int      `json:"square"`
+	Dot     string   `json:"dot"`
 	Stopped bool     `json:"stopped"`
 	Must    []string `json:"must"`
 }
@@ -63,12 +65,17 @@ func LoadJson() GameData {
 }
 
 type GameData struct {
+	Actions    map[string]action
 	Squares    []trackSquare
 	Currencies map[string]currency
 	Places     map[string]worldPlace
 	Dots       map[string]worldDot
 	Lucks      []luckCard
 	Risks      []riskCard
+}
+
+type action struct {
+	Help string `json:"help"`
 }
 
 type luckCard struct {

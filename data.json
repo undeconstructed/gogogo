@@ -1,8 +1,32 @@
 {
+  "actions": {
+    "dicemove": {},
+    "stop": {},
+    "takeluck": {},
+    "buysouvenir": {},
+    "useluck": {
+      "help": "<cardId>"
+    },
+    "buyticket": {
+      "help": "<to> <mode>"
+    },
+    "changemoney": {
+      "help": "<from> <amount(from)>"
+    },
+    "takerisk": {},
+    "gamble": {
+      "help": "<currency> <amount>"
+    },
+    "pay": {},
+    "declare": {
+      "help": "<place> | none"
+    },
+    "end": {}
+  },
   "squares": [
     {
       "type": "bank",
-      "name": "start - bank - Bureau de Change",
+      "name": "Start - Bank - Bureau de Change",
       "options": [
         "can:changemoney"
       ]
@@ -43,7 +67,7 @@
       ]
     },
     {
-      "type": "consuluate",
+      "type": "consulate",
       "name": "British Consulate"
     },
     {
@@ -710,10 +734,10 @@
     },
     "467,78": {
       "links": [
-        "s:498,62"
+        "s:498,60"
       ]
     },
-    "498,62": {
+    "498,60": {
       "danger": true,
       "links": [
         "s:535,65"
@@ -816,7 +840,7 @@
       "place": "berlin",
       "links": [
         "a:522,207",
-        "a:486,236",
+        "a:488,238",
         "r:519,160",
         "l:519,225"
       ]
@@ -1450,10 +1474,10 @@
     },
     "468,464": {
       "links": [
-        "l:460,415"
+        "l:462,417"
       ]
     },
-    "460,415": {
+    "462,417": {
       "links": [
         "l:472,379"
       ]
@@ -1831,7 +1855,7 @@
         "s:391,296"
       ]
     },
-    "486,236": {
+    "488,238": {
       "danger": true,
       "links": [
         "a:478,264"
@@ -2107,7 +2131,7 @@
       "retain": true
     },
     {
-      "name": "Free air ticket - Los Angeles to Tokyyo. - Keep until needed then surrender.",
+      "name": "Free air ticket - Los Angeles to Tokyo. - Keep until needed then surrender.",
       "code": "freeticket:losangeles:tokyo:a",
       "retain": true
     },

@@ -19,6 +19,10 @@ func ReError(cerr *comms.CommsError) error {
 		return ErrNotStopped
 	case "MUSTDO":
 		return ErrMustDo
+	case "NOTYOURTURN":
+		return ErrNotYourTurn
+	case "BADREQUEST":
+		return ErrBadRequest
 	default:
 		return errors.New(cerr.Error())
 	}

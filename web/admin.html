@@ -12,42 +12,6 @@
   <link rel="stylesheet" href="css/bootstrap-reboot.css">
   <link rel="stylesheet" href="css/custom.css">
 
-<style>
-  body {
-    padding: 10px;
-  }
-
-  div#maparea {
-    border: 10px solid black;
-    width: 1000px;
-    margin: auto;
-    padding: 0;
-    position: relative;
-  }
-  div#jsonarea {
-    border: 10px solid black;
-    width: 1000px;
-    margin: auto;
-  }
-  div#jsonarea textarea {
-    height: 100px;
-    width: 100%;
-    display: block;
-  }
-  img#map {
-    display: block;
-  }
-  .dot {
-    border: 2px solid white;
-    width: 6px;
-    height: 6px;
-    border-radius: 5px;
-    position: absolute;
-    font-size: 0px;
-  }
-  .line { line-height: 0; }
-</style>
-
   <script>
 
 let maparea = null
@@ -247,8 +211,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <body>
 
-</body>
-
   <div id="maparea">
     <img id="map" src="1000map.png">
   </div>
@@ -257,5 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <textarea id="out"></textarea>
     <div><button type="button" id="inb">in</button><button type="button" id="outb">out</button></div>
   </div>
+
+</body>
 
 </html>

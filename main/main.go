@@ -27,7 +27,6 @@ func main() {
 	// 	fmt.Printf("failed connect: %v\n", err)
 	// 	os.Exit(1)
 	// }
-
 }
 
 func serverMain() {
@@ -45,7 +44,9 @@ func serverMain() {
 }
 
 func clientMain(name, colour string) {
-	client := client.NewClient(name, colour, "game.socket")
+	data := game.LoadJson()
+
+	client := client.NewClient(data, name, colour, "game.socket")
 	err := client.Run()
 	if err != nil {
 		fmt.Printf("client ended: %v\n", err)

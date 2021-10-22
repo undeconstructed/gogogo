@@ -24,6 +24,10 @@ var (
 	ErrNotStopped = &GameError{"NOTSTOPPED", "not stopped"}
 	// ErrMustDo means tasks left
 	ErrMustDo = &GameError{"MUSTDO", "must do things"}
+	// ErrNotYourTurn means you can't do something while it's not your turn
+	ErrNotYourTurn = &GameError{"NOTYOURTURN", "it's not your turn"}
+	// ErrBadRequest is for bad requests
+	ErrBadRequest = &GameError{"BADREQUEST", "bad request"}
 )
 
 type Game interface {
@@ -189,7 +193,7 @@ func (g *game) Play(player string, c Command) (string, error) {
 	}
 
 	if t.player.name != player {
-		return "", errors.New("not your turn")
+		return "", ErrNotYourTurn
 	}
 
 	if !t.onMap {
@@ -445,24 +449,19 @@ func (g *game) DescribePlayer(name string) AboutAPlayer {
 		return AboutAPlayer{}
 	}
 
-	lucks := map[int]string{}
-	for _, cardId := range player.luckCards {
-		card := g.lucks[cardId]
-		lucks[cardId] = card.Name
-	}
 	ticket := "<none>"
 	if player.ticket != nil {
 		ticket = fmt.Sprintf("%s -> %s by %s", player.ticket.from, player.ticket.to, player.ticket.mode)
 	}
 
-	// XXX - returns real money, souvenirs
+	// XXX - returns real money, souvenirs, etc.
 	return AboutAPlayer{
 		Name:      name,
 		Colour:    player.colour,
 		Money:     player.money,
 		Souvenirs: player.souvenirs,
-		Lucks:     lucks,
-		Square:    fmt.Sprintf("%d/%s", player.onSquare, g.squares[player.onSquare].Name),
+		Lucks:     player.luckCards,
+		Square:    player.onSquare,
 		Dot:       fmt.Sprintf("%s/%s", player.onDot, g.dots[player.onDot].Place),
 		Ticket:    ticket,
 	}
@@ -480,6 +479,8 @@ func (g *game) DescribeTurn() AboutATurn {
 		Player:  p.name,
 		Colour:  p.colour,
 		OnMap:   g.turn.onMap,
+		Square:  p.onSquare,
+		Dot:     p.onDot,
 		Stopped: g.turn.stopped,
 		Must:    g.turn.must,
 	}
