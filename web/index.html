@@ -15,7 +15,7 @@
   <script type="module" src="js/main.js"></script>
 </head>
 
-<body>
+<body class="game" started="false">
 
   <div class="board">
     <div class="squares">
@@ -28,10 +28,13 @@
   <div class="other">
     <div class="actions">
     </div>
+    <div class="nostate">game not started</div>
     <div class="state">
-      <span class="colour"></span>
-      <span class="name"></span>
-      <span class="text"></span>
+      <div class="currentturn">
+        <span class="colour"></span>
+        <span class="name"></span>
+        <span class="text"></span>
+      </div>
     </div>
     <div class="messages">
     </div>

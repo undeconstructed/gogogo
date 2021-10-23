@@ -13,6 +13,7 @@ type AboutABank struct {
 }
 
 type AboutAPlace struct {
+	ID       string         `json:"id"`
 	Name     string         `json:"name"`
 	Currency string         `json:"currency"`
 	Souvenir string         `json:"souvenir"`

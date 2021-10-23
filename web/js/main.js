@@ -65,13 +65,37 @@ function send(type, data) {
 }
 
 function receiveState(st) {
+  document.body.setAttribute('started', !!st.player)
+
   let s = select(document, '.state')
+
   let sc = select(s, '.colour')
   sc.style.backgroundColor = st.colour
   let sn = select(s, '.name')
   sn.textContent = st.player
+
+  let what = st.stopped ? 'Stopped' : 'Moving'
+  let where, point
+  if (st.onmap) {
+    where = 'map'
+    let dot = state.data.dots[st.dot]
+    if (dot.place) {
+      point = state.data.places[dot.place].name
+    } else {
+      point = st.dot
+    }
+  } else {
+    where = 'track'
+    point = state.data.squares[st.square].name
+  }
+  let text = `${what} on ${where}, at ${point}`
+
+  if (st.must) {
+    text += `, and must ${st.must}`
+  }
+
   let sr = select(s, '.text')
-  sr.textContent = JSON.stringify(st)
+  sr.textContent = text
 
   markOnTrack(st.colour, st.square)
   markOnMap(st.colour, st.dot)
@@ -93,7 +117,7 @@ function markOnTrack(colour, square) {
   let squareDiv = state.squares[square]
 
   state.trackMarks.set(colour, mark)
-  squareDiv.append(mark)
+  select(squareDiv, '.sitting').append(mark)
 
   squareDiv.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
@@ -141,6 +165,11 @@ function makeSquares(data) {
     let square = data.squares[squareId]
     let el = document.createElement('div')
     el.append(square.name)
+
+    let sittingRoom = document.createElement('div')
+    sittingRoom.classList.add('sitting')
+    el.append(sittingRoom)
+
     area.append(el)
     state.squares[squareId] = el
   }
@@ -161,7 +190,18 @@ function plot(data) {
 
   let drawPoint = (pointId, point) => {
     if (point.city) {
+      // let place = data.places[point.place]
       // city marks are already in the SVG
+      let star = select(svg, '#'+point.place)
+      console.assert(star, point.place)
+      star.addEventListener('click', e => {
+        doRequest('query:place:'+point.place, {}, (e, r) => {
+          if (e) {
+            alert(e.message); return
+          }
+          log(JSON.stringify(r))
+        })
+      })
       return
     }
 
@@ -172,7 +212,14 @@ function plot(data) {
       ndot.id = "dot-"+pointId
       ndot.setAttributeNS(null, 'x', x-10);
       ndot.setAttributeNS(null, 'y', y-10);
-      ndot.addEventListener('click', e => { alert(pointId) })
+      ndot.addEventListener('click', e => {
+        doRequest('query:place:'+point.place, {}, (e, r) => {
+          if (e) {
+            alert(e.message); return
+          }
+          log(JSON.stringify(r))
+        })
+      })
       layer.append(ndot)
     } else {
       let ndot = null
@@ -197,7 +244,6 @@ function plot(data) {
 function makeButtons(data) {
   let buttonBox = select(document, '.actions')
 
-  // start button
   {
     let button = document.createElement('button')
     button.append('start')
@@ -205,7 +251,22 @@ function makeButtons(data) {
     buttonBox.append(button)
   }
 
+  {
+    let button = document.createElement('button')
+    button.append('say')
+    button.addEventListener('click', doSay)
+    buttonBox.append(button)
+  }
+
+  {
+    let button = document.createElement('button')
+    button.append('self')
+    button.addEventListener('click', doSelf)
+    buttonBox.append(button)
+  }
+
   // play action buttons
+  buttonBox.append('play: ')
   for (let a of Object.keys(data.actions)) {
     let button = document.createElement('button')
     button.append(a)
@@ -216,15 +277,35 @@ function makeButtons(data) {
   }
 }
 
+function doSelf() {
+  doRequest('query:player:'+state.name, {}, (e, r) => {
+    if (e) {
+      alert(e.message); return
+    }
+    let lucks = {}
+    for (let cardId of r.lucks || []) {
+      lucks[cardId] = state.data.lucks[cardId].name
+    }
+    r.lucks = lucks
+    log(JSON.stringify(r))
+  })
+}
+
+function doSay() {
+  let msg = prompt('Say what?')
+  if (!msg) return
+  send('text', msg)
+}
+
 function doRequest(rtype, body, then) {
   let rn = '' + state.reqNo++
-  let mtype = "request:" + rn + ":" + rtype
+  let mtype = 'request:' + rn + ':' + rtype
   state.reqs.set(rn, then)
   send(mtype, body)
 }
 
 function doStart() {
-  return doRequest("start", null, (e, r) => {
+  doRequest('start', null, (e, r) => {
     if (e) {
       alert(e.message); return
     }
@@ -236,6 +317,7 @@ function doPlay(cmd, action) {
   let options = null
   if (action.help) {
     options = prompt(`${cmd} ${action.help}`)
+    if (!options) return
   }
   doRequest(`play`, { command: cmd, options: options }, (e, r) => {
     if (e) {
@@ -260,9 +342,10 @@ function fixup(indata) {
   return indata
 }
 
-function setup(inData) {
+function setup(inData, name, colour) {
   state.data = fixup(inData)
-  console.log(state)
+  state.name = name
+  state.colour = colour
 
   makeSquares(state.data)
   // img.contentDocument.addEventListener('load', e => {
@@ -270,7 +353,7 @@ function setup(inData) {
   // })
   makeButtons(state.data)
 
-  connect('web', 'green')
+  connect(state.name, state.colour)
 }
 
 function log(text) {
@@ -281,9 +364,18 @@ function log(text) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  let urlParams = new URLSearchParams(window.location.search)
+  let name = urlParams.get('name')
+  let colour = urlParams.get('colour')
+
+  if (!name || !colour) {
+    alert('missing params')
+    return
+  }
+
   fetch('../data.json').
     then(rez => rez.json()).
     then(data => {
-      setup(data)
+      setup(data, name, colour)
     })
 })

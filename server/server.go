@@ -72,9 +72,7 @@ func (s *server) Run() error {
 		if changes {
 			about := s.game.DescribeTurn()
 			msg, _ := comms.Encode("turn", about)
-			for _, c := range s.clients {
-				c.downCh <- msg
-			}
+			s.broadcast(msg, "")
 		}
 	}
 
@@ -84,13 +82,19 @@ func (s *server) Run() error {
 func (s *server) handleText(in TextFromUser) {
 	outText := in.Who + " says " + in.Text
 	out, _ := comms.Encode("text", outText)
-	s.broadcast(out, in.Who)
+	s.broadcast(out, "")
 }
 
 func (s *server) handleRequest(msg RequestFromUser) bool {
 	res, changed := s.processRequest(msg)
 	cres := ResponseToUser{ID: msg.ID, Body: res}
-	s.clients[msg.Who].downCh <- cres
+	c := s.clients[msg.Who]
+
+	select {
+	case c.downCh <- cres:
+	default:
+		// client lagging
+	}
 
 	// TODO - real notification system
 	if t, ok := res.(game.PlayResult); ok {
@@ -161,6 +165,10 @@ func (s *server) broadcast(msg comms.Message, skip string) {
 		if n == skip {
 			continue
 		}
-		c.downCh <- msg
+		select {
+		case c.downCh <- msg:
+		default:
+			// client lagging
+		}
 	}
 }

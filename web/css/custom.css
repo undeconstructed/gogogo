@@ -52,30 +52,40 @@ body {
 }
 
 .squares {
-  padding: 10px;
   overflow-y: auto;
   max-height: 100%;
   flex: 0 0 18em;
-  gap: .5em;
-  display: flex;
-  flex-flow: column nowrap;
 }
 
 .squares > div {
-  background-color: #fffaf6;
   height: 12em;
-  padding: 1em;
+  padding: 1em 3em;
   text-align: center;
   flex: 1 0 8em;
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column nowrap;
   align-items: center;
+  justify-content: center;
+  gap: .5em;
+  background-image: url('../square.svg');
+  background-size: 100% 100%;
+}
+
+.squares > div+div {
+  margin-top: -1em;
+}
+
+.squares .sitting {
+  display: flex;
+  flex-flow: row;
+  gap: .5em;
   justify-content: center;
 }
 
 .squares .mark {
   height: 1em;
   width: 1em;
+  border-radius: .5em;
 }
 
 .map {
@@ -84,26 +94,58 @@ body {
   line-height: 0;
 }
 .map > object {
-  height: 1000px;
+  min-width: 100%;
+  min-height: 1400px;
 }
 
 .other {
-  background-color: white;
   height: 10em;
   display: flex;
   flex-flow: column nowrap;
 }
 
-.state {
+.game[started=false] .nostate {
+  text-align: center;
+  display: block;
+}
+.game[started=true] .nostate {
+  display: none;
+}
+
+.game[started=false] .state {
+  display: none;
+}
+.game[started=true] .state {
+  display: true;
+}
+
+.currentturn {
   display: flex;
+  justify-content: center;
   flex-flow: row nowrap;
+  gap: .5em;
 }
-.state .colour {
-  width: 2em;
+.currentturn .colour {
+  width: 1em;
+  height: 1em;
+  border-radius: .5em;
 }
-.state .name {
+.currentturn .name {
 }
-.state .text {
+.currentturn .text {
+}
+
+.actions {
+  display: flex;
+  flex-flow: row;
+  justify-content: center;
+  gap: .5em;
+  padding: 10px;
+}
+.actions > button {
+  flex: 0 0 auto;
+  background-color: #0d8db0;
+  border-radius: 5px;
 }
 
 .messages {

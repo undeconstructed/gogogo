@@ -422,8 +422,9 @@ func (g *game) DescribePlace(from string) AboutAPlace {
 	}
 
 	return AboutAPlace{
-		Name:     from + "/" + place.Name,
-		Currency: currencyCode + "/" + currency.Name,
+		ID:       from,
+		Name:     place.Name,
+		Currency: currencyCode,
 		Souvenir: place.Souvenir,
 		Prices:   routes,
 	}

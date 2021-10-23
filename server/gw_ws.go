@@ -156,7 +156,7 @@ func sendDownWs(ws *websocket.Conn, msg comms.Message) error {
 
 	jmsg := WsJSONMessage{
 		Head: string(msg.Head),
-		// guess how this doesn't work!
+		// XXX - not everything always is json!
 		Data: json.RawMessage(msg.Data),
 	}
 
