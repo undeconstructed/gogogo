@@ -163,8 +163,13 @@ function makeSquares(data) {
   let area = select(document, '.squares')
   for (let squareId in data.squares) {
     let square = data.squares[squareId]
+
     let el = document.createElement('div')
-    el.append(square.name)
+    for (let s of square.name.split(' - ')) {
+      let d = document.createElement('div')
+      d.append(s)
+      el.append(d)
+    }
 
     let sittingRoom = document.createElement('div')
     sittingRoom.classList.add('sitting')

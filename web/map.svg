@@ -22,15 +22,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      showgrid="false"
-     inkscape:zoom="2.8412984"
-     inkscape:cx="916.30643"
-     inkscape:cy="227.18487"
+     inkscape:zoom="2.6593123"
+     inkscape:cx="38.167762"
+     inkscape:cy="421.72557"
      inkscape:window-width="1920"
      inkscape:window-height="1016"
      inkscape:window-x="0"
      inkscape:window-y="1077"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer4"
      inkscape:snap-nodes="false"
      inkscape:snap-bbox="true" />
   <defs
@@ -362,7 +362,7 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:6, 6;stroke-dashoffset:0;stroke-opacity:1"
-       d="M 46.495465,243.4511 C 8.832967,277.38907 9.4099138,367.33792 42.537348,431.54124 c 9.643024,18.68886 29.774599,22.01719 45.879665,35.84468 12.661557,10.87096 25.630837,14.55577 40.609057,19.41503 21.43753,6.95482 38.95626,16.25976 74.85485,13.03535"
+       d="M 46.495465,243.4511 C 8.832967,277.38907 5.5581797,373.68967 43.862957,434.94517 c 11.443682,18.3003 26.172019,26.30733 45.879665,35.84468 15.021538,7.26955 24.305228,11.15184 39.283448,16.0111 21.43753,6.95482 38.95626,16.25976 74.85485,13.03535"
        id="path60129"
        sodipodi:nodetypes="csssc" />
     <path
@@ -1370,14 +1370,24 @@
     </g>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:6.66666667px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       x="143.05273"
-       y="514.41211"
+       style="font-style:normal;font-weight:normal;font-size:6.66667px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       x="173.27487"
+       y="493.77094"
        id="text7838-65"><tspan
          sodipodi:role="line"
          id="tspan7836-63"
-         x="143.05273"
-         y="514.41211">ARICA</tspan></text>
+         x="173.27487"
+         y="493.77094">ARICA</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:6.66667px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#000000;fill-opacity:1;stroke:none"
+       x="219.14651"
+       y="476.52151"
+       id="text7838-65-1"><tspan
+         sodipodi:role="line"
+         id="tspan7836-63-8"
+         x="219.14651"
+         y="476.52151">LA PAZ</tspan></text>
     <g
        id="g193152">
       <rect
