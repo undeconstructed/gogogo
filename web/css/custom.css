@@ -1,8 +1,11 @@
 
+* {
+  scrollbar-width: none;
+  scrollbar-color: #7ba2b2 transparent;
+}
+
 body {
   background-color: #0d8db0;
-  scrollbar-width: thin;
-  scrollbar-color: #7ba2b2 transparent;
 }
 
 #maparea {
@@ -30,7 +33,6 @@ body {
   width: 100%;
   display: block;
 }
-
 .dot {
   border: 2px solid white;
   width: 6px;
@@ -43,18 +45,28 @@ body {
   line-height: 0;
 }
 
-.board {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  align-content: stretch;
-  height: calc(100vh - 10em);
+/* -------------------------------- */
+
+.map {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  /* padding: 15em; */
+  overflow: auto;
+  z-index: -1;
+}
+.map > object {
+  margin: 4rem 8rem 15rem 18rem;
+  width: 2000px;
 }
 
 .squares {
-  overflow-y: auto;
-  max-height: 100%;
-  flex: 0 0 18em;
+  position: absolute;
+  top: 0; width: 18rem; bottom: 0; left: 0;
+  overflow: auto;
+  opacity: 0.6;
+}
+.squares:hover {
+  opacity: 1;
 }
 
 .squares > div {
@@ -88,24 +100,35 @@ body {
   border-radius: .5em;
 }
 
-.map {
-  flex-grow: 1;
-  overflow: auto;
-  line-height: 0;
+.actions {
+  position: absolute;
+  top: 5rem; right: 1rem; width: 8rem;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  gap: .5rem;
+  z-index: 10;
+  opacity: 0.6;
 }
-.map > object {
-  min-width: 100%;
-  min-height: 1400px;
+.actions:hover {
+  opacity: 1;
 }
 
-.other {
-  height: 10em;
-  display: flex;
-  flex-flow: column nowrap;
+.actions > button {
+  flex: 0 0 auto;
+  background: white;
+  border-radius: 5px;
+  border-width: 0;
+}
+.actions > button:hover {
+  outline: 2px solid black;
+}
+.actions > button:active {
+  background: black;
+  color: white;
 }
 
 .game[started=false] .nostate {
-  text-align: center;
   display: block;
 }
 .game[started=true] .nostate {
@@ -116,14 +139,22 @@ body {
   display: none;
 }
 .game[started=true] .state {
-  display: true;
+  display: block;
+}
+
+.nostate {
+  text-align: center;
+  padding: 1rem;
 }
 
 .currentturn {
+  padding: 1rem;
   display: flex;
   justify-content: center;
   flex-flow: row nowrap;
+  align-items: center;
   gap: .5em;
+  background: rgba(255,255,255, 0.6);
 }
 .currentturn .colour {
   width: 1em;
@@ -135,20 +166,16 @@ body {
 .currentturn .text {
 }
 
-.actions {
-  display: flex;
-  flex-flow: row;
-  justify-content: center;
-  gap: .5em;
-  padding: 10px;
-}
-.actions > button {
-  flex: 0 0 auto;
-  background-color: #0d8db0;
-  border-radius: 5px;
-}
-
 .messages {
-  flex-grow: 10;
+  position: absolute;
+  height: 8rem; right: 2rem; bottom: 0; left: 20rem;
   overflow: auto;
+  background: white;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  padding: 0 1rem;
+  opacity: 0.6;
+}
+.messages:hover {
+  opacity: 1;
 }

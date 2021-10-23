@@ -150,8 +150,8 @@ function markOnMap(colour, dot) {
 
   let scroller = select(document, '.map')
   let scrollee = scroller.firstElementChild
-  let sLeft = (x/1000)*scrollee.offsetWidth-scroller.offsetWidth/2
-  let sTop = (y/700)*scrollee.offsetHeight-scroller.offsetHeight/2
+  let sLeft = (x/1000)*scrollee.offsetWidth-scroller.offsetWidth/2+scrollee.offsetLeft
+  let sTop = (y/700)*scrollee.offsetHeight-scroller.offsetHeight/2+scrollee.offsetTop
   scroller.scrollTo({ top: sTop, left: sLeft, behavior: 'smooth' })
 }
 
