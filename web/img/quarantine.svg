@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="150mm"
+   height="100mm"
+   viewBox="0 0 150 100"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="quarantine.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.2810466"
+     inkscape:cx="291.55848"
+     inkscape:cy="149.48715"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="1077"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-33.421143,-77.506638)">
+    <rect
+       style="fill:#ddb700;fill-opacity:1;stroke:none;stroke-width:0.105833;stroke-linecap:square;stroke-opacity:1"
+       id="rect7731"
+       width="46.40173"
+       height="33.082443"
+       x="84.462807"
+       y="87.899635" />
+    <path
+       style="fill:#12708a;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 84.462801,120.98208 0.124602,31.52002 55.199667,-14.88207 z"
+       id="path7785"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="fill:#ddb700;fill-opacity:1;stroke:none;stroke-width:0.265529px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 120.28473,137.47044 -35.849485,9.60329 0.05722,-20.65855 z"
+       id="path7787" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.34245px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.183561"
+       x="87.548645"
+       y="127.51917"
+       id="text16813"
+       transform="scale(0.79368091,1.2599522)"><tspan
+         sodipodi:role="line"
+         id="tspan16811"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.34245px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.183561"
+         x="87.548645"
+         y="127.51917">SUSPECTED SMALLPOX</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:6.99228px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.174807"
+       x="85.660614"
+       y="160.67299"
+       id="text17411"
+       transform="scale(0.95185163,1.0505839)"><tspan
+         sodipodi:role="line"
+         id="tspan17409"
+         style="stroke-width:0.174807"
+         x="85.660614"
+         y="160.67299">MISS ONE TURN</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11.8572px;line-height:1.25;font-family:Caladea;-inkscape-font-specification:'Caladea, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.29643"
+       x="34.647758"
+       y="138.91757"
+       id="text1696"
+       transform="matrix(1.0420865,-0.24639474,0.20537362,0.91105394,0,0)"><tspan
+         id="tspan1694"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11.8572px;font-family:Caladea;-inkscape-font-specification:'Caladea, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.29643"
+         x="34.647758"
+         y="138.91757"
+         sodipodi:role="line">QUARANTINED!</tspan></text>
+  </g>
+</svg>

@@ -66,6 +66,7 @@ function send(type, data) {
 
 function receiveState(st) {
   document.body.setAttribute('started', !!st.player)
+  document.body.setAttribute('ontrack', !st.onmap)
 
   let s = select(document, '.state')
 
@@ -160,16 +161,36 @@ function select(parent, selector) {
 }
 
 function makeSquares(data) {
+  let z = 1000
+
   let area = select(document, '.squares')
   for (let squareId in data.squares) {
     let square = data.squares[squareId]
 
     let el = document.createElement('div')
-    for (let s of square.name.split(' - ')) {
-      let d = document.createElement('div')
-      d.append(s)
-      el.append(d)
+    el.style.zIndex = z--
+
+    let background = 'squarex.svg'
+    if (square.type == 'customs1' || square.type == 'customs2' || square.type === 'luck' || square.type === 'hospital' || square.type === 'hotel') {
+      // some squares are yellow
+      // el.style.backgroundColor = '#ddb700'
+      background = 'squarey.svg'
     }
+
+    // if using background
+    el.style.backgroundImage = `url(img/squarez.svg), url(img/${square.type}.svg), url(img/${background})`
+
+    // if using images
+    // let i = document.createElement('img')
+    // i.src = square.type+'.svg'
+    // el.append(i)
+
+    // if there is no image:
+    // for (let s of square.name.split(' - ')) {
+    //   let d = document.createElement('div')
+    //   d.append(s)
+    //   el.append(d)
+    // }
 
     let sittingRoom = document.createElement('div')
     sittingRoom.classList.add('sitting')
@@ -271,7 +292,7 @@ function makeButtons(data) {
   }
 
   // play action buttons
-  buttonBox.append('play: ')
+  buttonBox.append(document.createElement('br'))
   for (let a of Object.keys(data.actions)) {
     let button = document.createElement('button')
     button.append(a)

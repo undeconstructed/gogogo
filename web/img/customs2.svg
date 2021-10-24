@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="150mm"
+   height="100mm"
+   viewBox="0 0 150 100"
+   version="1.1"
+   id="svg17508"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="customs2.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview17510"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.8116734"
+     inkscape:cx="277.91985"
+     inkscape:cy="163.66085"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="1077"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs17505">
+    <pattern
+       inkscape:collect="always"
+       xlink:href="#Strips1_1"
+       id="pattern34010"
+       patternTransform="matrix(10.485976,2.6795402,-10.631465,19.90667,-22.97144,6.2156413)" />
+    <pattern
+       inkscape:collect="always"
+       patternUnits="userSpaceOnUse"
+       width="2"
+       height="1"
+       patternTransform="translate(0,0) scale(10,10)"
+       id="Strips1_1"
+       inkscape:stockid="Stripes 1:1">
+      <rect
+         style="fill:black;stroke:none"
+         x="0"
+         y="-0.5"
+         width="1"
+         height="2"
+         id="rect32973" />
+    </pattern>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-55.327545,-79.720497)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.4814px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#983327;fill-opacity:1;stroke:none;stroke-width:0.412036"
+       x="119.82376"
+       y="83.248848"
+       id="text20289"
+       transform="scale(0.78954267,1.266556)"><tspan
+         sodipodi:role="line"
+         id="tspan20287"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.4814px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#983327;fill-opacity:1;stroke-width:0.412036"
+         x="119.82376"
+         y="83.248848">CUSTOMS</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.4646px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#983327;fill-opacity:1;stroke:none;stroke-width:0.211615"
+       x="117.12563"
+       y="138.31566"
+       id="text27494"
+       transform="scale(0.84969686,1.1768903)"><tspan
+         sodipodi:role="line"
+         id="tspan27492"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.4646px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#983327;fill-opacity:1;stroke-width:0.211615"
+         x="117.12563"
+         y="138.31566">ONE SOUVENIR</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.4646px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#983327;fill-opacity:1;stroke:none;stroke-width:0.211615"
+       x="120.28745"
+       y="146.76785"
+       id="text28048"
+       transform="scale(0.84969686,1.1768903)"><tspan
+         sodipodi:role="line"
+         id="tspan28046"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.4646px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#983327;fill-opacity:1;stroke-width:0.211615"
+         x="120.28745"
+         y="146.76785">CONFISCATED</tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.127249;stroke-linecap:square"
+       id="rect31989-6"
+       width="151.93022"
+       height="40.609108"
+       x="54.362434"
+       y="111.41222" />
+    <rect
+       style="fill:url(#pattern34010);fill-opacity:1;stroke-width:0.127249;stroke-linecap:square"
+       id="rect31989"
+       width="151.93022"
+       height="40.609108"
+       x="54.362434"
+       y="111.41222" />
+  </g>
+</svg>

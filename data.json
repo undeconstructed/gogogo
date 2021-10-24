@@ -49,7 +49,7 @@
       ]
     },
     {
-      "type": "oversea",
+      "type": "overseas",
       "name": "Overseas Shipping Agency",
       "options": [
         "can:buyticket:s"

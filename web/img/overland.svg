@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="150mm"
+   height="100mm"
+   viewBox="0 0 150 100"
+   version="1.1"
+   id="svg218717"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="overland.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview218719"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.9058367"
+     inkscape:cx="-21.527059"
+     inkscape:cy="97.699729"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="1077"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs218714" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-7.0350933,-14.589148)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.8487px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.32122"
+       x="42.562527"
+       y="35.559406"
+       id="text220398"
+       transform="scale(0.99813379,1.0018697)"><tspan
+         sodipodi:role="line"
+         id="tspan220396"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.8487px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.32122"
+         x="42.562527"
+         y="35.559406">OVERLAND</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:11.1499px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.278747"
+       x="40.325172"
+       y="107.54704"
+       id="text221502"
+       transform="scale(1.053533,0.94918714)"><tspan
+         sodipodi:role="line"
+         id="tspan221500"
+         style="stroke-width:0.278747"
+         x="40.325172"
+         y="107.54704">CAR HIRE CO.</tspan></text>
+    <path
+       id="path235996"
+       style="fill:#842d42;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 81.852649,36.69076 c -3.264406,1.430723 -6.725656,2.50023 -10.730611,2.572969 -2.587837,3.764775 -5.78911,4.999315 -8.950876,6.395475 -0.90905,3.913173 -2.893764,6.687189 -5.415173,8.893515 -0.03988,3.434439 -0.809691,6.794232 -1.863969,10.124963 1.520804,3.824579 1.543468,7.265329 1.807642,10.767817 3.339754,2.877494 4.62958,6.079582 5.705595,9.315712 3.61336,0.893146 6.51282,2.746592 8.559166,5.746935 3.853529,-0.416692 7.307395,0.925451 10.752317,2.307352 3.103997,-2.190266 6.284518,-1.916348 9.454203,-1.991609 2.657329,-2.847832 5.554496,-5.084754 9.008757,-5.899899 1.35747,-3.692615 3.24512,-6.660504 5.78931,-8.730734 0.33034,-4.974304 1.33343,-7.66065 2.72076,-10.851533 -1.99672,-3.438779 -2.17051,-7.292679 -1.865,-11.256161 -4.69495,-4.299788 -4.84776,-6.556851 -6.01876,-9.271784 -3.487074,-1.122153 -6.542768,-3.069802 -8.97826,-6.206339 -3.324974,0.713386 -6.650127,-0.02401 -9.975101,-1.916679 z m 0.693497,4.005957 c 13.306723,0.112423 26.183014,10.809862 21.089674,32.997984 -0.42092,0.495485 -1.05501,0.573907 -1.91823,0.203607 C 97.631703,70.957528 89.900263,67.018745 89.990137,65.2208 89.031086,53.357178 74.494819,53.706454 73.539978,64.83426 c -2.140339,3.265101 -8.419804,6.244963 -12.631271,9.367388 -1.356535,-0.0042 -1.393356,-0.574435 -1.66243,-1.044898 -4.616932,-21.424207 9.570711,-32.576025 23.299869,-32.460033 z m -0.824757,16.484264 c 4.073938,0 7.376811,3.416993 7.376811,7.632094 0,2.433886 -1.235779,4.512215 -2.950723,5.909715 -1.255065,1.022747 -2.704532,1.718884 -4.426088,1.722376 -4.07425,0.0083 -7.385349,-3.180561 -7.376292,-7.632091 0.0086,-4.215093 3.302357,-7.632094 7.376292,-7.632094 z m -7.848616,12.001336 c 0.268087,0.008 0.527251,0.0825 0.762228,0.329694 4.993002,5.693749 9.654841,4.611656 14.137121,-0.147793 0.545177,-0.191813 1.562473,-0.318212 2.213819,0.133842 l 10.426239,5.889561 c 0.70642,0.566005 0.44068,1.59562 0.14779,2.257227 -8.797836,14.551199 -30.595952,16.24522 -40.474012,-0.197919 -0.42588,-0.980422 0.1611,-1.629952 0.93741,-2.217955 l 11.032401,-5.978445 c 0.271669,-0.01786 0.54892,-0.07624 0.817004,-0.06821 z" />
+    <ellipse
+       style="fill:none;fill-opacity:1;stroke:#842d42;stroke-width:1.48902;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path242958"
+       cx="81.466393"
+       cy="64.499329"
+       rx="5.3493142"
+       ry="5.5348988" />
+    <ellipse
+       style="fill:#842d42;fill-opacity:1;stroke:#842d42;stroke-width:1.45264;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path242958-8"
+       cx="81.474098"
+       cy="64.630417"
+       rx="2.6603777"
+       ry="2.6802654" />
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.7607px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.169018"
+       x="63.736477"
+       y="57.197701"
+       id="text222444"
+       transform="scale(0.84818059,1.1789942)"><tspan
+         sodipodi:role="line"
+         id="tspan222442"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.7607px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.169018"
+         x="63.736477"
+         y="57.197701">BOOKING OFFICE</tspan></text>
+  </g>
+</svg>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="150mm"
+   height="100mm"
+   viewBox="0 0 150 100"
+   version="1.1"
+   id="svg212565"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="hotel.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview212567"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:snap-global="false"
+     inkscape:zoom="1.2810466"
+     inkscape:cx="332.93091"
+     inkscape:cy="266.57891"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="1077"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs212562" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-53.316181,-101.16793)">
+    <path
+       style="fill:#ffffff;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 83.365383,133.33677 185.33939,107.13586 226.96727,208.36063 127.2426,241.06312 Z"
+       id="path219623"
+       sodipodi:nodetypes="ccccc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:19.2025px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.480064"
+       x="-14.690865"
+       y="192.03586"
+       id="text220983"
+       transform="matrix(0.74055475,-0.52625896,0.65650474,0.88380838,0,0)"><tspan
+         sodipodi:role="line"
+         id="tspan220981"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:19.2025px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ae97a9;fill-opacity:1;stroke-width:0.480064"
+         x="-14.690865"
+         y="192.03586">PAID</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11.8703px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.296758"
+       x="72.963074"
+       y="127.65997"
+       id="text213850"
+       transform="scale(1.1184737,0.89407558)"><tspan
+         sodipodi:role="line"
+         id="tspan213848"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11.8703px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.296758"
+         x="72.963074"
+         y="127.65997">HOTEL BILL</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1525px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.353814"
+       x="90.539215"
+       y="152.97383"
+       id="text215340"
+       transform="scale(1.1194746,0.89327619)"><tspan
+         sodipodi:role="line"
+         id="tspan215338"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.1525px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.353814"
+         x="90.539215"
+         y="152.97383">£100</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:6.49773px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.162444"
+       x="104.15678"
+       y="155.61255"
+       id="text219028"
+       transform="scale(1.0141506,0.98604684)"><tspan
+         sodipodi:role="line"
+         id="tspan219026"
+         style="stroke-width:0.162444"
+         x="104.15678"
+         y="155.61255">PAYABLE IN</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:6.49773px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.162444"
+       x="92.595383"
+       y="161.94649"
+       id="text219142"
+       transform="scale(1.0141506,0.98604684)"><tspan
+         sodipodi:role="line"
+         id="tspan219140"
+         style="stroke-width:0.162444"
+         x="92.595383"
+         y="161.94649">LOCAL CURRENCY</tspan></text>
+    <path
+       style="fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 143.25821,194.82764 -1.9197,-9.09512 c 4.5972,-16.21742 14.5293,-26.97614 27.3399,-34.78955 l 6.4786,-2.87451 -6.34311,4.68129 c -13.32816,7.46082 -21.26439,19.03626 -25.66928,32.72679 l 5.68461,5.4521 5.86921,-5.57728 c 3.24297,-8.40475 8.31079,-14.1093 13.82931,-19.14695 l 8.41771,-4.66436 -8.30298,6.64307 c -5.4071,4.83099 -9.25412,10.18438 -11.99734,17.2328 l -6.05414,9.3475 z"
+       id="path236739"
+       sodipodi:nodetypes="cccccccccccccc" />
+    <ellipse
+       style="fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.499999;stroke-linecap:square"
+       id="path237660"
+       cx="149.91264"
+       cy="183.02193"
+       rx="1.0539536"
+       ry="1.0886195" />
+    <ellipse
+       style="fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.499999;stroke-linecap:square"
+       id="path237662"
+       cx="163.62767"
+       cy="163.77194"
+       rx="1.026312"
+       ry="0.95505965" />
+    <path
+       style="fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 149.56928,175.89615 6.43246,1.86278 0.90261,-1.33661 -4.59244,-4.93577 -0.82881,1.39195 2.47766,2.68199 -3.45201,-1.23595 z"
+       id="path244948"
+       sodipodi:nodetypes="cccccccc" />
+    <path
+       style="fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 155.23153,167.88365 0.99081,-1.21211 4.75525,3.53416 -0.93792,1.19519 z"
+       id="path244950"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 153.97321,169.12415 4.86947,3.54866 -0.671,1.27653 -5.09353,-3.59074 z"
+       id="path244952"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="fill:#ae97a9;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 167.13688,156.41364 4.1701,4.71101 -1.24562,0.98833 -4.00395,-4.53024 z"
+       id="path244954"
+       sodipodi:nodetypes="ccccc" />
+  </g>
+</svg>

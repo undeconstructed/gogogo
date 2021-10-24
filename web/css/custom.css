@@ -54,37 +54,40 @@ body {
 .map {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
-  /* padding: 15em; */
   overflow: auto;
   z-index: -1;
 }
 .map > object {
-  margin: 4rem 10rem 9rem 19rem;
+  margin: 4rem 10rem 9rem 16rem;
   width: 2000px;
 }
 
 .squares {
   position: absolute;
-  top: 0; width: 18rem; bottom: 0; left: 0;
+  top: 0; width: 14rem; bottom: 0; left: 1rem;
   overflow: auto;
   opacity: 0.6;
+  background-color: black;
+}
+.game[ontrack=true] .squares {
+  opacity: 1;
 }
 .squares:hover {
   opacity: 1;
 }
 
 .squares > div {
-  height: 12em;
-  padding: 1em 3em;
+  height: 11.375rem;
+  /* padding: 1em 3em;
   text-align: center;
-  flex: 1 0 8em;
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
-  gap: .5em;
-  background-image: url('../square.svg');
+  gap: .5em; */
+  background-image: url('../img/square.svg');
   background-size: 100% 100%;
+  position: relative;
 }
 
 .squares > div > *:first-child {
@@ -92,21 +95,26 @@ body {
   font-weight: bold;
 }
 
+.squares > div > img {
+  width: 100%;
+}
+
 .squares > div+div {
-  margin-top: -1em;
+  margin-top: -1.5em;
 }
 
 .squares .sitting {
   display: flex;
-  flex-flow: row;
+  flex-flow: column wrap;
+  padding: 1rem;
   gap: .5em;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .squares .mark {
-  height: 1em;
-  width: 1em;
-  border-radius: .5em;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1.5em;
 }
 
 .actions {
@@ -177,7 +185,7 @@ body {
 
 .messages {
   position: absolute;
-  height: 8rem; right: 1rem; bottom: 0; left: 20rem;
+  height: 8rem; right: 1rem; bottom: 0; left: 16rem;
   overflow: auto;
   background: white;
   border-top-left-radius: 1rem;
