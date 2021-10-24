@@ -117,6 +117,7 @@ type GameData struct {
 
 type settings struct {
 	Home string `json:"home"`
+	Goal int    `json:"goal"`
 }
 
 type action struct {

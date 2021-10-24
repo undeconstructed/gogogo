@@ -1,6 +1,7 @@
 {
   "settings": {
-    "home": "london"
+    "home": "london",
+    "goal": 3
   },
   "actions": {
     "dicemove": {},
