@@ -76,10 +76,6 @@ function receiveUpdate(st) {
     document.body.setAttribute('started', true)
   }
 
-  for (let n of st.news) {
-    log(n)
-  }
-
   for (let pl of st.players) {
     let prev = state.players.get(pl.name) || {}
 
@@ -93,6 +89,10 @@ function receiveUpdate(st) {
     }
 
     state.players.set(pl.name, pl)
+  }
+
+  for (let n of st.news) {
+    log(n)
   }
 
   if (st.playing && st.playing != state.name) {
@@ -443,11 +443,29 @@ function setup(inData, name, colour) {
   connect(state.name, state.colour)
 }
 
-function log(text) {
-  text = typeof text === 'string' ? text : JSON.stringify(text)
+function log(msg) {
   let s = select(document, '.messages')
   let d = document.createElement('div')
-  d.textContent = text
+  if (msg.who) {
+    let player = state.players.get(msg.who)
+    let where = ""
+    if (msg.where) {
+      let dotId = msg.where
+      let dot = state.data.dots[dotId]
+      let place = state.data.places[dot.place]
+      if (place) {
+        where = "in " + place.name
+      } else {
+        where = "at " + dotId
+      }
+    }
+    d.innerHTML = `<span style="color: ${player.colour}; font-weight: bold;">${player.name}</span> ${msg.what} ${where}`
+  } else if (msg.what) {
+    d.textContent = msg.what
+  } else {
+    let text = typeof msg === 'string' ? msg : JSON.stringify(msg)
+    d.textContent = text
+  }
   s.prepend(d)
 }
 

@@ -228,29 +228,17 @@ func (g *game) Play(player string, c Command) (PlayResult, error) {
 		t.can, _ = stringListWith(t.can, "end")
 	}
 
-	return PlayResult{[]Change{{
-		Who:  player,
-		What: news,
-	}}, g.GetTurnState()}, nil
+	return PlayResult{news, g.GetTurnState()}, nil
 }
 
-func (g *game) doPlay(t *turn, c Command) (string, error) {
+func (g *game) doPlay(t *turn, c Command) ([]Change, error) {
 	switch c.Command {
 	case "dicemove":
-		res, err := g.turn_dicemove(t)
-		// XXX - not ready to return multiple yet
-		resX := strings.Join(res, ", ")
-		return resX, err
+		return g.turn_dicemove(t)
 	case "useluck":
-		res, err := g.turn_useluck(t, c.Options)
-		// XXX - not ready to return multiple yet
-		resX := strings.Join(res, ", ")
-		return resX, err
+		return g.turn_useluck(t, c.Options)
 	case "stop":
-		res, err := g.turn_stop(t)
-		// XXX - not ready to return multiple yet
-		resX := strings.Join(res, ", ")
-		return resX, err
+		return g.turn_stop(t)
 	case "buysouvenir":
 		return g.turn_buysouvenir(t)
 	case "buyticket":
@@ -273,16 +261,16 @@ func (g *game) doPlay(t *turn, c Command) (string, error) {
 		return g.turn_quarantine(t)
 	case "end":
 		if !t.stopped {
-			return "", ErrNotStopped
+			return nil, ErrNotStopped
 		}
 		if len(t.must) > 0 {
-			return "", ErrMustDo
+			return nil, ErrMustDo
 		}
 		g.toNextPlayer()
-		return "turn ended", nil
+		return t.oneEvent("goes to sleep"), nil
 	}
 
-	return "", errors.New("bad command: " + c.Command)
+	return nil, errors.New("bad command: " + c.Command)
 }
 
 func (g *game) GetTurnState() TurnState {
@@ -349,7 +337,7 @@ func (g *game) rollDice() int {
 	return rand.Intn(5) + 1
 }
 
-func (g *game) moveOnTrack(t *turn, n int) ([]string, error) {
+func (g *game) moveOnTrack(t *turn, n int) []Change {
 	t.moved = true
 
 	tp := t.player.onSquare
@@ -363,15 +351,15 @@ func (g *game) moveOnTrack(t *turn, n int) ([]string, error) {
 
 	square := g.squares[t.player.onSquare]
 
-	return []string{fmt.Sprintf("moved %d to %s", n, square.Name)}, nil
+	return t.oneEvent(fmt.Sprintf("walks %d squares to %s", n, square.Name))
 }
 
-func (g *game) stopOnTrack(t *turn) ([]string, error) {
+func (g *game) stopOnTrack(t *turn) ([]Change, error) {
 	t.stopped = true
 
-	out := []string{"stopped"}
-
 	square := g.squares[t.player.onSquare]
+	out := []Change{t.makeEvent(fmt.Sprintf("goes into %s", square.Name))}
+
 	for _, o := range square.ParseOptions() {
 		switch option := o.(type) {
 		case OptionMust:
@@ -390,20 +378,19 @@ func (g *game) stopOnTrack(t *turn) ([]string, error) {
 			t.can = append(t.can, c)
 		case OptionMiss:
 			t.player.missTurns += option.N
-			out = append(out, fmt.Sprintf("will miss %d turns", option.N))
+			out = append(out, t.makeEvent(fmt.Sprintf("will miss %d turns", option.N)))
 		case OptionGo:
 			err := g.jumpOnTrack(t, option.Dest, option.Forwards)
 			if err != nil {
 				panic("bad jump " + option.Dest)
 			}
 			// recurse, to get effects of the new location
-			out = append(out, fmt.Sprintf("moved forward to %s", option.Dest))
+			out = append(out, t.makeEvent(fmt.Sprintf("jumps to %s", option.Dest)))
 			res, err := g.stopOnTrack(t)
 			if err != nil {
 				// ?????????????
 			}
 			out = append(out, res...)
-			return out, nil
 		case OptionCode:
 			panic("unhandled option " + option.Code)
 		}
@@ -444,26 +431,25 @@ func (g *game) jumpOnTrack(t *turn, to string, forward bool) error {
 	}
 }
 
-func (g *game) moveOnMap(t *turn, n int) ([]string, error) {
+func (g *game) moveOnMap(t *turn, n int) ([]Change, bool) {
 	need := len(t.player.ticket.route)
 	if n > need {
 		// overshot
-		return []string{fmt.Sprintf("tried to move %d, overshot", n)}, nil
+		return t.oneEvent(fmt.Sprintf("tries to move %d, but overshoots", n)), false
 	} else if n == need {
 		// reached
-		dest := t.player.ticket.to
 		t.player.onDot = t.player.ticket.route[need-1]
 		t.player.ticket = nil
 		t.moved = true
 		// new city, can buy souvenir again
 		t.player.hasBought = false
-		return []string{fmt.Sprintf("moved %d, reached %s", n, dest)}, nil
+		return t.oneEvent(fmt.Sprintf("moves %d and arrives", n)), true
 	} else {
 		t.player.onDot = t.player.ticket.route[n-1]
 		t.player.ticket.route = t.player.ticket.route[n:]
 		t.moved = true
 
-		return []string{fmt.Sprintf("moved %d to %s", n, t.player.onDot)}, nil
+		return t.oneEvent(fmt.Sprintf("moves %d", n)), false
 	}
 }
 
@@ -476,7 +462,7 @@ func (g *game) jumpOnMap(t *turn, dest string) error {
 	return nil
 }
 
-func (g *game) stopOnMap(t *turn) ([]string, error) {
+func (g *game) stopOnMap(t *turn) ([]Change, error) {
 	t.stopped = true
 
 	if t.moved {
@@ -487,7 +473,7 @@ func (g *game) stopOnMap(t *turn) ([]string, error) {
 		}
 	}
 
-	return []string{"stopped"}, nil
+	return t.oneEvent("stops moving"), nil
 }
 
 // finds a price and a currency, with the price converted into that currency
@@ -726,8 +712,12 @@ type turn struct {
 	must []string
 }
 
+func (t *turn) makeEvent(msg string) Change {
+	return Change{Who: t.player.name, What: msg, Where: t.player.onDot}
+}
+
 func (t *turn) oneEvent(msg string) []Change {
-	return []Change{{Who: t.player.name, What: msg, Where: t.player.onDot}}
+	return []Change{t.makeEvent(msg)}
 }
 
 type bank struct {

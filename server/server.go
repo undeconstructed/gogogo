@@ -61,7 +61,7 @@ func (s *server) Run() error {
 
 				news = append(news, game.Change{
 					Who:  msg.Name,
-					What: "reconnected",
+					What: "reconnects",
 				})
 			} else {
 				// new player
@@ -70,13 +70,17 @@ func (s *server) Run() error {
 				msg.Rep <- err
 				news = append(news, game.Change{
 					Who:  msg.Name,
-					What: "joined",
+					What: "joins",
 				})
 			}
 		case DisconnectMsg:
 			fmt.Printf("client gone: %s\n", msg.Name)
 			// null the connection, but remember the user
 			s.clients[msg.Name] = clientBundle{}
+			news = append(news, game.Change{
+				Who:  msg.Name,
+				What: "disconnects",
+			})
 		case TextFromUser:
 			s.handleText(msg)
 		case RequestFromUser:
@@ -166,7 +170,7 @@ func (s *server) parseRequest(in RequestFromUser) requestFunc {
 				}, nil
 			}
 			s.turn = &turn
-			return game.StartResultJSON{}, []game.Change{{What: "game started"}}
+			return game.StartResultJSON{}, []game.Change{{What: "the game starts"}}
 		}
 	case "query":
 		f = f[1:]
