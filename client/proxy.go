@@ -19,7 +19,7 @@ func NewGameProxy(client *client) GameClient {
 }
 
 func (gp *gameProxy) Start() error {
-	res := game.StartResult{}
+	res := game.StartResultJSON{}
 	err := gp.client.doRequest("start", nil, &res)
 	if err != nil {
 		return err
@@ -31,7 +31,7 @@ func (gp *gameProxy) Start() error {
 }
 
 func (gp *gameProxy) Play(command game.Command) (string, error) {
-	res := game.PlayResult{}
+	res := game.PlayResultJSON{}
 	err := gp.client.doRequest("play", command, &res)
 	if err != nil {
 		return "", err

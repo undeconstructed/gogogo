@@ -185,13 +185,13 @@ body {
 
 .messages {
   position: absolute;
-  height: 8rem; right: 1rem; bottom: 0; left: 16rem;
+  height: 8rem; right: 0; bottom: 0; left: 16rem;
   overflow: auto;
   background: white;
-  border-top-left-radius: 1rem;
-  border-top-right-radius: 1rem;
   padding: 0 1rem;
   opacity: 0.6;
+  border-top: 2px solid black;
+  border-left: 2px solid black;
 }
 .messages:hover {
   opacity: 1;

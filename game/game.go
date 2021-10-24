@@ -31,10 +31,16 @@ var (
 )
 
 type Game interface {
+	// activities
 	AddPlayer(name string, colour string) error
-	Start() (AboutATurn, error)
-	Play(player string, c Command) (string, error)
+	Start() (TurnState, error)
+	Play(player string, c Command) (PlayResult, error)
 
+	// general state
+	GetTurnState() TurnState
+	GetPlayerSummary() []PlayerState
+
+	// queries
 	DescribeBank() AboutABank
 	ListPlaces() []string
 	DescribePlace(id string) AboutAPlace
@@ -170,12 +176,12 @@ func (g *game) AddPlayer(name string, colour string) error {
 }
 
 // Start starts the game
-func (g *game) Start() (AboutATurn, error) {
+func (g *game) Start() (TurnState, error) {
 	if g.turn != nil {
-		return AboutATurn{}, ErrAlreadyStarted
+		return TurnState{}, ErrAlreadyStarted
 	}
 	if len(g.players) < 1 {
-		return AboutATurn{}, errors.New("no players")
+		return TurnState{}, errors.New("no players")
 	}
 
 	rand.Shuffle(len(g.players), func(i, j int) {
@@ -184,20 +190,32 @@ func (g *game) Start() (AboutATurn, error) {
 
 	g.toNextPlayer()
 
-	return g.DescribeTurn(), nil
+	return g.GetTurnState(), nil
 }
 
 // Turn is current player doing things
-func (g *game) Play(player string, c Command) (string, error) {
+func (g *game) Play(player string, c Command) (PlayResult, error) {
 	t := g.turn
 	if t == nil {
-		return "", errors.New("game not started")
+		return PlayResult{}, errors.New("game not started")
 	}
 
 	if t.player.name != player {
-		return "", ErrNotYourTurn
+		return PlayResult{}, ErrNotYourTurn
 	}
 
+	news, err := g.doPlay(t, c)
+	if err != nil {
+		return PlayResult{}, err
+	}
+
+	return PlayResult{[]Change{{
+		Who:  player,
+		What: news,
+	}}, g.GetTurnState()}, nil
+}
+
+func (g *game) doPlay(t *turn, c Command) (string, error) {
 	if !t.onMap {
 		// on track
 		switch c.Command {
@@ -249,6 +267,42 @@ func (g *game) Play(player string, c Command) (string, error) {
 	}
 
 	return "", errors.New("bad command: " + c.Command)
+}
+
+func (g *game) GetTurnState() TurnState {
+	if g.turn == nil {
+		return TurnState{
+			Number: -1,
+		}
+	}
+
+	p := g.turn.player
+
+	// TODO
+	var can []string
+
+	return TurnState{
+		Number:  g.turn.no,
+		Player:  p.name,
+		Colour:  p.colour,
+		OnMap:   g.turn.onMap,
+		Stopped: g.turn.stopped,
+		Can:     can,
+		Must:    g.turn.must,
+	}
+}
+
+func (g *game) GetPlayerSummary() []PlayerState {
+	var out []PlayerState
+	for _, pl := range g.players {
+		out = append(out, PlayerState{
+			Name:   pl.name,
+			Colour: pl.colour,
+			Square: pl.onSquare,
+			Dot:    pl.onDot,
+		})
+	}
+	return out
 }
 
 func (g *game) moveMoney(from, to map[string]int, currency string, amount int) error {

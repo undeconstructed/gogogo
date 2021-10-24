@@ -28,11 +28,11 @@ func ReError(cerr *comms.CommsError) error {
 	}
 }
 
-type StartResult struct {
+type StartResultJSON struct {
 	Err *comms.CommsError `json:"error"`
 }
 
-type PlayResult struct {
+type PlayResultJSON struct {
 	Msg string            `json:"message"`
 	Err *comms.CommsError `json:"error"`
 }

@@ -7,6 +7,45 @@ import (
 	"strings"
 )
 
+// Change is something that happened
+type Change struct {
+	Who   string `json:"who"`
+	What  string `json:"what"`
+	Where string `json:"where"`
+}
+
+// PlayResult is the result of a Game.Play() call
+type PlayResult struct {
+	News []Change
+	Next TurnState
+}
+
+// GameUpdate is a giant state object, until I do some sort of selective updating.
+type GameUpdate struct {
+	News    []Change      `json:"news"`
+	Playing string        `json:"playing"`
+	Players []PlayerState `json:"players"`
+}
+
+// PlayerState is a summary of each player
+type PlayerState struct {
+	Name   string `json:"name"`
+	Colour string `json:"colour"`
+	Square int    `json:"square"`
+	Dot    string `json:"dot"`
+}
+
+// TurnState is just for the player whose turn is happening
+type TurnState struct {
+	Number  int      `json:"number"`
+	Player  string   `json:"player"`
+	Colour  string   `json:"colour"`
+	OnMap   bool     `json:"onmap"`
+	Stopped bool     `json:"stopped"`
+	Can     []string `json:"can"`
+	Must    []string `json:"must"`
+}
+
 type AboutABank struct {
 	Money     map[string]int `json:"money"`
 	Souvenirs map[string]int `json:"souvenirs"`

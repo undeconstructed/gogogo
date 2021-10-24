@@ -25,7 +25,9 @@ func NewServer(game game.Game) Server {
 type clients map[string]clientBundle
 
 type server struct {
-	game    game.Game
+	game game.Game
+	turn *game.TurnState
+
 	clients clients
 	coreCh  chan interface{}
 }
@@ -41,22 +43,28 @@ func (s *server) Run() error {
 
 	// this is the server's main loop
 	for in := range s.coreCh {
-		changes := false
+		var news []game.Change
 
 		switch msg := in.(type) {
 		case ConnectMsg:
-			fmt.Printf("client come: %s\n", msg.Name)
 			if _, exists := s.clients[msg.Name]; exists {
 				// rejoin, hopefully
 				s.clients[msg.Name] = msg.Client
 				msg.Rep <- nil
+				news = append(news, game.Change{
+					Who:  msg.Name,
+					What: "reconnected",
+				})
 			} else {
 				// new player
 				err := s.game.AddPlayer(msg.Name, msg.Colour)
 				s.clients[msg.Name] = msg.Client
 				msg.Rep <- err
+				news = append(news, game.Change{
+					Who:  msg.Name,
+					What: "joined",
+				})
 			}
-			changes = true
 		case DisconnectMsg:
 			fmt.Printf("client gone: %s\n", msg.Name)
 			// null the connection, but remember the user
@@ -64,15 +72,37 @@ func (s *server) Run() error {
 		case TextFromUser:
 			s.handleText(msg)
 		case RequestFromUser:
-			changes = s.handleRequest(msg)
+			moreNews := s.handleRequest(msg)
+			if len(moreNews) > 0 {
+				news = append(news, moreNews...)
+			}
 		default:
 			fmt.Printf("nonsense in core: %#v\n", in)
 		}
 
-		if changes {
-			about := s.game.DescribeTurn()
-			msg, _ := comms.Encode("turn", about)
+		if len(news) > 0 {
+			playing := s.game.GetTurnState().Player
+			players := s.game.GetPlayerSummary()
+			update := game.GameUpdate{News: news, Playing: playing, Players: players}
+			msg, _ := comms.Encode("update", update)
 			s.broadcast(msg, "")
+		}
+
+		// s.turn is set somewhere deep in the request code normally
+		if s.turn != nil {
+			c, ok := s.clients[s.turn.Player]
+			if !ok {
+				fmt.Printf("current player not connected: %s\n", s.turn.Player)
+			}
+
+			msg, _ := comms.Encode("turn", s.turn)
+
+			select {
+			case c.downCh <- msg:
+				s.turn = nil
+			default:
+				// client lagging
+			}
 		}
 	}
 
@@ -85,8 +115,10 @@ func (s *server) handleText(in TextFromUser) {
 	s.broadcast(out, "")
 }
 
-func (s *server) handleRequest(msg RequestFromUser) bool {
-	res, changed := s.processRequest(msg)
+func (s *server) handleRequest(msg RequestFromUser) []game.Change {
+	f := s.parseRequest(msg)
+	res, news := f()
+
 	cres := ResponseToUser{ID: msg.ID, Body: res}
 	c := s.clients[msg.Who]
 
@@ -96,67 +128,73 @@ func (s *server) handleRequest(msg RequestFromUser) bool {
 		// client lagging
 	}
 
-	// TODO - real notification system
-	if t, ok := res.(game.PlayResult); ok {
-		if t.Msg != "" {
-			text := msg.Who + ": " + t.Msg
-			out, _ := comms.Encode("text", text)
-			s.broadcast(out, "")
-		}
-	}
-
-	return changed
+	return news
 }
 
-func (s *server) processRequest(in RequestFromUser) (res interface{}, changed bool) {
+type requestFunc func() (interface{}, []game.Change)
+
+func (s *server) parseRequest(in RequestFromUser) requestFunc {
 	f := in.Cmd
 	switch f[0] {
 	case "start":
-		_, err := s.game.Start()
-		changed = err == nil
-		return game.StartResult{
-			Err: comms.WrapError(err),
-		}, changed
+		return func() (interface{}, []game.Change) {
+			turn, err := s.game.Start()
+			if err != nil {
+				return game.StartResultJSON{
+					Err: comms.WrapError(err),
+				}, nil
+			}
+			s.turn = &turn
+			return game.StartResultJSON{}, []game.Change{{What: "game started"}}
+		}
 	case "query":
 		f = f[1:]
 		switch f[0] {
 		case "turn":
-			return s.game.DescribeTurn(), false
+			return func() (interface{}, []game.Change) { return s.game.DescribeTurn(), nil }
 		case "bank":
-			return s.game.DescribeBank(), false
+			return func() (interface{}, []game.Change) { return s.game.DescribeBank(), nil }
 		case "players":
-			return s.game.ListPlayers(), false
+			return func() (interface{}, []game.Change) { return s.game.ListPlayers(), nil }
 		case "player":
-			name := f[1]
-			return s.game.DescribePlayer(name), false
+			name := f[1] // XXX
+			return func() (interface{}, []game.Change) { return s.game.DescribePlayer(name), nil }
 		case "places":
-			return s.game.ListPlaces(), false
+			return func() (interface{}, []game.Change) { return s.game.ListPlaces(), nil }
 		case "place":
-			id := f[1]
-			return s.game.DescribePlace(id), false
+			id := f[1] // XXX
+			return func() (interface{}, []game.Change) { return s.game.DescribePlace(id), nil }
 		default:
-			return comms.WrapError(fmt.Errorf("unknown query: %v", f)), false
+			return func() (interface{}, []game.Change) { return comms.WrapError(fmt.Errorf("unknown query: %v", f)), nil }
 		}
 	case "play":
 		gameCommand := game.Command{}
 		if data, ok := in.Body.([]byte); ok {
 			if err := json.Unmarshal(data, &gameCommand); err != nil {
 				// bad command
-				return comms.WrapError(fmt.Errorf("bad body: %w", err)), false
+				return func() (interface{}, []game.Change) { return comms.WrapError(fmt.Errorf("bad body: %w", err)), nil }
 			}
-			res, err := s.game.Play(in.Who, gameCommand)
-			changed = err == nil
-			return game.PlayResult{
-				Msg: res,
-				Err: comms.WrapError(err),
-			}, changed
+
+			return func() (interface{}, []game.Change) {
+				res, err := s.game.Play(in.Who, gameCommand)
+				if err != nil {
+					return game.PlayResultJSON{Err: comms.WrapError(err)}, nil
+				}
+
+				// XXX - this is a strange way to get this data back to the server loop
+				s.turn = &res.Next
+
+				return game.PlayResultJSON{}, res.News
+			}
 		} else {
-			return game.PlayResult{
-				Err: comms.WrapError(errors.New("bad data")),
-			}, false
+			return func() (interface{}, []game.Change) {
+				return game.PlayResultJSON{Err: comms.WrapError(errors.New("bad data"))}, nil
+			}
 		}
 	default:
-		return comms.WrapError(fmt.Errorf("unknown request: %v", in.Cmd)), false
+		return func() (interface{}, []game.Change) {
+			return comms.WrapError(fmt.Errorf("unknown request: %v", in.Cmd)), nil
+		}
 	}
 }
 

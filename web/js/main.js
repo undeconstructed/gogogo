@@ -8,13 +8,16 @@ let state = {
 
   squares: [],
   trackMarks: new Map(),
-  mapMarks: new Map()
+  mapMarks: new Map(),
+
+  players: new Map(),
+  turn: null,
 }
 
 function connect(name, colour, then) {
   if (state.ws) return
 
-  const conn = new WebSocket(`ws://${location.hostname}:1235/?name=${name}&colour=${colour}`, 'comms')
+  const conn = new WebSocket(`ws://${location.host}/ws?name=${name}&colour=${colour}`, 'comms')
 
   conn.onclose = ev => {
     console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`)
@@ -36,8 +39,10 @@ function connect(name, colour, then) {
     }
     console.log(ev.data)
     let msg = JSON.parse(ev.data)
-    if (msg.head === 'turn') {
-      receiveState(msg.data)
+    if (msg.head === 'update') {
+      receiveUpdate(msg.data)
+    } else if (msg.head === 'turn') {
+      receiveTurn(msg.data)
     } else if (msg.head === 'text') {
       log(msg.data)
     } else if (msg.head.startsWith('response:')) {
@@ -64,42 +69,82 @@ function send(type, data) {
   state.ws.send(jtext)
 }
 
-function receiveState(st) {
-  document.body.setAttribute('started', !!st.player)
+function receiveUpdate(st) {
+  if (!st.playing) {
+    document.body.setAttribute('started', false)
+  } else {
+    document.body.setAttribute('started', true)
+    if (st.playing != state.name) {
+      // is not my turn, update the status bar
+      receiveTurn({
+        player: st.playing,
+        must: null
+      })
+    }
+  }
+
+  for (let n of st.news) {
+    log(n)
+  }
+
+  for (let pl of st.players) {
+    let prev = state.players.get(pl.name) || {}
+
+    if (prev.square != pl.square) {
+      scrollTrackTo(pl.square)
+      markOnTrack(pl.colour, pl.square)
+    }
+    if (prev.dot != pl.dot) {
+      scrollMapTo(pl.dot)
+      markOnMap(pl.colour, pl.dot)
+    }
+
+    state.players.set(pl.name, pl)
+  }
+}
+
+function receiveTurn(st) {
+  state.turn = st
+
+  let player = state.players.get(st.player)
   document.body.setAttribute('ontrack', !st.onmap)
 
   let s = select(document, '.state')
 
   let sc = select(s, '.colour')
-  sc.style.backgroundColor = st.colour
+  sc.style.backgroundColor = player.colour
   let sn = select(s, '.name')
-  sn.textContent = st.player
+  sn.textContent = player.name
 
-  let what = st.stopped ? 'Stopped' : 'Moving'
-  let where, point
-  if (st.onmap) {
-    where = 'map'
-    let dot = state.data.dots[st.dot]
-    if (dot.place) {
-      point = state.data.places[dot.place].name
-    } else {
-      point = st.dot
-    }
+  // XXX HACK
+  if (st.onmap === undefined) {
+    // not our turn
+    let sr = select(s, '.text')
+    sr.textContent = ''
   } else {
-    where = 'track'
-    point = state.data.squares[st.square].name
+    let what = st.stopped ? 'Stopped' : 'Moving'
+    let where, point
+    if (st.onmap) {
+      where = 'map'
+      let dot = state.data.dots[player.dot]
+      if (dot.place) {
+        point = state.data.places[dot.place].name
+      } else {
+        point = player.dot
+      }
+    } else {
+      where = 'track'
+      point = state.data.squares[player.square].name
+    }
+    let text = `${what} on ${where}, at ${point}`
+
+    if (st.must) {
+      text += `, and must ${st.must}`
+    }
+
+    let sr = select(s, '.text')
+    sr.textContent = text
   }
-  let text = `${what} on ${where}, at ${point}`
-
-  if (st.must) {
-    text += `, and must ${st.must}`
-  }
-
-  let sr = select(s, '.text')
-  sr.textContent = text
-
-  markOnTrack(st.colour, st.square)
-  markOnMap(st.colour, st.dot)
 }
 
 function markOnTrack(colour, square) {
@@ -119,7 +164,10 @@ function markOnTrack(colour, square) {
 
   state.trackMarks.set(colour, mark)
   select(squareDiv, '.sitting').append(mark)
+}
 
+function scrollTrackTo(square) {
+  let squareDiv = state.squares[square]
   squareDiv.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
@@ -148,6 +196,10 @@ function markOnMap(colour, dot) {
 
   state.mapMarks.set(colour, nmarker)
   layer.append(nmarker)
+}
+
+function scrollMapTo(dot) {
+  let [x, y] = split(dot)
 
   let scroller = select(document, '.map')
   let scrollee = scroller.firstElementChild
@@ -225,7 +277,7 @@ function plot(data) {
           if (e) {
             alert(e.message); return
           }
-          log(JSON.stringify(r))
+          log(r)
         })
       })
       return
@@ -243,7 +295,7 @@ function plot(data) {
           if (e) {
             alert(e.message); return
           }
-          log(JSON.stringify(r))
+          log(r)
         })
       })
       layer.append(ndot)
@@ -313,7 +365,7 @@ function doSelf() {
       lucks[cardId] = state.data.lucks[cardId].name
     }
     r.lucks = lucks
-    log(JSON.stringify(r))
+    log(r)
   })
 }
 
@@ -335,7 +387,7 @@ function doStart() {
     if (e) {
       alert(e.message); return
     }
-    // log(JSON.stringify(r))
+    // log(r)
   })
 }
 
@@ -349,7 +401,7 @@ function doPlay(cmd, action) {
     if (e) {
       alert(e.message); return
     }
-    // log(JSON.stringify(r))
+    // log(r)
   })
 }
 
@@ -383,6 +435,7 @@ function setup(inData, name, colour) {
 }
 
 function log(text) {
+  text = typeof text === 'string' ? text : JSON.stringify(text)
   let s = select(document, '.messages')
   let d = document.createElement('div')
   d.textContent = text
@@ -399,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return
   }
 
-  fetch('../data.json').
+  fetch('data.json').
     then(rez => rez.json()).
     then(data => {
       setup(data, name, colour)

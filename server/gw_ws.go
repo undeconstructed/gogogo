@@ -27,11 +27,16 @@ func runWsGateway(server *server, addr string) error {
 	}
 	fmt.Printf("ws listening on http://%v\n", l.Addr())
 
+	m := http.NewServeMux()
+	m.Handle("/", http.FileServer(http.Dir("web")))
+	m.HandleFunc("/data.json", serveDataFile)
+	m.Handle("/ws", commsServer{
+		server: server,
+		logf:   log.Printf,
+	})
+
 	s := &http.Server{
-		Handler: commsServer{
-			server: server,
-			logf:   log.Printf,
-		},
+		Handler:      m,
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 10,
 	}
@@ -40,6 +45,10 @@ func runWsGateway(server *server, addr string) error {
 	}()
 
 	return nil
+}
+
+func serveDataFile(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "data.json")
 }
 
 type commsServer struct {
