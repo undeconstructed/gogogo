@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -133,15 +134,22 @@ type luckCard struct {
 func (lc luckCard) ParseCode() interface{} {
 	code := lc.Code
 	switch {
+	case strings.HasPrefix(code, "advance:"):
+		n, _ := strconv.Atoi(code[8:])
+		return LuckAdvance{n}
 	case strings.HasPrefix(code, "go:"):
 		return LuckGo{code[3:]}
+	case code == "immunity":
+		return LuckImmunity{}
+	case code == "inoculation":
+		return LuckInoculation{}
 	case strings.HasPrefix(code, "getmoney:"):
 		var currencyId string
 		var amount int
-		code = strings.ReplaceAll(code, ":", " ") // UGC
+		code = strings.ReplaceAll(code, ":", " ") // UGH!
 		_, err := fmt.Sscanf(code, "getmoney %s %d", &currencyId, &amount)
 		if err != nil {
-			return fmt.Errorf("invalid luck code: %s, %w", lc.Code, err)
+			panic(fmt.Sprintf("invalid luck code: %s, %v", lc.Code, err))
 		}
 		return LuckGetMoney{currencyId, amount}
 	default:
@@ -153,8 +161,18 @@ type LuckCode struct {
 	Code string
 }
 
+type LuckAdvance struct {
+	N int
+}
+
 type LuckGo struct {
 	Dest string
+}
+
+type LuckImmunity struct {
+}
+
+type LuckInoculation struct {
 }
 
 type LuckGetMoney struct {
@@ -167,6 +185,10 @@ type riskCard struct {
 	Code string `json:"code"`
 }
 
+func (rc riskCard) ParseCode() {
+	// ???
+}
+
 type currency struct {
 	Name string `json:"name"`
 	Rate int    `json:"rate"`
@@ -176,6 +198,70 @@ type trackSquare struct {
 	Type    string   `json:"type"`
 	Name    string   `json:"name"`
 	Options []string `json:"options"`
+}
+
+func (t *trackSquare) ParseOptions() []interface{} {
+	var out []interface{}
+
+	for _, option := range t.Options {
+		ss := strings.SplitN(option, ":", 2)
+		switch ss[0] {
+		case "go":
+			dest := ss[1]
+			forwards := true
+			if dest[0] == '-' {
+				forwards = false
+				dest = dest[1:]
+			}
+			out = append(out, OptionGo{dest, forwards})
+		case "can":
+			ss1 := strings.SplitN(ss[1], ":", 2)
+			cmd := ss1[0]
+			options := ""
+			if len(ss1) > 1 {
+				options = ss1[1]
+			}
+			out = append(out, OptionCan{cmd, options})
+		case "must":
+			ss1 := strings.SplitN(ss[1], ":", 2)
+			cmd := ss1[0]
+			options := ""
+			if len(ss1) > 1 {
+				options = ss1[1]
+			}
+			out = append(out, OptionMust{cmd, options})
+		case "miss":
+			n, _ := strconv.Atoi(ss[1])
+			out = append(out, OptionMiss{n})
+		default:
+			out = append(out, OptionCode{option})
+		}
+	}
+
+	return out
+}
+
+type OptionGo struct {
+	Dest     string
+	Forwards bool
+}
+
+type OptionCan struct {
+	Command string
+	Options string
+}
+
+type OptionMust struct {
+	Command string
+	Options string
+}
+
+type OptionMiss struct {
+	N int
+}
+
+type OptionCode struct {
+	Code string
 }
 
 func (t *trackSquare) hasOption(o string) bool {

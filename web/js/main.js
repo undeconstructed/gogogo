@@ -74,13 +74,6 @@ function receiveUpdate(st) {
     document.body.setAttribute('started', false)
   } else {
     document.body.setAttribute('started', true)
-    if (st.playing != state.name) {
-      // is not my turn, update the status bar
-      receiveTurn({
-        player: st.playing,
-        must: null
-      })
-    }
   }
 
   for (let n of st.news) {
@@ -101,6 +94,14 @@ function receiveUpdate(st) {
 
     state.players.set(pl.name, pl)
   }
+
+  if (st.playing && st.playing != state.name) {
+    // XXX - is not my turn, update the status bar - shouldn't use a fake turn
+    receiveTurn({
+      player: st.playing,
+      must: null
+    })
+  }
 }
 
 function receiveTurn(st) {
@@ -117,10 +118,11 @@ function receiveTurn(st) {
   sn.textContent = player.name
 
   // XXX HACK
-  if (st.onmap === undefined) {
+  if (true || st.onmap === undefined) {
     // not our turn
     let sr = select(s, '.text')
     sr.textContent = ''
+    makeButtons()
   } else {
     let what = st.stopped ? 'Stopped' : 'Moving'
     let where, point
@@ -144,6 +146,7 @@ function receiveTurn(st) {
 
     let sr = select(s, '.text')
     sr.textContent = text
+    makeButtons()
   }
 }
 
@@ -319,15 +322,9 @@ function plot(data) {
   }
 }
 
-function makeButtons(data) {
+function makeButtons() {
   let buttonBox = select(document, '.actions')
-
-  {
-    let button = document.createElement('button')
-    button.append('start')
-    button.addEventListener('click', doStart)
-    buttonBox.append(button)
-  }
+  buttonBox.replaceChildren()
 
   {
     let button = document.createElement('button')
@@ -343,15 +340,23 @@ function makeButtons(data) {
     buttonBox.append(button)
   }
 
-  // play action buttons
-  buttonBox.append(document.createElement('br'))
-  for (let a of Object.keys(data.actions)) {
+  if (state.turn) {
+    makePlayButtons(buttonBox, state.turn.can, 'can')
+    makePlayButtons(buttonBox, state.turn.must, 'must')
+  }
+}
+
+function makePlayButtons(tgt, actions, clazz) {
+  tgt.append(document.createElement('br'))
+  for (let a of actions || []) {
+    let cmd = a.split(":")[0]
     let button = document.createElement('button')
-    button.append(a)
+    button.classList.add(clazz)
+    button.append(cmd)
     button.addEventListener('click', e => {
-      doPlay(a, data.actions[a])
+      doPlay(cmd, state.data.actions[cmd])
     })
-    buttonBox.append(button)
+    tgt.append(button)
   }
 }
 
@@ -425,7 +430,11 @@ function setup(inData, name, colour) {
   state.name = name
   state.colour = colour
 
+  let startButton = select(document, '#startbutton')
+  startButton.addEventListener('click', doStart)
+
   makeSquares(state.data)
+  // XXX - will fail if the svg isn't loaded
   // img.contentDocument.addEventListener('load', e => {
     plot(state.data)
   // })

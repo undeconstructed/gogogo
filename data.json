@@ -5,26 +5,28 @@
   },
   "actions": {
     "dicemove": {},
-    "stop": {},
-    "takeluck": {},
-    "buysouvenir": {},
     "useluck": {
       "help": "<cardId>"
     },
+    "stop": {},
     "buyticket": {
       "help": "<to> <mode>"
     },
     "changemoney": {
       "help": "<from> <amount(from)>"
     },
-    "takerisk": {},
-    "gamble": {
-      "help": "<currency> <amount>"
-    },
+    "buysouvenir": {},
     "pay": {},
     "declare": {
       "help": "<place> | none"
     },
+    "takeluck": {},
+    "gamble": {
+      "help": "<currency> <amount>"
+    },
+    "gainlocal10": {},
+    "quarantine": {},
+    "takerisk": {},
     "end": {}
   },
   "squares": [
@@ -39,7 +41,7 @@
       "type": "curspec",
       "name": "Currency speculation - receive £100 from the bank in the currency of the country you are visiting",
       "options": [
-        "auto:gainlocal10"
+        "can:gainlocal10"
       ]
     },
     {
@@ -78,7 +80,7 @@
       "type": "quarantine",
       "name": "Quarantined - Suspected smallpox - Miss one turn",
       "options": [
-        "auto:miss:1"
+        "must:quarantine"
       ]
     },
     {
@@ -86,10 +88,7 @@
       "name": "Thos. Cook and son / Bureau de change",
       "options": [
         "can:changemoney",
-        "can:buyticket:l",
-        "can:buyticket:s",
-        "can:buyticket:a",
-        "can:buyticket:r"
+        "can:buyticket:*"
       ]
     },
     {
@@ -138,7 +137,7 @@
       "type": "customs1",
       "name": "Customs - pay £100 duty (in any currency)",
       "options": [
-        "must:pay:x:10"
+        "must:pay:*:10"
       ]
     },
     {
@@ -152,14 +151,14 @@
       "type": "gocooks",
       "name": "Short cut to Cooks",
       "options": [
-        "auto:go:cooks"
+        "go:cooks"
       ]
     },
     {
       "type": "hospital",
       "name": "City hospital - You need a rest - Miss one turn",
       "options": [
-        "auto:miss:1"
+        "miss:1"
       ]
     },
     {
@@ -195,17 +194,14 @@
       "name": "Thos. Cook and son / Bureau de change",
       "options": [
         "can:changemoney",
-        "can:buyticket:l",
-        "can:buyticket:s",
-        "can:buyticket:a",
-        "can:buyticket:r"
+        "can:buyticket:*"
       ]
     },
     {
       "type": "gobank",
       "name": "Short cut to Bank",
       "options": [
-        "auto:go:bank"
+        "go:bank"
       ]
     },
     {
@@ -240,7 +236,7 @@
       "type": "badpapers",
       "name": "Your papers are not in order - go back to the british consulate",
       "options": [
-        "auto:goconsulate"
+        "go:-consulate"
       ]
     },
     {
@@ -248,10 +244,7 @@
       "name": "Thos. Cook and son / Bureau de change",
       "options": [
         "can:changemoney",
-        "can:buyticket:l",
-        "can:buyticket:s",
-        "can:buyticket:a",
-        "can:buyticket:r"
+        "can:buyticket:*"
       ]
     },
     {
@@ -2107,7 +2100,7 @@
     },
     {
       "name": "Free sea ticket - One journey only. - Keep until needed then surrender.",
-      "code": "freeticket:x:x:s",
+      "code": "freeticket:*:*:s",
       "retain": true
     },
     {
@@ -2141,7 +2134,7 @@
     },
     {
       "name": "Free train ticket - One journey only. - Retain until needed then surrender.",
-      "code": "freeticket:x:x:r",
+      "code": "freeticket:*:*:r",
       "retain": true
     },
     {
@@ -2208,7 +2201,7 @@
     },
     {
       "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional.",
-      "code": "insurance:x:10",
+      "code": "insurance:*:10",
       "retain": true
     },
     {
@@ -2227,7 +2220,7 @@
     },
     {
       "name": "Free insurance policy - In case of diversion or accident, collect from Bank twice price of fare in Sterling. - Use only one then surrender.",
-      "code": "insurance:x:0",
+      "code": "insurance:*:0",
       "retain": true
     },
     {
@@ -2242,7 +2235,7 @@
     },
     {
       "name": "Free car ticket - One journey only. - Keep until needed then surrender.",
-      "code": "freeticket:x:x:l",
+      "code": "freeticket:*:*:l",
       "retain": true
     },
     {
@@ -2267,7 +2260,7 @@
     },
     {
       "name": "Free air ticket - One journey only. - Keep until needed then surrender.",
-      "code": "freeticket:x:x:a",
+      "code": "freeticket:*:*:a",
       "retain": true
     },
     {
@@ -2315,7 +2308,7 @@
     },
     {
       "name": "All transport - Excess baggage. - 100 kilos overweight. - Pay £40 (or equivalent in local currency)",
-      "code": "must:pay:x:4"
+      "code": "must:pay:*:4"
     },
     {
       "name": "Ships and planes only - Hurricane. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave.",

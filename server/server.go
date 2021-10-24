@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
@@ -51,6 +52,13 @@ func (s *server) Run() error {
 				// rejoin, hopefully
 				s.clients[msg.Name] = msg.Client
 				msg.Rep <- nil
+
+				// tell the player everything
+				turn := s.game.GetTurnState()
+				if turn.Player == msg.Name {
+					s.turn = &turn
+				}
+
 				news = append(news, game.Change{
 					Who:  msg.Name,
 					What: "reconnected",
@@ -81,6 +89,8 @@ func (s *server) Run() error {
 		}
 
 		if len(news) > 0 {
+			s.saveGame()
+
 			playing := s.game.GetTurnState().Player
 			players := s.game.GetPlayerSummary()
 			update := game.GameUpdate{News: news, Playing: playing, Players: players}
@@ -107,6 +117,17 @@ func (s *server) Run() error {
 	}
 
 	return nil
+}
+
+func (s *server) saveGame() {
+	outFile, err := os.Create("state.json")
+	if err != nil {
+		fmt.Printf("can't save: %v\n", err)
+		return
+	}
+	defer outFile.Close()
+
+	s.game.WriteOut(outFile)
 }
 
 func (s *server) handleText(in TextFromUser) {

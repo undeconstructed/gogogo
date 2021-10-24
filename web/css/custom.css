@@ -47,6 +47,19 @@ body {
 
 /* -------------------------------- */
 
+button {
+  background: white;
+  border-radius: 5px;
+  border-width: 0;
+}
+button:hover {
+  outline: 2px solid black !important;
+}
+button:active {
+  background: black;
+  color: white;
+}
+
 .game {
   font-size: smaller;
 }
@@ -133,16 +146,12 @@ body {
 
 .actions > button {
   flex: 0 0 auto;
-  background: white;
-  border-radius: 5px;
-  border-width: 0;
 }
-.actions > button:hover {
-  outline: 2px solid black;
+.actions > button.can {
+  outline: 2px solid green;
 }
-.actions > button:active {
-  background: black;
-  color: white;
+.actions > button.must {
+  outline: 2px solid red;
 }
 
 .game[started=false] .nostate {
@@ -162,6 +171,9 @@ body {
 .nostate {
   text-align: center;
   padding: 1rem;
+}
+.nostate button {
+  font-size: 500%;
 }
 
 .currentturn {
