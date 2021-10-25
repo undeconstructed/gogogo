@@ -208,3 +208,48 @@ button:active {
 .messages:hover {
   opacity: 1;
 }
+
+.game[ticket=false] .ticket {
+  display: none;
+}
+
+.ticket {
+  position: absolute;
+  background-color: #dfd8c7;
+  border: 1px solid black;
+  width: 20em;
+  height: 14em;
+  right: -14em;
+  bottom: 8em;
+  rotate: -.14turn;
+  transition: right .5s, rotate .5s;
+  display: flex;
+  flex-flow: column;
+  padding: 1em;
+}
+.ticket:hover {
+  right: -2em;
+  rotate: -.06turn;
+}
+.ticket > div {
+  flex: 1 0 auto;
+}
+
+.ticket .head {
+  text-align: center;
+}
+.ticket .field {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: baseline;
+  gap: 1rem;
+}
+.ticket .field span {
+  flex: 1 0 auto;
+  border-bottom: 1px dotted black;
+  padding-left: .5rem;
+}
+.ticket .foot {
+  text-align: center;
+  font-size: 60%;
+}

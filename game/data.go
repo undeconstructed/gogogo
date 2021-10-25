@@ -30,10 +30,11 @@ type GameUpdate struct {
 
 // PlayerState is a summary of each player
 type PlayerState struct {
-	Name   string `json:"name"`
-	Colour string `json:"colour"`
-	Square int    `json:"square"`
-	Dot    string `json:"dot"`
+	Name   string  `json:"name"`
+	Colour string  `json:"colour"`
+	Square int     `json:"square"`
+	Dot    string  `json:"dot"`
+	Ticket *Ticket `json:"ticket"`
 }
 
 // TurnState is just for the player whose turn is happening
@@ -45,6 +46,13 @@ type TurnState struct {
 	Stopped bool     `json:"stopped"`
 	Can     []string `json:"can"`
 	Must    []string `json:"must"`
+}
+
+type Ticket struct {
+	By   string `json:"by"`
+	From string `json:"from"`
+	To   string `json:"to"`
+	Fare string `json:"fare"`
 }
 
 type AboutABank struct {
@@ -283,4 +291,13 @@ type worldPlace struct {
 	Routes   map[string]int `json:"routes"`
 
 	Dot string
+}
+
+// gameSave is container for saving all changing
+type gameSave struct {
+	Players []player `json:"players"`
+	Bank    bank     `json:"bank"`
+	Lucks   []int    `json:"lucks"`
+	Risks   []int    `json:"risks"`
+	Turn    *turn    `json:"turn"`
 }

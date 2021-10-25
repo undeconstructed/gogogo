@@ -30,13 +30,26 @@ func main() {
 }
 
 func serverMain() {
+	rand.Seed(time.Now().Unix())
 	data := game.LoadJson()
 
-	rand.Seed(time.Now().Unix())
-	g := game.NewGame(data)
+	var g game.Game
+
+	f, err := os.Open("state.json")
+	if err != nil {
+		fmt.Printf("cannot open state file: %v\n", err)
+		g = game.NewGame(data)
+	} else {
+		// XXX - random seed not restored
+		g, err = game.NewFromSaved(data, f)
+		if err != nil {
+			fmt.Printf("cannot restore state: %v\n", err)
+			return
+		}
+	}
 
 	server := server.NewServer(g)
-	err := server.Run()
+	err = server.Run()
 	if err != nil {
 		fmt.Printf("server ended: %v\n", err)
 		os.Exit(1)

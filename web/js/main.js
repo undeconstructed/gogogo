@@ -11,6 +11,7 @@ let state = {
   mapMarks: new Map(),
 
   players: new Map(),
+  playing: null,
   turn: null,
 }
 
@@ -76,16 +77,30 @@ function receiveUpdate(st) {
     document.body.setAttribute('started', true)
   }
 
+  if (state.playing != st.playing) {
+    // turn has moved on
+    state.playing = st.playing
+  }
+
   for (let pl of st.players) {
     let prev = state.players.get(pl.name) || {}
 
+    if (pl.name == state.name) {
+      // this is us
+      receiveTicket(pl.ticket)
+    }
+
     if (prev.square != pl.square) {
-      scrollTrackTo(pl.square)
       markOnTrack(pl.colour, pl.square)
     }
     if (prev.dot != pl.dot) {
-      scrollMapTo(pl.dot)
       markOnMap(pl.colour, pl.dot)
+    }
+
+    if (state.playing == pl.name) {
+      // focus on active plauer
+      scrollMapTo(pl.dot)
+      scrollTrackTo(pl.square)
     }
 
     state.players.set(pl.name, pl)
@@ -101,6 +116,19 @@ function receiveUpdate(st) {
       player: st.playing,
       must: null
     })
+  }
+}
+
+function receiveTicket(ticket) {
+  if (!ticket) {
+    document.body.setAttribute('ticket', false)
+  } else {
+    let div = select(document, '.ticket')
+    select(div, '.by > span').textContent = ticket.by
+    select(div, '.from > span').textContent = ticket.from
+    select(div, '.to > span').textContent = ticket.to
+    select(div, '.fare > span').textContent = ticket.fare
+    document.body.setAttribute('ticket', true)
   }
 }
 

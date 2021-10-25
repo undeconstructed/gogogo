@@ -48,12 +48,13 @@ func (s *server) Run() error {
 
 		switch msg := in.(type) {
 		case ConnectMsg:
-			if _, exists := s.clients[msg.Name]; exists {
-				// rejoin, hopefully
+			err := s.game.AddPlayer(msg.Name, msg.Colour)
+			if err == game.ErrPlayerExists {
+				// assume this is same player rejoining
 				s.clients[msg.Name] = msg.Client
 				msg.Rep <- nil
 
-				// tell the player everything
+				// if it's this players turn, arrange for a new turn message
 				turn := s.game.GetTurnState()
 				if turn.Player == msg.Name {
 					s.turn = &turn
@@ -63,11 +64,13 @@ func (s *server) Run() error {
 					Who:  msg.Name,
 					What: "reconnects",
 				})
+			} else if err != nil {
+				msg.Rep <- err
 			} else {
 				// new player
-				err := s.game.AddPlayer(msg.Name, msg.Colour)
 				s.clients[msg.Name] = msg.Client
-				msg.Rep <- err
+				msg.Rep <- nil
+
 				news = append(news, game.Change{
 					Who:  msg.Name,
 					What: "joins",
@@ -75,8 +78,7 @@ func (s *server) Run() error {
 			}
 		case DisconnectMsg:
 			fmt.Printf("client gone: %s\n", msg.Name)
-			// null the connection, but remember the user
-			s.clients[msg.Name] = clientBundle{}
+			delete(s.clients, msg.Name)
 			news = append(news, game.Change{
 				Who:  msg.Name,
 				What: "disconnects",
