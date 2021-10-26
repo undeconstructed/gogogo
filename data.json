@@ -1,7 +1,14 @@
 {
   "settings": {
     "home": "london",
+    "souvenirPrice": 6,
     "goal": 3
+  },
+  "modes": {
+    "a": "air",
+    "r": "rail",
+    "l": "land",
+    "s": "sea"
   },
   "actions": {
     "airlift": {},
@@ -401,6 +408,7 @@
         "mexicocity:a": 10,
         "riodejaneiro:s": 1,
         "riodejaneiro:l": 3,
+        "riodejaneiro:sr": -1,
         "sanfrancisco:s": 15
       }
     },
@@ -625,6 +633,7 @@
       "routes": {
         "buenosaires:s": 1,
         "buenosaires:l": 3,
+        "buenosaires:rs": -1,
         "casablanca:a": 10,
         "mexicocity:a": 10,
         "newyork:a": 12,
@@ -1329,7 +1338,7 @@
     "476,508": {
       "place": "capetown",
       "links": [
-        "s:480,557",
+        "s:479,557",
         "s:503,548",
         "s:516,521",
         "a:492,445",
@@ -1521,9 +1530,9 @@
         "l:437,289"
       ]
     },
-    "330,364": {
+    "331,364": {
       "links": [
-        "s:369,421"
+        "s:370,420"
       ]
     },
     "351,378": {
@@ -1531,13 +1540,13 @@
         "a:324,437"
       ]
     },
-    "369,421": {
+    "370,420": {
       "links": [
         "s:372,492",
-        "s:419,442"
+        "s:419,443"
       ]
     },
-    "419,442": {
+    "419,443": {
       "links": [
         "s:428,485"
       ]
@@ -1711,7 +1720,7 @@
         "a:365,531"
       ]
     },
-    "480,557": {
+    "479,557": {
       "links": [
         "s:434,584"
       ]
@@ -1845,10 +1854,10 @@
     "389,233": {
       "danger": true,
       "links": [
-        "s:375,265"
+        "s:376,265"
       ]
     },
-    "375,265": {
+    "376,265": {
       "links": [
         "s:391,296"
       ]
@@ -2066,7 +2075,7 @@
     "347,321": {
       "danger": true,
       "links": [
-        "s:330,364"
+        "s:331,364"
       ]
     },
     "369,342": {
@@ -2078,7 +2087,7 @@
     "388,461": {
       "place": "ascensionisland",
       "links": [
-        "s:419,442"
+        "s:419,443"
       ]
     },
     "17,320": {
@@ -2357,7 +2366,7 @@
     },
     {
       "name": "Plane changes course - Diverted to Falkand Isles. - Surrender ticket for present journey. Purchase new ticket to leave.",
-      "code": "sa/go:wellington"
+      "code": "a/go:falklandislands"
     },
     {
       "name": "Ships only - Severe storm. - Your ship seeks refuge in Archangel (U.S.S.R.) - Surrender ticket for present journey. Purchase new ticket to leave.",

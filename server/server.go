@@ -211,7 +211,7 @@ func (s *server) parseRequest(in RequestFromUser) requestFunc {
 				// XXX - this is a strange way to get this data back to the server loop
 				s.turn = &res.Next
 
-				return game.PlayResultJSON{}, res.News
+				return game.PlayResultJSON{Msg: res.Response}, res.News
 			}
 		} else {
 			return func() (interface{}, []game.Change) {

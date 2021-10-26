@@ -6,7 +6,7 @@ import (
 
 type GameClient interface {
 	Start() error
-	Play(c game.Command) (string, error)
+	Play(c game.Command) (interface{}, error)
 	Query(cmd string, resp interface{}) error
 }
 
@@ -30,7 +30,7 @@ func (gp *gameProxy) Start() error {
 	return nil
 }
 
-func (gp *gameProxy) Play(command game.Command) (string, error) {
+func (gp *gameProxy) Play(command game.Command) (interface{}, error) {
 	res := game.PlayResultJSON{}
 	err := gp.client.doRequest("play", command, &res)
 	if err != nil {

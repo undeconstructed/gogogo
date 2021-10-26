@@ -16,9 +16,9 @@ type Change struct {
 
 // PlayResult is the result of a Game.Play() call
 type PlayResult struct {
-	// Response string
-	News []Change
-	Next TurnState
+	Response interface{}
+	News     []Change
+	Next     TurnState
 }
 
 // GameUpdate is a giant state object, until I do some sort of selective updating.
@@ -129,8 +129,9 @@ type GameData struct {
 }
 
 type settings struct {
-	Home string `json:"home"`
-	Goal int    `json:"goal"`
+	Home          string `json:"home"`
+	SouvenirPrice int    `json:"souvenirPrice"`
+	Goal          int    `json:"goal"`
 }
 
 type action struct {

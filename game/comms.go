@@ -33,6 +33,6 @@ type StartResultJSON struct {
 }
 
 type PlayResultJSON struct {
-	Msg string            `json:"message"`
+	Msg interface{}       `json:"message"`
 	Err *comms.CommsError `json:"error"`
 }

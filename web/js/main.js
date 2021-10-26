@@ -38,8 +38,8 @@ function connect(name, colour, then) {
       console.error("unexpected message type", typeof ev.data)
       return
     }
-    console.log(ev.data)
     let msg = JSON.parse(ev.data)
+    console.log('rx', msg)
     if (msg.head === 'update') {
       receiveUpdate(msg.data)
     } else if (msg.head === 'turn') {
@@ -48,25 +48,29 @@ function connect(name, colour, then) {
       log(msg.data)
     } else if (msg.head.startsWith('response:')) {
       let rn = msg.head.substring(9)
-      let res = msg.data
       let then = state.reqs.get(rn)
       state.reqs.delete(rn)
-      let err = null
-      then(msg.data.error, msg.data)
+
+      let res = msg.data
+      // XXX - nothing says these fields must exist
+      then(res.error, res)
     }
   }
 }
 
 function send(type, data) {
-  if (!state.ws) return
+  if (!state.ws) {
+    alert('not connected')
+    return
+  }
 
   let msg = {
     Head: type,
     Data: data
   }
 
+  console.log('tx', msg)
   let jtext = JSON.stringify(msg)
-  console.log('sending', msg)
   state.ws.send(jtext)
 }
 
@@ -145,12 +149,20 @@ function receiveLucks(lucks) {
   }
 }
 
+function makeByLine(modes) {
+  let ms = []
+  for (let m of modes) {
+    ms.push(state.data.modes[m])
+  }
+  return ms.join(' and ')
+}
+
 function receiveTicket(ticket) {
   if (!ticket) {
     document.body.setAttribute('ticket', false)
   } else {
     let div = select(document, '.ticket')
-    select(div, '.by > span').textContent = ticket.by
+    select(div, '.by > span').textContent = makeByLine(ticket.by)
     let from = state.data.places[ticket.from].name
     select(div, '.from > span').textContent = from
     let to = state.data.places[ticket.to].name
@@ -170,10 +182,23 @@ function receiveStatus(money, souvenirs) {
   let sn = select(s, '.name')
   sn.textContent = state.name
 
-  let text = `${JSON.stringify(money)}, ${souvenirs}`
+  let md = select(document, '.money > div')
+  md.replaceChildren()
+  for (let cId in money || {}) {
+    let cName = state.data.currencies[cId].name
+    let div = document.createElement('div')
+    div.textContent = `${money[cId]} ${cName}`
+    md.append(div)
+  }
 
-  let st = select(s, '.text')
-  st.textContent = text
+  let sd = select(document, '.souvenirs > div')
+  sd.replaceChildren()
+  for (let s of souvenirs || []) {
+    let div = document.createElement('div')
+    let place = state.data.places[s]
+    div.textContent = `${place.souvenir} from ${place.name}`
+    sd.append(div)
+  }
 }
 
 function receiveTurn(st) {
@@ -240,7 +265,6 @@ function markOnMap(colour, dot) {
   nmarker.setAttributeNS(null, 'cx', x);
   nmarker.setAttributeNS(null, 'cy', y);
   nmarker.style.stroke = colour
-  // TOOD - colour
 
   state.mapMarks.set(colour, nmarker)
   layer.append(nmarker)
@@ -419,10 +443,14 @@ function openLucks() {
   stack.classList.remove('stashed')
   stack.classList.add('open')
 
-  let n = 0
+  let turn = .05
+  let howMany = stack.querySelectorAll('.luckcard').length
+  let totalTurn = howMany * turn
+
+  let n = -(totalTurn/2)
   for (let card of stack.querySelectorAll('.luckcard')) {
     card.style.rotate = n + 'turn'
-    n += .05
+    n += turn
   }
 }
 
@@ -484,17 +512,27 @@ function doPlay(cmd, action) {
     if (e) { alert(e.message); return; }
   }
 
-  // if (cmd === 'takerisk') {
-  //   cb = (e, r) => {
-  //     if (e) { alert(e.message); return; }
-  //     showRisk(r)
-  //   }
-  // } else if (cmd === 'takeluck') {
-  //   cb = (e, r) => {
-  //     if (e) { alert(e.message); return; }
-  //     showLuck(r)
-  //   }
-  // }
+  if (cmd === 'takerisk') {
+    showRiskBlank()
+    cb = (e, r) => {
+      if (e) {
+        hideRisk()
+        alert(e.message)
+        return
+      }
+      showRiskCard(r.message)
+    }
+  } else if (cmd === 'takeluck') {
+    showLuckBlank()
+    cb = (e, r) => {
+      if (e) {
+        hideLuck()
+        alert(e.message)
+        return
+      }
+      showLuckCard(r.message)
+    }
+  }
 
   doRequest(`play`, { command: cmd, options: options }, cb)
 }
@@ -510,13 +548,46 @@ function useLuck(id) {
   doRequest(`play`, { command: 'useluck', options: options }, cb)
 }
 
-function showLuck(ind) {
-  let div = select(document, '.luck')
-  console.log(ind)
+function showLuckBlank() {
+  let div = select(document, '.showluck')
+  div.classList.add('open')
+  div.classList.add('blank')
 }
 
-function showRisk() {
-  console.log(ind)
+function showLuckCard(cardId) {
+  let card = state.data.lucks[cardId]
+  if (!card) {
+    card = {
+      name: 'there are only so many cards'
+    }
+  }
+
+  let div = select(document, '.showluck')
+  div.classList.remove('blank')
+  select(div, '.luckcard .body').textContent = card.name
+}
+
+function hideLuck() {
+  let div = select(document, '.showluck')
+  div.classList.remove('open')
+}
+
+function showRiskBlank() {
+  let div = select(document, '.showrisk')
+  div.classList.add('open')
+  div.classList.add('blank')
+}
+
+function showRiskCard(cardId) {
+  let card = state.data.risks[cardId]
+  let div = select(document, '.showrisk')
+  div.classList.remove('blank')
+  select(div, '.riskcard .body').textContent = card.name
+}
+
+function hideRisk() {
+  let div = select(document, '.showrisk')
+  div.classList.remove('open')
 }
 
 function fixup(indata) {
@@ -545,8 +616,10 @@ function setup(inData, name, colour) {
   makeSquares(state.data)
   plot(state.data)
   makeButtons()
-
   makeLuckStack()
+
+  select(document, '.showluck').addEventListener('click', hideLuck)
+  select(document, '.showrisk').addEventListener('click', hideRisk)
 
   connect(state.name, state.colour)
 }
