@@ -49,7 +49,7 @@ body {
 
 button {
   background: white;
-  border-radius: 5px;
+  border-radius: .5rem;
   border-width: 0;
 }
 button:hover {
@@ -62,6 +62,10 @@ button:active {
 
 .game {
   font-size: smaller;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  /* overflow: clip; */
 }
 
 .map {
@@ -73,6 +77,35 @@ button:active {
 .map > object {
   margin: 4rem 10rem 9rem 16rem;
   width: 2000px;
+}
+
+.nostate {
+  text-align: center;
+  padding: 1rem;
+}
+.nostate button {
+  font-size: 500%;
+}
+
+.state {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: .5em;
+  background: rgba(255,255,255, 0.6);
+  margin: auto;
+}
+.state .colour {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border-radius: .5em;
+}
+.state .name {
+}
+.state .text {
 }
 
 .squares {
@@ -132,7 +165,7 @@ button:active {
 
 .actions {
   position: absolute;
-  top: 5rem; right: 1rem; width: 8rem;
+  top: 4rem; right: 1rem; width: 5rem;
   display: flex;
   flex-flow: column;
   justify-content: center;
@@ -145,7 +178,10 @@ button:active {
 }
 
 .actions > button {
+  height: 5rem;
+  border-radius: 2.5rem;
   flex: 0 0 auto;
+  overflow: clip;
 }
 .actions > button.can {
   outline: 2px solid green;
@@ -154,45 +190,12 @@ button:active {
   outline: 2px solid red;
 }
 
-.game[started=false] .nostate {
-  display: block;
-}
 .game[started=true] .nostate {
   display: none;
 }
 
 .game[started=false] .state {
   display: none;
-}
-.game[started=true] .state {
-  display: block;
-}
-
-.nostate {
-  text-align: center;
-  padding: 1rem;
-}
-.nostate button {
-  font-size: 500%;
-}
-
-.currentturn {
-  padding: 1rem;
-  display: flex;
-  justify-content: center;
-  flex-flow: row nowrap;
-  align-items: center;
-  gap: .5em;
-  background: rgba(255,255,255, 0.6);
-}
-.currentturn .colour {
-  width: 1em;
-  height: 1em;
-  border-radius: .5em;
-}
-.currentturn .name {
-}
-.currentturn .text {
 }
 
 .messages {
@@ -216,11 +219,11 @@ button:active {
 .ticket {
   position: absolute;
   background-color: #dfd8c7;
-  border: 1px solid black;
-  width: 20em;
-  height: 14em;
-  right: -14em;
-  bottom: 8em;
+  /* border: 1px solid black; */
+  width: 20rem;
+  height: 14rem;
+  right: -14rem;
+  bottom: 8rem;
   rotate: -.14turn;
   transition: right .5s, rotate .5s;
   display: flex;
@@ -252,4 +255,89 @@ button:active {
 .ticket .foot {
   text-align: center;
   font-size: 60%;
+}
+
+.game[hasluck=false] .lucks {
+  display: none;
+}
+
+.lucks {
+  position: absolute;
+  width: 16rem;
+  height: 12rem;
+  transition: right .5s, rotate .5s, bottom .5s;
+}
+
+.lucks.stashed {
+  right: -14rem;
+  bottom: 2rem;
+  rotate: -.14turn;
+  cursor: pointer;
+}
+.lucks.stashed:hover {
+  right: -10rem;
+  rotate: -.18turn;
+}
+
+.lucks.open {
+  right: 20rem;
+  bottom: 20rem;
+}
+
+.lucks .luckcard {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+}
+.lucks.open .luckcard {
+  box-shadow: 0px 0px 5px 0px #000000;
+  transform-origin: bottom right;
+}
+
+.lucks.open .luckcard:hover {
+  z-index: 1000;
+}
+
+.luckcard {
+  background-color: #ffcb50;
+  height: 100%;
+  padding: 1em;
+  text-align: center;
+  display: flex;
+  flex-flow: column;
+  transition: rotate;
+}
+.luckcard > div {
+}
+.luckcard .head {
+  font-weight: bold;
+  text-decoration: underline;
+  flex: 1 0 auto;
+}
+.luckcard .body {
+  flex: 1 0 auto;
+}
+.luckcard .foot button {
+  visibility: hidden;
+  border: 0;
+  background: transparent;
+  color: black;
+}
+.game[canluck=true] .luckcard .foot button {
+  visibility: visible !important;
+}
+
+.money {
+  display: none;
+}
+
+.souvenirs {
+  display: none;
+}
+
+.risk {
+  display: none;
+}
+
+.luck {
+  display: none;
 }

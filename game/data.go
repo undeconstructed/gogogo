@@ -2,7 +2,6 @@ package game
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ type Change struct {
 
 // PlayResult is the result of a Game.Play() call
 type PlayResult struct {
+	// Response string
 	News []Change
 	Next TurnState
 }
@@ -30,11 +30,14 @@ type GameUpdate struct {
 
 // PlayerState is a summary of each player
 type PlayerState struct {
-	Name   string  `json:"name"`
-	Colour string  `json:"colour"`
-	Square int     `json:"square"`
-	Dot    string  `json:"dot"`
-	Ticket *Ticket `json:"ticket"`
+	Name      string         `json:"name"`
+	Colour    string         `json:"colour"`
+	Square    int            `json:"square"`
+	Dot       string         `json:"dot"`
+	Money     map[string]int `json:"money"`
+	Souvenirs []string       `json:"souvenirs"`
+	Lucks     []int          `json:"lucks"`
+	Ticket    *Ticket        `json:"ticket"`
 }
 
 // TurnState is just for the player whose turn is happening
@@ -49,10 +52,11 @@ type TurnState struct {
 }
 
 type Ticket struct {
-	By   string `json:"by"`
-	From string `json:"from"`
-	To   string `json:"to"`
-	Fare string `json:"fare"`
+	By       string `json:"by"`
+	From     string `json:"from"`
+	To       string `json:"to"`
+	Fare     int    `json:"fare"`
+	Currency string `json:"currency"`
 }
 
 type AboutABank struct {
@@ -139,53 +143,125 @@ type luckCard struct {
 	Retain bool   `json:"retain"`
 }
 
-func (lc luckCard) ParseCode() interface{} {
+func (lc luckCard) ParseCode() LuckI {
 	code := lc.Code
-	switch {
-	case strings.HasPrefix(code, "advance:"):
-		n, _ := strconv.Atoi(code[8:])
-		return LuckAdvance{n}
-	case strings.HasPrefix(code, "go:"):
-		return LuckGo{code[3:]}
-	case code == "immunity":
-		return LuckImmunity{}
-	case code == "inoculation":
-		return LuckInoculation{}
-	case strings.HasPrefix(code, "getmoney:"):
-		var currencyId string
-		var amount int
-		code = strings.ReplaceAll(code, ":", " ") // UGH!
-		_, err := fmt.Sscanf(code, "getmoney %s %d", &currencyId, &amount)
-		if err != nil {
-			panic(fmt.Sprintf("invalid luck code: %s, %v", lc.Code, err))
+	ctxt := luckS{}
+
+	ss := strings.SplitN(code, ":", 2)
+	switch ss[0] {
+	case "advance":
+		n, _ := strconv.Atoi(ss[1])
+		return LuckAdvance{ctxt, n}
+	case "can":
+		ss1 := strings.SplitN(ss[1], ":", 2)
+		cmd := ss1[0]
+		options := ""
+		if len(ss1) > 1 {
+			options = ss1[1]
 		}
-		return LuckGetMoney{currencyId, amount}
+		return LuckCan{ctxt, cmd, options}
+	case "dest":
+		return LuckDest{}
+	case "freeticket":
+		ss1 := strings.Split(ss[1], ":")
+		from := ss1[0]
+		to := ss1[1]
+		modes := ss1[2]
+		return LuckFreeTicket{ctxt, from, to, modes}
+	case "getmoney":
+		ss1 := strings.SplitN(ss[1], ":", 2)
+		currencyId := ss1[0]
+		amount, _ := strconv.Atoi(ss1[1])
+		return LuckGetMoney{ctxt, currencyId, amount}
+	case "go":
+		return LuckGo{ctxt, ss[1]}
+	case "immunity":
+		return LuckImmunity{ctxt}
+	case "inoculation":
+		return LuckInoculation{ctxt}
 	default:
-		return LuckCode{code}
+		return LuckCode{ctxt, code}
 	}
 }
 
-type LuckCode struct {
-	Code string
+type LuckI interface {
+	x()
 }
 
+type luckS struct{}
+
+func (luckS) x() {}
+
 type LuckAdvance struct {
+	luckS
 	N int
 }
 
+type LuckCan struct {
+	luckS
+	Command string
+	Options string
+}
+
+type LuckDest struct {
+	luckS
+}
+
+type LuckFreeTicket struct {
+	luckS
+	From  string
+	To    string
+	Modes string
+}
+
+func (l LuckFreeTicket) Match(args []string) (to, from, modes string, err error) {
+	if len(args) != 3 {
+		err = ErrBadRequest
+		return
+	}
+
+	from = args[0]
+	to = args[1]
+	modes = args[2]
+
+	if l.From != "*" && l.From != from {
+		err = ErrBadRequest
+		return
+	}
+	if l.To != "*" && l.To != to {
+		err = ErrBadRequest
+		return
+	}
+	if l.Modes != "*" && l.Modes != modes {
+		err = ErrBadRequest
+		return
+	}
+
+	return from, to, modes, nil
+}
+
+type LuckGetMoney struct {
+	luckS
+	CurrencyId string
+	Amount     int
+}
+
 type LuckGo struct {
+	luckS
 	Dest string
 }
 
 type LuckImmunity struct {
+	luckS
 }
 
 type LuckInoculation struct {
+	luckS
 }
 
-type LuckGetMoney struct {
-	CurrencyId string
-	Amount     int
+type LuckCode struct {
+	luckS
+	Code string
 }
 
 type riskCard struct {
@@ -193,8 +269,88 @@ type riskCard struct {
 	Code string `json:"code"`
 }
 
-func (rc riskCard) ParseCode() {
-	// ???
+func (rc riskCard) ParseCode() RiskI {
+	code := rc.Code
+	modes := "*"
+
+	ss := strings.SplitN(code, "/", 2)
+	if len(ss) > 1 {
+		modes = ss[0]
+		code = ss[1]
+	}
+
+	ctxt := riskS{modes}
+
+	ss = strings.SplitN(code, ":", 2)
+	switch ss[0] {
+	case "dest":
+		return RiskDest{ctxt}
+	case "go":
+		dest := ss[1]
+		return RiskGo{ctxt, dest}
+	case "miss":
+		n, _ := strconv.Atoi(ss[1])
+		return RiskMiss{ctxt, n}
+	case "must":
+		ss1 := strings.SplitN(ss[1], ":", 2)
+		cmd := ss1[0]
+		options := ""
+		if len(ss1) > 1 {
+			options = ss1[1]
+		}
+		return RiskMust{ctxt, cmd, options}
+	case "start":
+		return RiskStart{ctxt}
+	case "startx":
+		return RiskStartX{ctxt}
+	default:
+		return RiskCode{ctxt, code}
+	}
+}
+
+type RiskI interface {
+	GetModes() string
+}
+
+type riskS struct {
+	Modes string
+}
+
+func (r riskS) GetModes() string {
+	return r.Modes
+}
+
+type RiskGo struct {
+	riskS
+	Dest string
+}
+
+type RiskMust struct {
+	riskS
+	Command string
+	Options string
+}
+
+type RiskMiss struct {
+	riskS
+	N int
+}
+
+type RiskStart struct {
+	riskS
+}
+
+type RiskStartX struct {
+	riskS
+}
+
+type RiskDest struct {
+	riskS
+}
+
+type RiskCode struct {
+	riskS
+	Code string
 }
 
 type currency struct {
@@ -208,20 +364,14 @@ type trackSquare struct {
 	Options []string `json:"options"`
 }
 
-func (t *trackSquare) ParseOptions() []interface{} {
-	var out []interface{}
+func (t *trackSquare) ParseOptions() []OptionI {
+	var out []OptionI
+
+	ctxt := optionS{}
 
 	for _, option := range t.Options {
 		ss := strings.SplitN(option, ":", 2)
 		switch ss[0] {
-		case "go":
-			dest := ss[1]
-			forwards := true
-			if dest[0] == '-' {
-				forwards = false
-				dest = dest[1:]
-			}
-			out = append(out, OptionGo{dest, forwards})
 		case "can":
 			ss1 := strings.SplitN(ss[1], ":", 2)
 			cmd := ss1[0]
@@ -229,7 +379,18 @@ func (t *trackSquare) ParseOptions() []interface{} {
 			if len(ss1) > 1 {
 				options = ss1[1]
 			}
-			out = append(out, OptionCan{cmd, options})
+			out = append(out, OptionCan{ctxt, cmd, options})
+		case "go":
+			dest := ss[1]
+			forwards := true
+			if dest[0] == '-' {
+				forwards = false
+				dest = dest[1:]
+			}
+			out = append(out, OptionGo{ctxt, dest, forwards})
+		case "miss":
+			n, _ := strconv.Atoi(ss[1])
+			out = append(out, OptionMiss{ctxt, n})
 		case "must":
 			ss1 := strings.SplitN(ss[1], ":", 2)
 			cmd := ss1[0]
@@ -237,38 +398,48 @@ func (t *trackSquare) ParseOptions() []interface{} {
 			if len(ss1) > 1 {
 				options = ss1[1]
 			}
-			out = append(out, OptionMust{cmd, options})
-		case "miss":
-			n, _ := strconv.Atoi(ss[1])
-			out = append(out, OptionMiss{n})
+			out = append(out, OptionMust{ctxt, cmd, options})
 		default:
-			out = append(out, OptionCode{option})
+			out = append(out, OptionCode{ctxt, option})
 		}
 	}
 
 	return out
 }
 
+type OptionI interface {
+	x()
+}
+
+type optionS struct{}
+
+func (optionS) x() {}
+
 type OptionGo struct {
+	optionS
 	Dest     string
 	Forwards bool
 }
 
 type OptionCan struct {
+	optionS
 	Command string
 	Options string
 }
 
 type OptionMust struct {
+	optionS
 	Command string
 	Options string
 }
 
 type OptionMiss struct {
+	optionS
 	N int
 }
 
 type OptionCode struct {
+	optionS
 	Code string
 }
 

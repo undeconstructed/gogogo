@@ -11,37 +11,6 @@ import (
 
 const SouvenirPrice = 6
 
-type GameError struct {
-	Code string
-	Msg  string
-}
-
-func (e *GameError) ErrorCode() string { return e.Code }
-func (e *GameError) Error() string     { return e.Msg }
-
-var (
-	// ErrPlayerExists means a player with the same name already is
-	ErrPlayerExists = &GameError{"PLAYEREXISTS", "player exists"}
-	// ErrNoPlayers means can't start the game with no players
-	ErrNoPlayers = &GameError{"NOPLAYERS", "no players"}
-	// ErrAlreadyStarted is only when calling Start() too much
-	ErrAlreadyStarted = &GameError{"ALREADYSTARTED", "game has already started"}
-
-	// ErrNotStarted means the game has not started
-	ErrNotStarted = &GameError{"NOTSTARTED", "game has not started"}
-
-	// ErrNotStopped means haven't elected to stop moving
-	ErrNotStopped = &GameError{"NOTSTOPPED", "not stopped"}
-	// ErrMustDo means tasks left
-	ErrMustDo = &GameError{"MUSTDO", "must do things"}
-	// ErrNotYourTurn means you can't do something while it's not your turn
-	ErrNotYourTurn = &GameError{"NOTYOURTURN", "it's not your turn"}
-	// ErrNotNow is for maybe valid moves that are not allowed now
-	ErrNotNow = &GameError{"NOTNOW", "you cannot do that now"}
-	// ErrBadRequest is for bad requests
-	ErrBadRequest = &GameError{"BADREQUEST", "bad request"}
-)
-
 type Game interface {
 	// activities
 	AddPlayer(name string, colour string) error
@@ -163,10 +132,16 @@ func NewGame(data GameData) Game {
 		s.ParseOptions()
 	}
 	for _, lc := range g.lucks {
-		lc.ParseCode()
+		code := lc.ParseCode()
+		if _, ok := code.(LuckCode); ok {
+			fmt.Printf("unparsed luck card: %s\n", lc.Code)
+		}
 	}
 	for _, rc := range g.risks {
-		rc.ParseCode()
+		code := rc.ParseCode()
+		if _, ok := code.(RiskCode); ok {
+			fmt.Printf("unparsed risk card: %s\n", rc.Code)
+		}
 	}
 
 	return g
@@ -270,32 +245,34 @@ func (g *game) Play(player string, c Command) (PlayResult, error) {
 
 func (g *game) doPlay(t *turn, c Command) ([]Change, error) {
 	switch c.Command {
-	case "dicemove":
-		return g.turn_dicemove(t)
-	case "useluck":
-		return g.turn_useluck(t, c.Options)
-	case "stop":
-		return g.turn_stop(t)
+	case "airlift":
+		return g.turn_airlift(t)
 	case "buysouvenir":
 		return g.turn_buysouvenir(t)
 	case "buyticket":
 		return g.turn_buyticket(t, c.Options)
 	case "changemoney":
 		return g.turn_changemoney(t, c.Options)
-	case "pay":
-		return g.turn_pay(t, c.Options)
 	case "declare":
 		return g.turn_declare(t, c.Options)
-	case "takeluck":
-		return g.turn_takeluck(t)
-	case "gamble":
-		return g.turn_gamble(t, c.Options)
-	case "takerisk":
-		return g.turn_takerisk(t)
+	case "dicemove":
+		return g.turn_dicemove(t)
 	case "gainlocal10":
 		return g.turn_gainlocal10(t)
+	case "gamble":
+		return g.turn_gamble(t, c.Options)
+	case "pay":
+		return g.turn_pay(t, c.Options)
 	case "quarantine":
 		return g.turn_quarantine(t)
+	case "stop":
+		return g.turn_stop(t)
+	case "takeluck":
+		return g.turn_takeluck(t)
+	case "takerisk":
+		return g.turn_takerisk(t)
+	case "useluck":
+		return g.turn_useluck(t, c.Options)
 	case "end":
 		if !t.Stopped {
 			return nil, ErrNotStopped
@@ -336,18 +313,23 @@ func (g *game) GetPlayerSummary() []PlayerState {
 		var ticket *Ticket
 		if pl.Ticket != nil {
 			ticket = &Ticket{
-				By:   pl.Ticket.Mode,
-				From: pl.Ticket.From,
-				To:   pl.Ticket.To,
-				Fare: "a song",
+				By:       pl.Ticket.Mode,
+				From:     pl.Ticket.From,
+				To:       pl.Ticket.To,
+				Fare:     pl.Ticket.Fare,
+				Currency: pl.Ticket.Currency,
 			}
 		}
+		// XXX - is this always serialized in-process? money is a live map
 		out = append(out, PlayerState{
-			Name:   pl.Name,
-			Colour: pl.Colour,
-			Square: pl.OnSquare,
-			Dot:    pl.OnDot,
-			Ticket: ticket,
+			Name:      pl.Name,
+			Colour:    pl.Colour,
+			Square:    pl.OnSquare,
+			Dot:       pl.OnDot,
+			Money:     pl.Money,
+			Souvenirs: pl.Souvenirs,
+			Lucks:     pl.LuckCards,
+			Ticket:    ticket,
 		})
 	}
 	return out
@@ -363,7 +345,7 @@ func (g *game) WriteOut(w io.Writer) error {
 		Turn:    g.turn,
 	}
 
-	jdata, err := json.Marshal(out)
+	jdata, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -401,7 +383,7 @@ func (g *game) moveOnTrack(t *turn, n int) []Change {
 	return t.oneEvent(fmt.Sprintf("walks %d squares to %s", n, square.Name))
 }
 
-func (g *game) stopOnTrack(t *turn) ([]Change, error) {
+func (g *game) stopOnTrack(t *turn) []Change {
 	t.Stopped = true
 
 	square := g.squares[t.player.OnSquare]
@@ -427,26 +409,20 @@ func (g *game) stopOnTrack(t *turn) ([]Change, error) {
 			t.player.MissTurns += option.N
 			out = append(out, t.makeEvent(fmt.Sprintf("will miss %d turns", option.N)))
 		case OptionGo:
-			err := g.jumpOnTrack(t, option.Dest, option.Forwards)
-			if err != nil {
-				panic("bad jump " + option.Dest)
-			}
+			g.jumpOnTrack(t, option.Dest, option.Forwards)
 			// recurse, to get effects of the new location
 			out = append(out, t.makeEvent(fmt.Sprintf("jumps to %s", option.Dest)))
-			res, err := g.stopOnTrack(t)
-			if err != nil {
-				// ?????????????
-			}
+			res := g.stopOnTrack(t)
 			out = append(out, res...)
 		case OptionCode:
 			panic("unhandled option " + option.Code)
 		}
 	}
 
-	return out, nil
+	return out
 }
 
-func (g *game) jumpOnTrack(t *turn, to string, forward bool) error {
+func (g *game) jumpOnTrack(t *turn, to string, forward bool) {
 	tp := t.player.OnSquare
 	if forward {
 		for {
@@ -460,7 +436,7 @@ func (g *game) jumpOnTrack(t *turn, to string, forward bool) error {
 			}
 			if square.Type == to {
 				t.player.OnSquare = tp
-				return nil
+				return
 			}
 		}
 	} else {
@@ -472,7 +448,7 @@ func (g *game) jumpOnTrack(t *turn, to string, forward bool) error {
 			square := g.squares[tp]
 			if square.Type == to {
 				t.player.OnSquare = tp
-				return nil
+				return
 			}
 		}
 	}
@@ -502,15 +478,14 @@ func (g *game) moveOnMap(t *turn, n int) ([]Change, bool) {
 	}
 }
 
-func (g *game) jumpOnMap(t *turn, dest string) error {
+func (g *game) jumpOnMap(t *turn, dest string) {
 	destDot := g.places[dest].Dot
 	t.player.OnDot = destDot
 	// new city, can buy souvenir again
 	t.player.HasBought = false
-	return nil
 }
 
-func (g *game) stopOnMap(t *turn) ([]Change, error) {
+func (g *game) stopOnMap(t *turn) []Change {
 	t.Stopped = true
 
 	if t.Moved {
@@ -521,7 +496,7 @@ func (g *game) stopOnMap(t *turn) ([]Change, error) {
 		}
 	}
 
-	return t.oneEvent("stops moving"), nil
+	return t.oneEvent("stops moving")
 }
 
 // finds a price and a currency, with the price converted into that currency
@@ -539,6 +514,29 @@ func (g *game) findPrice(from, to, modes string) (currency string, n int) {
 	c := g.currencies[pl.Currency]
 	price = price * c.Rate
 	return pl.Currency, price
+}
+
+func (g *game) makeTicket(from, to, modes string) (ticket, error) {
+	currencyId, price := g.findPrice(from, to, modes)
+	if price < 0 {
+		return ticket{}, fmt.Errorf("no price %s %s %s", from, to, modes)
+	}
+
+	route := g.FindRoute(from, to, modes)
+	if len(route) < 2 {
+		return ticket{}, fmt.Errorf("no route %s %s %s", from, to, modes)
+	}
+	// should be already at the first dot
+	route = route[1:]
+
+	return ticket{
+		Mode:     modes,
+		From:     from,
+		To:       to,
+		Route:    route,
+		Fare:     price,
+		Currency: currencyId,
+	}, nil
 }
 
 func (g *game) toNextPlayer() {
@@ -680,15 +678,6 @@ func (g *game) DescribeTurn() AboutATurn {
 	}
 }
 
-func inList(l []string, s string) bool {
-	for _, i := range l {
-		if s == i {
-			return true
-		}
-	}
-	return false
-}
-
 func route(world map[string]worldDot, srcp, tgtp, modes string, acc []string) []string {
 	length := len(acc)
 
@@ -710,7 +699,7 @@ func route(world map[string]worldDot, srcp, tgtp, modes string, acc []string) []
 			// no routing through terminal
 			continue
 		}
-		if inList(acc, dest) {
+		if stringListContains(acc, dest) {
 			// prevent cycles
 			continue
 		}
@@ -789,8 +778,10 @@ type player struct {
 }
 
 type ticket struct {
-	Mode  string   `json:"mode"`
-	From  string   `json:"from"`  // place
-	To    string   `json:"to"`    // place
-	Route []string `json:"route"` // dots
+	Mode     string   `json:"mode"`
+	From     string   `json:"from"`  // place
+	To       string   `json:"to"`    // place
+	Route    []string `json:"route"` // dots
+	Fare     int      `json:"price"`
+	Currency string   `json:"currency"`
 }

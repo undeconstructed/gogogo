@@ -87,7 +87,9 @@ function receiveUpdate(st) {
 
     if (pl.name == state.name) {
       // this is us
+      receiveLucks(pl.lucks)
       receiveTicket(pl.ticket)
+      receiveStatus(pl.money, pl.souvenirs)
     }
 
     if (prev.square != pl.square) {
@@ -113,9 +115,33 @@ function receiveUpdate(st) {
   if (st.playing && st.playing != state.name) {
     // XXX - is not my turn, update the status bar - shouldn't use a fake turn
     receiveTurn({
-      player: st.playing,
-      must: null
+      player: st.playing
     })
+  }
+}
+
+function receiveLucks(lucks) {
+  let stack = select(document, '.lucks')
+  stack.replaceChildren()
+
+  if (!lucks) {
+    document.body.setAttribute('hasluck', false)
+  } else {
+    document.body.setAttribute('hasluck', true)
+
+    let tmpl = select(document, '#lucktemplate').content.firstElementChild
+
+    for (let luckId of lucks) {
+      let luckData = state.data.lucks[luckId]
+      let div = tmpl.cloneNode(true)
+      select(div, '.body').textContent = luckData.name
+      select(div, 'button').addEventListener('click', e => {
+        e.stopPropagation()
+        useLuck(luckId)
+        closeLucks()
+      })
+      stack.append(div)
+    }
   }
 }
 
@@ -125,57 +151,48 @@ function receiveTicket(ticket) {
   } else {
     let div = select(document, '.ticket')
     select(div, '.by > span').textContent = ticket.by
-    select(div, '.from > span').textContent = ticket.from
-    select(div, '.to > span').textContent = ticket.to
-    select(div, '.fare > span').textContent = ticket.fare
+    let from = state.data.places[ticket.from].name
+    select(div, '.from > span').textContent = from
+    let to = state.data.places[ticket.to].name
+    select(div, '.to > span').textContent = to
+    let currency = state.data.currencies[ticket.currency].name
+    select(div, '.fare > span').textContent = `${ticket.fare} ${currency}`
     document.body.setAttribute('ticket', true)
   }
+}
+
+function receiveStatus(money, souvenirs) {
+  let s = select(document, '.aboutme')
+
+  // XXX - this bit never changes
+  let sc = select(s, '.colour')
+  sc.style.backgroundColor = state.colour
+  let sn = select(s, '.name')
+  sn.textContent = state.name
+
+  let text = `${JSON.stringify(money)}, ${souvenirs}`
+
+  let st = select(s, '.text')
+  st.textContent = text
 }
 
 function receiveTurn(st) {
   state.turn = st
 
+  let canLuck = st.can ? st.can.includes('useluck') : false
+  document.body.setAttribute('canluck', canLuck)
+
   let player = state.players.get(st.player)
   document.body.setAttribute('ontrack', !st.onmap)
 
-  let s = select(document, '.state')
+  let s = select(document, '.currentturn')
 
   let sc = select(s, '.colour')
   sc.style.backgroundColor = player.colour
   let sn = select(s, '.name')
   sn.textContent = player.name
 
-  // XXX HACK
-  if (true || st.onmap === undefined) {
-    // not our turn
-    let sr = select(s, '.text')
-    sr.textContent = ''
-    makeButtons()
-  } else {
-    let what = st.stopped ? 'Stopped' : 'Moving'
-    let where, point
-    if (st.onmap) {
-      where = 'map'
-      let dot = state.data.dots[player.dot]
-      if (dot.place) {
-        point = state.data.places[dot.place].name
-      } else {
-        point = player.dot
-      }
-    } else {
-      where = 'track'
-      point = state.data.squares[player.square].name
-    }
-    let text = `${what} on ${where}, at ${point}`
-
-    if (st.must) {
-      text += `, and must ${st.must}`
-    }
-
-    let sr = select(s, '.text')
-    sr.textContent = text
-    makeButtons()
-  }
+  makeButtons()
 }
 
 function markOnTrack(colour, square) {
@@ -354,19 +371,12 @@ function makeButtons() {
   let buttonBox = select(document, '.actions')
   buttonBox.replaceChildren()
 
-  {
-    let button = document.createElement('button')
-    button.append('say')
-    button.addEventListener('click', doSay)
-    buttonBox.append(button)
-  }
-
-  {
-    let button = document.createElement('button')
-    button.append('self')
-    button.addEventListener('click', doSelf)
-    buttonBox.append(button)
-  }
+  // {
+  //   let button = document.createElement('button')
+  //   button.append('say')
+  //   button.addEventListener('click', doSay)
+  //   buttonBox.append(button)
+  // }
 
   if (state.turn) {
     makePlayButtons(buttonBox, state.turn.can, 'can')
@@ -375,8 +385,12 @@ function makeButtons() {
 }
 
 function makePlayButtons(tgt, actions, clazz) {
-  tgt.append(document.createElement('br'))
   for (let a of actions || []) {
+    if (a === 'useluck') {
+      // can do this with the cards
+      continue
+    }
+
     let cmd = a.split(":")[0]
     let button = document.createElement('button')
     button.classList.add(clazz)
@@ -385,6 +399,41 @@ function makePlayButtons(tgt, actions, clazz) {
       doPlay(cmd, state.data.actions[cmd])
     })
     tgt.append(button)
+  }
+}
+
+function makeLuckStack() {
+  let stack = select(document, '.lucks')
+  stack.addEventListener('click', e => {
+    if (stack.classList.contains('stashed')) {
+      openLucks()
+    } else {
+      closeLucks()
+    }
+  })
+}
+
+function openLucks() {
+  let stack = select(document, '.lucks')
+
+  stack.classList.remove('stashed')
+  stack.classList.add('open')
+
+  let n = 0
+  for (let card of stack.querySelectorAll('.luckcard')) {
+    card.style.rotate = n + 'turn'
+    n += .05
+  }
+}
+
+function closeLucks() {
+  let stack = select(document, '.lucks')
+
+  stack.classList.remove('open')
+  stack.classList.add('stashed')
+
+  for (let card of stack.querySelectorAll('.luckcard')) {
+    card.style.rotate = 'unset'
   }
 }
 
@@ -430,12 +479,44 @@ function doPlay(cmd, action) {
     options = prompt(`${cmd} ${action.help}`)
     if (!options) return
   }
-  doRequest(`play`, { command: cmd, options: options }, (e, r) => {
-    if (e) {
-      alert(e.message); return
-    }
-    // log(r)
-  })
+
+  let cb = (e, r) => {
+    if (e) { alert(e.message); return; }
+  }
+
+  // if (cmd === 'takerisk') {
+  //   cb = (e, r) => {
+  //     if (e) { alert(e.message); return; }
+  //     showRisk(r)
+  //   }
+  // } else if (cmd === 'takeluck') {
+  //   cb = (e, r) => {
+  //     if (e) { alert(e.message); return; }
+  //     showLuck(r)
+  //   }
+  // }
+
+  doRequest(`play`, { command: cmd, options: options }, cb)
+}
+
+function useLuck(id) {
+  let options = prompt('options (or none)')
+  options = '' + id + ' ' + options
+
+  let cb = (e, r) => {
+    if (e) { alert(e.message); return; }
+  }
+
+  doRequest(`play`, { command: 'useluck', options: options }, cb)
+}
+
+function showLuck(ind) {
+  let div = select(document, '.luck')
+  console.log(ind)
+}
+
+function showRisk() {
+  console.log(ind)
 }
 
 function fixup(indata) {
@@ -462,11 +543,10 @@ function setup(inData, name, colour) {
   startButton.addEventListener('click', doStart)
 
   makeSquares(state.data)
-  // XXX - will fail if the svg isn't loaded
-  // img.contentDocument.addEventListener('load', e => {
-    plot(state.data)
-  // })
-  makeButtons(state.data)
+  plot(state.data)
+  makeButtons()
+
+  makeLuckStack()
 
   connect(state.name, state.colour)
 }
@@ -507,9 +587,11 @@ document.addEventListener('DOMContentLoaded', function() {
     return
   }
 
-  fetch('data.json').
-    then(rez => rez.json()).
-    then(data => {
-      setup(data, name, colour)
+  select(document, 'object').addEventListener('load', e => {
+    fetch('data.json').
+      then(rez => rez.json()).
+      then(data => {
+        setup(data, name, colour)
+      })
     })
 })

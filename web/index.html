@@ -5,9 +5,9 @@
   <meta charset="utf-8">
   <title>gogogo</title>
 
-  <meta name="description" content="Afero">
+  <meta name="description" content="A Go game in Go lang">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="theme-color" content="rgb(118, 145, 158)">
+  <meta name="theme-color" content="#0d8db0">
 
   <link rel="stylesheet" href="css/bootstrap-reboot.css">
   <link rel="stylesheet" href="css/custom.css">
@@ -15,7 +15,7 @@
   <script type="module" src="js/main.js"></script>
 </head>
 
-<body class="game" started="false" ontrack="true" ticket="false">
+<body class="game" started="false" ontrack="true" ticket="false" hasluck="false" canluck="false">
 
   <div class="board">
     <div class="squares">
@@ -25,27 +25,29 @@
     </div>
   </div>
 
-  <div class="other">
-    <div class="actions">
+  <div class="nostate">
+    <button id="startbutton">START</button>
+  </div>
+
+  <div class="state">
+    <div class="currentturn">
+      Playing:
+      <span class="colour"></span>
+      <span class="name"></span>
     </div>
-    <div class="nostate">
-      <button id="startbutton">START</button>
-    </div>
-    <div class="state">
-      <div class="currentturn">
-        <span class="colour"></span>
-        <span class="name"></span>
-        <span class="text"></span>
-      </div>
-    </div>
-    <div class="messages">
+    <div class="aboutme">
+      Me:
+      <span class="colour"></span>
+      <span class="name"></span>
+      <span class="text"></span>
     </div>
   </div>
 
-  <template id="popup">
-    <div class="popup">
-    </div>
-  </template>
+  <div class="actions">
+  </div>
+
+  <div class="messages">
+  </div>
 
   <div class="ticket">
     <div class="head">TRAVEL TICKET</div>
@@ -54,6 +56,27 @@
     <div class="field to">To: <span></span></div>
     <div class="field fare">Fare: <span></span></div>
     <div class="foot">INTERNATIONAL TRAVEL GAME "GO"</div>
+  </div>
+
+  <div class="lucks stashed">
+  </div>
+
+  <template id="lucktemplate">
+    <div class="luckcard">
+      <div class="head">LUCK</div>
+      <div class="body"></div>
+      <div class="foot"><button>[use]</button></div>
+    </div>
+  </template>
+
+  <div class="money">
+  </div>
+
+  <div class="souvenirs">
+  </div>
+
+  <div class="risk">
+    <div class="head">RISK</div>
   </div>
 
 </body>
