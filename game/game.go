@@ -469,8 +469,8 @@ func (g *game) moveOnMap(t *turn, n int) bool {
 		t.player.OnDot = t.player.Ticket.Route[need-1]
 		t.player.Ticket = nil
 		t.Moved = true
-		g.stopOnMap(t)
 		t.addEventf("moves %d and arrives", n)
+		g.stopOnMap(t)
 		return true
 	} else {
 		t.player.OnDot = t.player.Ticket.Route[n-1]

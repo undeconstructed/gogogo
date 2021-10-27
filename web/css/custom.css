@@ -47,19 +47,6 @@ body {
 
 /* -------------------------------- */
 
-button {
-  background: white;
-  border-radius: .5rem;
-  border-width: 0;
-}
-button:hover {
-  outline: 2px solid black !important;
-}
-button:active {
-  background: black;
-  color: white;
-}
-
 .game {
   font-size: smaller;
   width: 100vw;
@@ -80,12 +67,25 @@ button:active {
 }
 
 .nostate {
-  text-align: center;
-  padding: 1rem;
+  z-index: 1001;
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffffaa;
 }
 .nostate button {
-  font-size: 500%;
+  width: 50%;
+  height: 50%;
+  border: none;
+  background-color: transparent;
+  background-image: url('../go.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
+
 
 .state {
   position: absolute;
@@ -98,6 +98,7 @@ button:active {
   align-items: center;
   gap: .5em;
   background: rgba(255,255,255,0.6);
+  cursor: default;
 }
 .state .colour {
   display: inline-block;
@@ -196,23 +197,34 @@ button:active {
   justify-content: center;
   gap: .5rem;
   z-index: 10;
-  opacity: 0.6;
-}
-.actions:hover {
-  opacity: 1;
 }
 
 .actions > button {
   height: 5rem;
+  opacity: 0.6;
+  border: none;
+}
+.actions > button:hover {
+  opacity: 1;
+}
+.actions > button.text {
+  background-color: white;
   border-radius: 2.5rem;
-  flex: 0 0 auto;
   overflow: clip;
 }
-.actions > button.can {
+.actions > button.text.can {
   outline: 2px solid green;
 }
-.actions > button.must {
+.actions > button.text.must {
   outline: 2px solid red;
+}
+
+.actions > button.img {
+  background-color: transparent;
+  background-size: contain;
+}
+.actions > button.img.must {
+  background-color: red;
 }
 
 .game[started=true] .nostate {
@@ -389,4 +401,52 @@ button:active {
 .showrisk.open.blank .riskcard, .showluck.open.blank .luckcard {
   opacity: 0;
   visibility: hidden;
+}
+
+.prices {
+  position: absolute;
+  left: 0;
+  width: 0;
+  top: 10rem;
+  height: 30rem;
+  rotate: -.05turn;
+  transition: left .5s, width .5s, rotate .5s;
+  background-color: white;
+  overflow: hidden;
+}
+.prices > * {
+  width: 25rem;
+}
+.prices .head {
+  height: 8rem;
+  background: url('../prices.svg');
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+}
+.prices .body {
+  padding: 1em;
+}
+.prices table {
+  width: 100%;
+}
+.prices thead th {
+  border-bottom: 1px solid black;
+  text-align: center;
+  font-size: 80%;
+}
+.prices thead th {
+  font-style: italic;
+  font-weight: normal;
+}
+.prices .place {
+  text-transform: uppercase;
+}
+.prices .fare {
+  text-align: right;
+}
+
+.prices.open {
+  /* rotate: unset; */
+  left: 20rem;
+  width: 25rem;
 }

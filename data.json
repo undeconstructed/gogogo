@@ -5,10 +5,10 @@
     "goal": 3
   },
   "modes": {
-    "a": "air",
-    "r": "rail",
-    "l": "land",
-    "s": "sea"
+    "a": "Air",
+    "r": "Rail",
+    "l": "Land",
+    "s": "Sea"
   },
   "actions": {
     "airlift": {},
@@ -328,7 +328,7 @@
   "places": {
     "archangel": {
       "name": "Archangel",
-      "currency": "ru",
+      "currency": "ro",
       "routes": {
         "london:s": 5,
         "moscow:r": 2

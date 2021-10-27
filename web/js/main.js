@@ -154,7 +154,7 @@ function makeByLine(modes) {
   for (let m of modes) {
     ms.push(state.data.modes[m])
   }
-  return ms.join(' and ')
+  return ms.join('/')
 }
 
 function receiveTicket(ticket) {
@@ -346,10 +346,8 @@ function plot(data) {
       console.assert(star, point.place)
       star.addEventListener('click', e => {
         doRequest('query:place:'+point.place, {}, (e, r) => {
-          if (e) {
-            alert(e.message); return
-          }
-          log(r)
+          if (e) { alert(e.message); return; }
+          showPrices(point.place, r)
         })
       })
       return
@@ -364,10 +362,8 @@ function plot(data) {
       ndot.setAttributeNS(null, 'y', y-10);
       ndot.addEventListener('click', e => {
         doRequest('query:place:'+point.place, {}, (e, r) => {
-          if (e) {
-            alert(e.message); return
-          }
-          log(r)
+          if (e) { alert(e.message); return; }
+          showPrices(point.place, r)
         })
       })
       layer.append(ndot)
@@ -418,7 +414,15 @@ function makePlayButtons(tgt, actions, clazz) {
     let cmd = a.split(":")[0]
     let button = document.createElement('button')
     button.classList.add(clazz)
-    button.append(cmd)
+
+    if (cmd === 'dicemove') {
+      button.classList.add('img')
+      button.style.backgroundImage = 'url(img/dice.svg)'
+    } else {
+      button.classList.add('text')
+      button.append(cmd)
+    }
+
     button.addEventListener('click', e => {
       doPlay(cmd, state.data.actions[cmd])
     })
@@ -590,6 +594,62 @@ function hideRisk() {
   div.classList.remove('open')
 }
 
+function showPrices(placeId, xxx) {
+  let ele = select(document, '.prices')
+  let tbody = select(ele, 'tbody')
+  tbody.replaceChildren()
+
+  let place = state.data.places[placeId]
+  let currency = state.data.currencies[place.currency]
+
+  let stRate = state.data.currencies['st'].rate
+  let loRate = currency.rate
+
+  let linen = 0
+  for (let r in place.routes) {
+    let tr = document.createElement('tr')
+    let th = document.createElement('th')
+    if (linen == 0) {
+      th.classList.add('place')
+      th.textContent = place.name
+    } else if (linen == 1) {
+      th.textContent = `(${currency.name})`
+    }
+    tr.append(th)
+    linen++
+
+    let ss = r.split(':')
+    let dest = state.data.places[ss[0]].name
+    let mode = makeByLine(ss[1])
+    let fare = place.routes[r]
+
+    let td1 = document.createElement('td')
+    td1.classList.add('place')
+    td1.append(dest)
+    tr.append(td1)
+    let td2 = document.createElement('td')
+    td2.append(mode)
+    tr.append(td2)
+    let td3 = document.createElement('td')
+    td3.classList.add('fare')
+    td3.append(`£${fare*stRate}`)
+    tr.append(td3)
+    let td4 = document.createElement('td')
+    td4.classList.add('fare')
+    td4.append(`${fare*loRate}`)
+    tr.append(td4)
+
+    tbody.append(tr)
+  }
+
+  ele.classList.add('open')
+}
+
+function hidePrices() {
+  let ele = select(document, '.prices')
+  ele.classList.remove('open')
+}
+
 function fixup(indata) {
   for (let dotId in indata.dots) {
     let dot = indata.dots[dotId]
@@ -620,6 +680,8 @@ function setup(inData, name, colour) {
 
   select(document, '.showluck').addEventListener('click', hideLuck)
   select(document, '.showrisk').addEventListener('click', hideRisk)
+
+  select(document, '.prices').addEventListener('click', hidePrices)
 
   connect(state.name, state.colour)
 }
