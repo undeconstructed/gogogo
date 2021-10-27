@@ -235,17 +235,40 @@ body {
   display: none;
 }
 
+.showmessage {
+  z-index: 1000;
+  display: none;
+  position: absolute;
+  top: 50vh; right: 50vw; bottom: 50vh; left: 50vw;
+  justify-content: center;
+  align-items: center;
+}
+.showmessage.open {
+  display: flex;
+}
+.showmessage .message {
+  background-color: rgb(255,255,255,0.8);
+  border-radius: .5rem;
+  padding: 2rem;
+  min-width: 40em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .messages {
   position: absolute;
-  height: 8rem; right: 0; bottom: 0; left: 16rem;
+  height: 1rem; right: 0; bottom: 0; left: 16rem;
   overflow: auto;
   background: white;
   padding: 0 1rem;
   opacity: 0.6;
   border-top: 2px solid black;
   border-left: 2px solid black;
+  transition: height .5s;
 }
 .messages:hover {
+  height: 8rem;
   opacity: 1;
 }
 
@@ -411,7 +434,7 @@ body {
   height: 30rem;
   rotate: -.05turn;
   transition: left .5s, width .5s, rotate .5s;
-  background-color: white;
+  background-color: #fdf3d7;
   overflow: hidden;
 }
 .prices > * {

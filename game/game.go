@@ -167,8 +167,10 @@ func NewFromSaved(data GameData, r io.Reader) (Game, error) {
 	g.riskPile = CardStack(save.Risks)
 	// odd stuff about turn
 	g.turn = save.Turn
-	g.turn.player = &g.players[g.turn.PlayerID]
-	g.turnNo = g.turn.Num
+	if g.turn != nil {
+		g.turn.player = &g.players[g.turn.PlayerID]
+		g.turnNo = g.turn.Num
+	}
 
 	return g, nil
 }
@@ -482,8 +484,8 @@ func (g *game) moveOnMap(t *turn, n int) bool {
 	}
 }
 
-func (g *game) jumpOnMap(t *turn, dest string) {
-	destDot := g.places[dest].Dot
+func (g *game) jumpOnMap(t *turn, destPlace string) {
+	destDot := g.places[destPlace].Dot
 	t.player.OnDot = destDot
 }
 
@@ -761,6 +763,9 @@ type turn struct {
 	Can []string `json:"can"`
 	// things that must be done before the turn can end
 	Must []string `json:"must"`
+
+	// miscellaneous things collected for some reason
+	LostTicket *ticket `json:"lostTicket"`
 
 	// things that happened in this execution
 	news []Change

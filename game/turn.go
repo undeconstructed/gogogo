@@ -8,16 +8,15 @@ import (
 )
 
 func (g *game) turn_airlift(t *turn) (interface{}, error) {
-	can, changed := stringListWithout(t.Can, "airlift")
-	if !changed {
+	if !stringListContains(t.Can, "airlift") {
 		return nil, ErrNotNow
 	}
 
+	// only option is capetown
 	placeId := "capetown"
-	dotId := g.places[placeId].Dot
-	g.jumpOnMap(t, dotId)
+	g.jumpOnMap(t, placeId)
 
-	t.Can = can
+	t.Can, _ = stringListWithout(t.Can, "airlift")
 
 	t.addEvent("suddenly appears")
 	return nil, nil
@@ -383,6 +382,7 @@ func (g *game) turn_takerisk(t *turn) (interface{}, error) {
 		}
 		t.Must = append(t.Must, c)
 	case RiskGo:
+		t.LostTicket = t.player.Ticket
 		t.player.Ticket = nil
 		g.jumpOnMap(t, code.Dest)
 		t.addEvent("suddenly appears")
@@ -390,6 +390,7 @@ func (g *game) turn_takerisk(t *turn) (interface{}, error) {
 		t.player.MissTurns += code.N
 	case RiskStart:
 		dest := t.player.Ticket.From
+		t.LostTicket = t.player.Ticket
 		t.player.Ticket = nil
 		g.jumpOnMap(t, dest)
 		t.addEvent("is back, ticketless")
@@ -467,6 +468,22 @@ func (g *game) turn_useluck(t *turn, options string) (interface{}, error) {
 		g.luckPile = g.luckPile.Return(cardId)
 
 		t.addEvent("luckily arrives early")
+	case LuckFreeInsurance:
+		if t.LostTicket != nil {
+			return nil, ErrNotNow
+		}
+
+		fare := t.LostTicket.Fare
+		// the card says sterling ..
+		stRate := g.currencies["st"].Rate
+		refund := fare * stRate * 2
+
+		g.moveMoney(g.bank.Money, t.player.Money, "st", refund)
+
+		t.player.LuckCards = luckList
+		g.luckPile = g.luckPile.Return(cardId)
+
+		t.addEvent("luckily gets a big refund")
 	case LuckFreeTicket:
 		if t.player.Ticket != nil {
 			return nil, ErrNotNow

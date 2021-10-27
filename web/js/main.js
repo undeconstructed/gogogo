@@ -345,10 +345,10 @@ function plot(data) {
       let star = select(svg, '#'+point.place)
       console.assert(star, point.place)
       star.addEventListener('click', e => {
-        doRequest('query:place:'+point.place, {}, (e, r) => {
-          if (e) { alert(e.message); return; }
-          showPrices(point.place, r)
-        })
+        // doRequest('query:place:'+point.place, {}, (e, r) => {
+        //   if (e) { alert(e.message); return; }
+          showPrices(point.place)
+        // })
       })
       return
     }
@@ -361,10 +361,10 @@ function plot(data) {
       ndot.setAttributeNS(null, 'x', x-10);
       ndot.setAttributeNS(null, 'y', y-10);
       ndot.addEventListener('click', e => {
-        doRequest('query:place:'+point.place, {}, (e, r) => {
-          if (e) { alert(e.message); return; }
-          showPrices(point.place, r)
-        })
+        // doRequest('query:place:'+point.place, {}, (e, r) => {
+        //   if (e) { alert(e.message); return; }
+          showPrices(point.place)
+        // })
       })
       layer.append(ndot)
     } else {
@@ -703,6 +703,9 @@ function log(msg) {
       }
     }
     d.innerHTML = `<span style="color: ${player.colour}; font-weight: bold;">${player.name}</span> ${msg.what} ${where}`
+    if (msg.who != state.name) {
+      showLogLine(d.cloneNode(true))
+    }
   } else if (msg.what) {
     d.textContent = msg.what
   } else {
@@ -710,6 +713,30 @@ function log(msg) {
     d.textContent = text
   }
   s.prepend(d)
+}
+
+let messages = null
+function showLogLine(line) {
+  if (!messages) {
+    messages = [line]
+    showOneLogLine()
+  } else {
+    messages.push(line)
+  }
+}
+
+function showOneLogLine() {
+  let ele = select(document, '.showmessage')
+  let line = messages.pop()
+  if (line) {
+    ele.classList.add('open')
+    let ine = select(ele, '.message')
+    ine.replaceChildren(line)
+    setTimeout(showOneLogLine, 2000)
+  } else {
+    ele.classList.remove('open')
+    messages = null
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

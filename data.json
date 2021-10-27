@@ -1173,10 +1173,10 @@
     "871,575": {
       "danger": true,
       "links": [
-        "s:816,583"
+        "s:826,572"
       ]
     },
-    "816,583": {
+    "826,572": {
       "links": [
         "s:776,570"
       ]
@@ -1184,7 +1184,7 @@
     "796,618": {
       "danger": true,
       "links": [
-        "s:816,583"
+        "s:826,572"
       ]
     },
     "772,652": {
@@ -2109,7 +2109,7 @@
       "retain": true
     },
     {
-      "name": "Free sea ticket - One journey only. - Keep until needed then surrender.",
+      "name": "Free sea ticket - One journey only. - Keep until needed.",
       "code": "freeticket:*:*:s",
       "retain": true
     },
@@ -2138,19 +2138,18 @@
       "retain": true
     },
     {
-      "name": "Free air ticket - Los Angeles to Tokyo. - Keep until needed then surrender.",
+      "name": "Free air ticket - Los Angeles to Tokyo. - Keep until needed.",
       "code": "freeticket:losangeles:tokyo:a",
       "retain": true
     },
     {
-      "name": "Free train ticket - One journey only. - Retain until needed then surrender.",
+      "name": "Free train ticket - One journey only. - Keep until needed.",
       "code": "freeticket:*:*:r",
       "retain": true
     },
     {
       "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional.",
-      "code": "insurance+10",
-      "retain": true
+      "code": "can:insurance:*:10"
     },
     {
       "name": "Advance three spaces. - Keep until needed.",
@@ -2158,7 +2157,7 @@
       "retain": true
     },
     {
-      "name": "Free air lift - This card enables you to move from where you are now directly to Cape Town free of charge. But you must either use it now or return the card to the pack.",
+      "name": "Free air lift - This card enables you to move from where you are now directly to Cape Town free of charge. You can only do this right now.",
       "code": "can:airlift"
     },
     {
@@ -2211,8 +2210,7 @@
     },
     {
       "name": "Insurance policy - Premium £100 - (Payable to the Bank in any currency) - The holder of this policy is indemnified against all risk during any one journey. - (Ignore any adverse risk cards) - Purchase optional.",
-      "code": "insurance:*:10",
-      "retain": true
+      "code": "can:insurance:*:10"
     },
     {
       "name": "Currency speculation - Collect £10 from each player in any currency they may wish to give you.",
@@ -2230,11 +2228,11 @@
     },
     {
       "name": "Free insurance policy - In case of diversion or accident, collect from Bank twice price of fare in Sterling. - Use only once then surrender.",
-      "code": "insurance:*:0",
+      "code": "freeinsurance",
       "retain": true
     },
     {
-      "name": "Free air ticket - Sydney to Bombay. - Keep until needed then surrender.",
+      "name": "Free air ticket - Sydney to Bombay. - Keep until needed.",
       "code": "freeticket:sydney:bombay:a",
       "retain": true
     },
@@ -2244,37 +2242,37 @@
       "retain": true
     },
     {
-      "name": "Free car ticket - One journey only. - Keep until needed then surrender.",
+      "name": "Free car ticket - One journey only. - Keep until needed.",
       "code": "freeticket:*:*:l",
       "retain": true
     },
     {
-      "name": "Free sea ticket - Casablanca to London. Keep until needed then surrender.",
+      "name": "Free sea ticket - Casablanca to London. Keep until needed.",
       "code": "freeticket:casablanca:london:s",
       "retain": true
     },
     {
-      "name": "Free air ticket - Cape Town to Buenos Aires. Keep until needed then surrender.",
+      "name": "Free air ticket - Cape Town to Buenos Aires. Keep until needed",
       "code": "freeticket:capetown:buenosaires:a",
       "retain": true
     },
     {
-      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used.",
+      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required.",
       "code": "inoculation",
       "retain": true
     },
     {
-      "name": "Diplomatic immunity - This card enables you to pass through customs without examination. - Ignore instructions if you land on customs square. - Keep until needed then surrender.",
+      "name": "Diplomatic immunity - This card enables you to pass through customs without examination. - Ignore instructions if you land on customs square. - Keep until needed.",
       "code": "immunity",
       "retain": true
     },
     {
-      "name": "Free air ticket - One journey only. - Keep until needed then surrender.",
+      "name": "Free air ticket - One journey only. - Keep until needed.",
       "code": "freeticket:*:*:a",
       "retain": true
     },
     {
-      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required. - Return to pack when used.",
+      "name": "Certificate of inoculation - This is to certify that the bearer has been inoculated against smallpox. Do not miss a turn if you land on quarantine square. - Retain until required.",
       "code": "inoculation",
       "retain": true
     }

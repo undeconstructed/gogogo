@@ -163,6 +163,8 @@ func (lc luckCard) ParseCode() LuckI {
 		return LuckCan{ctxt, cmd, options}
 	case "dest":
 		return LuckDest{}
+	case "freeinsurance":
+		return LuckFreeInsurance{}
 	case "freeticket":
 		ss1 := strings.Split(ss[1], ":")
 		from := ss1[0]
@@ -205,6 +207,10 @@ type LuckCan struct {
 }
 
 type LuckDest struct {
+	luckS
+}
+
+type LuckFreeInsurance struct {
 	luckS
 }
 
