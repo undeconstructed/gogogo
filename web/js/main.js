@@ -758,7 +758,12 @@ document.addEventListener('DOMContentLoaded', function() {
     return
   }
 
-  select(document, 'object').addEventListener('load', e => {
+  let mapObject = document.createElement('object')
+  mapObject.type = 'image/svg+xml'
+  mapObject.data = 'map.svg'
+  select(document, '.map').append(mapObject)
+
+  mapObject.addEventListener('load', e => {
     fetch('data.json').
       then(rez => rez.json()).
       then(data => {
