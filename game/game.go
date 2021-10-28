@@ -23,14 +23,6 @@ type Game interface {
 
 	// admin
 	WriteOut(io.Writer) error
-
-	// queries
-	DescribeBank() AboutABank
-	ListPlaces() []string
-	DescribePlace(id string) AboutAPlace
-	ListPlayers() []string
-	DescribePlayer(name string) AboutAPlayer
-	DescribeTurn() AboutATurn
 }
 
 type game struct {
@@ -38,10 +30,10 @@ type game struct {
 	settings   settings
 	squares    []trackSquare
 	currencies map[string]currency
-	places     map[string]worldPlace
-	dots       map[string]worldDot
-	risks      []riskCard
-	lucks      []luckCard
+	places     map[string]WorldPlace
+	dots       map[string]WorldDot
+	risks      []RiskCard
+	lucks      []LuckCard
 
 	riskPile CardStack
 	luckPile CardStack
@@ -560,7 +552,7 @@ func (g *game) makeTicket(from, to, modes string) (ticket, error) {
 		return ticket{}, fmt.Errorf("no price %s %s %s", from, to, modes)
 	}
 
-	route := g.FindRoute(from, to, modes)
+	route := g.findRoute(from, to, modes)
 	if len(route) < 2 {
 		return ticket{}, fmt.Errorf("no route %s %s %s", from, to, modes)
 	}
@@ -598,11 +590,12 @@ func (g *game) toNextPlayer() {
 
 		// the rules aren't clear about when exactly you can buy a souvenir.
 		if !onMap && !p1.HasBought {
-			if place, exists := g.places[g.dots[p1.OnDot].Place]; exists {
+			placeId := g.dots[p1.OnDot].Place
+			if place, exists := g.places[placeId]; exists {
 				// place might not exist, because of lost ticket
 				// could just ignore it, but might be worth checking for some reason
 				if place.Souvenir != "" {
-					can = append(can, "buysouvenir")
+					can = append(can, "buysouvenir:"+placeId)
 				}
 			}
 		}
@@ -618,108 +611,9 @@ func (g *game) toNextPlayer() {
 	}
 }
 
-func (g *game) DescribeBank() AboutABank {
-	// XXX - returns real money, souvenirs
-	return AboutABank{
-		Money:     g.bank.Money,
-		Souvenirs: g.bank.Souvenirs,
-	}
-}
-
-func (g *game) ListPlaces() []string {
-	var out []string
-	for pl := range g.places {
-		out = append(out, pl)
-	}
-	return out
-}
-
-func (g *game) DescribePlace(from string) AboutAPlace {
-	place, ok := g.places[from]
-	if !ok {
-		return AboutAPlace{}
-	}
-
-	currencyCode := place.Currency
-	currency := g.currencies[currencyCode]
-
-	routes := map[string]int{}
-	for k, v := range place.Routes {
-		routes[k] = v * currency.Rate
-	}
-
-	return AboutAPlace{
-		ID:       from,
-		Name:     place.Name,
-		Currency: currencyCode,
-		Souvenir: place.Souvenir,
-		Prices:   routes,
-	}
-}
-
-func (g *game) ListPlayers() []string {
-	var out []string
-	for _, pl := range g.players {
-		out = append(out, pl.Name+"/"+pl.Colour)
-	}
-	return out
-}
-
-func (g *game) DescribePlayer(name string) AboutAPlayer {
-	var player player
-	ok := false
-	for _, pl := range g.players {
-		if pl.Name == name {
-			player = pl
-			ok = true
-			break
-		}
-	}
-	if !ok {
-		return AboutAPlayer{}
-	}
-
-	ticket := "<none>"
-	if player.Ticket != nil {
-		ticket = fmt.Sprintf("%s -> %s by %s", player.Ticket.From, player.Ticket.To, player.Ticket.Mode)
-	}
-
-	// XXX - returns real money, souvenirs, etc.
-	return AboutAPlayer{
-		Name:      name,
-		Colour:    player.Colour,
-		Money:     player.Money,
-		Souvenirs: player.Souvenirs,
-		Lucks:     player.LuckCards,
-		Square:    player.OnSquare,
-		Dot:       fmt.Sprintf("%s/%s", player.OnDot, g.dots[player.OnDot].Place),
-		Ticket:    ticket,
-	}
-}
-
-func (g *game) DescribeTurn() AboutATurn {
-	if g.turn == nil {
-		return AboutATurn{}
-	}
-
-	p := g.turn.player
-
-	return AboutATurn{
-		Number:  g.turn.Num,
-		Player:  p.Name,
-		Colour:  p.Colour,
-		Stopped: g.turn.Stopped,
-		OnMap:   g.turn.OnMap,
-		Square:  p.OnSquare,
-		Dot:     p.OnDot,
-		Must:    g.turn.Must,
-	}
-}
-
-func route(world map[string]worldDot, srcp, tgtp, modes string, acc []string) []string {
-	length := len(acc)
-
+func routes(world map[string]WorldDot, srcp, tgtp, modes string, acc []string, out [][]string) [][]string {
 	srcd := world[srcp]
+
 	// for each outbound link ..
 	for _, link := range srcd.Links {
 		lmode := link[0]
@@ -727,45 +621,63 @@ func route(world map[string]worldDot, srcp, tgtp, modes string, acc []string) []
 			// wrong mode
 			continue
 		}
+
 		dest := link[2:]
 		if dest == tgtp {
-			// done! stop now!
-			return append(acc, dest)
+			// find a valid route
+			route := []string{}
+			route = append(route, acc...)
+			route = append(route, dest)
+			out = append(out, route)
+
+			// cannot route through a destination
+			continue
 		}
+
 		destd := world[dest]
 		if destd.Terminal {
 			// no routing through terminal
 			continue
 		}
+
 		if stringListContains(acc, dest) {
 			// prevent cycles
 			continue
 		}
 
 		// append this as potential route point
-		acc = append(acc, dest)
+		accHere := append(acc, dest)
 
 		// try routing from this point
-		acc1 := route(world, dest, tgtp, modes, acc)
-		if acc1 == nil {
-			// dead end, reset acc to remove this point and any subsequent
-			acc = acc[0:length]
-			continue
+		out1 := routes(world, dest, tgtp, modes, accHere, out)
+		if out1 != nil {
+			// found a route
+			out = out1
 		}
-
-		// found it, return back up the stack
-		return acc1
 	}
 
-	return nil
+	return out
 }
 
-func (g *game) FindRoute(from, to, modes string) []string {
-	// place IDs
+func route(world map[string]WorldDot, srcp, tgtp, modes string) []string {
+	rs := routes(world, srcp, tgtp, modes, []string{srcp}, [][]string{})
+
+	var best []string
+	for _, r := range rs {
+		if best == nil || len(r) < len(best) {
+			best = r
+		}
+	}
+
+	return best
+}
+
+func (g *game) findRoute(from, to, modes string) []string {
+	// place IDs -> dot IDs
 	srcp := g.places[from].Dot
 	tgtp := g.places[to].Dot
 
-	r := route(g.dots, srcp, tgtp, modes, []string{srcp})
+	r := route(g.dots, srcp, tgtp, modes)
 
 	return r
 }

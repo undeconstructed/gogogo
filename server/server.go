@@ -104,24 +104,32 @@ func (s *server) Run() error {
 			playing := s.game.GetTurnState().Player
 			players := s.game.GetPlayerSummary()
 			update := game.GameUpdate{News: news, Playing: playing, Players: players}
-			msg, _ := comms.Encode("update", update)
+			msg, err := comms.Encode("update", update)
+			if err != nil {
+				fmt.Printf("failed to encode update: %v\n", err)
+				panic("encode update error")
+			}
 			s.broadcast(msg, "")
 		}
 
-		// s.turn is set somewhere deep in the request code normally
 		if s.turn != nil {
 			c, ok := s.clients[s.turn.Player]
 			if !ok {
 				fmt.Printf("current player not connected: %s\n", s.turn.Player)
 			}
 
-			msg, _ := comms.Encode("turn", s.turn)
+			msg, err := comms.Encode("turn", s.turn)
+			if err != nil {
+				fmt.Printf("failed to encode turn: %v\n", err)
+				panic("encode turn error")
+			}
 
 			select {
 			case c.downCh <- msg:
 				s.turn = nil
 			default:
 				// client lagging
+				fmt.Printf("client lagging: %s\n", s.turn.Player)
 			}
 		}
 	}
@@ -180,20 +188,6 @@ func (s *server) parseRequest(in RequestFromUser) requestFunc {
 	case "query":
 		f = f[1:]
 		switch f[0] {
-		case "turn":
-			return func() (interface{}, []game.Change, *game.TurnState) { return s.game.DescribeTurn(), nil, nil }
-		case "bank":
-			return func() (interface{}, []game.Change, *game.TurnState) { return s.game.DescribeBank(), nil, nil }
-		case "players":
-			return func() (interface{}, []game.Change, *game.TurnState) { return s.game.ListPlayers(), nil, nil }
-		case "player":
-			name := f[1] // XXX
-			return func() (interface{}, []game.Change, *game.TurnState) { return s.game.DescribePlayer(name), nil, nil }
-		case "places":
-			return func() (interface{}, []game.Change, *game.TurnState) { return s.game.ListPlaces(), nil, nil }
-		case "place":
-			id := f[1] // XXX
-			return func() (interface{}, []game.Change, *game.TurnState) { return s.game.DescribePlace(id), nil, nil }
 		default:
 			return func() (interface{}, []game.Change, *game.TurnState) {
 				return comms.WrapError(fmt.Errorf("unknown query: %v", f)), nil, nil
@@ -239,6 +233,7 @@ func (s *server) broadcast(msg comms.Message, skip string) {
 		case c.downCh <- msg:
 		default:
 			// client lagging
+			fmt.Printf("client lagging: %s\n", n)
 		}
 	}
 }

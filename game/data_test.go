@@ -41,7 +41,7 @@ func TestCommands_longer(t *testing.T) {
 }
 
 func TestLuckCard_getmoney(t *testing.T) {
-	lc := luckCard{Name: "foo", Code: "getmoney:st:10"}
+	lc := LuckCard{Name: "foo", Code: "getmoney:st:10"}
 	code := lc.ParseCode()
 	if c, ok := code.(LuckGetMoney); ok {
 		if c.CurrencyId != "st" {
@@ -55,7 +55,7 @@ func TestLuckCard_getmoney(t *testing.T) {
 	}
 }
 func TestLuckCard_can(t *testing.T) {
-	lc := luckCard{Name: "foo", Code: "can:insurance"}
+	lc := LuckCard{Name: "foo", Code: "can:insurance"}
 	code := lc.ParseCode()
 	if c, ok := code.(LuckCan); ok {
 		if string(c.Can) != "insurance" {
@@ -67,7 +67,7 @@ func TestLuckCard_can(t *testing.T) {
 }
 
 func TestLuckFreeTicket_yes(t *testing.T) {
-	lc := luckCard{Name: "foo", Code: "freeticket:*:*:*"}
+	lc := LuckCard{Name: "foo", Code: "freeticket:*:*:*"}
 	c := lc.ParseCode().(LuckFreeTicket)
 	from, _, _, err := c.Match([]string{"capetown", "london", "s"})
 	if err != nil {
@@ -79,7 +79,7 @@ func TestLuckFreeTicket_yes(t *testing.T) {
 }
 
 func TestLuckFreeTicket_no(t *testing.T) {
-	lc := luckCard{Name: "foo", Code: "freeticket:casablanca:*:*"}
+	lc := LuckCard{Name: "foo", Code: "freeticket:casablanca:*:*"}
 	c := lc.ParseCode().(LuckFreeTicket)
 	_, _, _, err := c.Match([]string{"capetown", "london", "s"})
 	if err == nil {
@@ -88,7 +88,7 @@ func TestLuckFreeTicket_no(t *testing.T) {
 }
 
 func TestRiskCard(t *testing.T) {
-	rc := riskCard{Name: "foo", Code: "rs/must:think"}
+	rc := RiskCard{Name: "foo", Code: "rs/must:think"}
 	code := rc.ParseCode()
 	if c, ok := code.(RiskMust); ok {
 		if string(c.Cmd) != "think" {

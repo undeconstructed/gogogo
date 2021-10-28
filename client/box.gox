@@ -1,0 +1,53 @@
+package client
+
+type BoxI[T any] interface {
+	Put(v *T)
+	Get() *T
+	Wait(seen *T) *T
+	WaitCh(seen *T) chan<- *T
+}
+
+type Box[T any] struct {
+	l *sync.Mutex
+	c *sync.Cond
+	v *T
+}
+
+func NewBox[T any]() BoxI[T] {
+	l := &sync.Mutex{}
+	c := sync.NewCond(l)
+	return &Box[T]{l, c, nil}
+}
+
+func (b *Box[T]) Put(v *T) {
+	b.v = v
+	b.c.Broadcast()
+}
+
+func (b *Box[T]) Get() *T {
+	return b.v
+}
+
+func (b *Box[T]) Wait(seen *T) *T {
+	b.l.Lock()
+	defer b.l.Unlock()
+	for b.v == seen {
+		b.c.Wait()
+	}
+	return b.v
+}
+
+func (b *Box[T]) WaitCh(seen *T) chan<- *T {
+	ch := make(chan *T, 1)
+	go func() {
+		ch <- b.Wait(seen)
+		close(ch)
+	}()
+	return ch
+}
+
+func Print[T any](s []T) {
+	for _, v := range s {
+		fmt.Print(v)
+	}
+}

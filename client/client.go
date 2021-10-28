@@ -56,6 +56,7 @@ func NewClient(data game.GameData, name, colour string, server string) Client {
 		colour: colour,
 		server: server,
 		coreCh: coreCh,
+		state:  NewBox(),
 		reqs:   map[string]RequestForServer{},
 	}
 }
@@ -80,19 +81,26 @@ type ResponseFromServer struct {
 	Body interface{}
 }
 
+type gameState struct {
+	playing string
+	players map[string]game.PlayerState
+	news    []game.Change
+	turn    *game.TurnState
+}
+
 type client struct {
 	data   game.GameData
 	name   string
 	colour string
 	server string
 
+	// drives the main loop
 	coreCh chan interface{}
 
-	turnCh   chan bool
-	turn     game.AboutATurn
-	updateCh chan string
-	updates  []string
+	// boxed state, for the UI
+	state *Box
 
+	// the request system
 	reqNo int
 	reqs  map[string]RequestForServer
 }
@@ -125,13 +133,6 @@ func (c *client) Run() error {
 			return err
 		}
 	}
-
-	c.updateCh = make(chan string)
-	c.turnCh = make(chan bool, 1)
-	defer func() {
-		close(c.updateCh)
-		close(c.turnCh)
-	}()
 
 	upCh := make(chan interface{}, 1)
 	defer close(upCh)
@@ -179,8 +180,20 @@ func (c *client) Run() error {
 			f := msg.Head.Fields()
 			switch f[0] {
 			case "turn":
-				about := game.AboutATurn{}
-				comms.Decode(msg, &about)
+				about := game.TurnState{}
+				err := comms.Decode(msg, &about)
+				if err != nil {
+					fmt.Printf("bad turn message: %v\n", err)
+					continue
+				}
+				c.coreCh <- about
+			case "update":
+				about := game.GameUpdate{}
+				err := comms.Decode(msg, &about)
+				if err != nil {
+					fmt.Printf("bad update message: %v\n", err)
+					continue
+				}
 				c.coreCh <- about
 			case "text":
 				var text string
@@ -193,17 +206,13 @@ func (c *client) Run() error {
 			case "response":
 				id := f[1]
 				c.coreCh <- ResponseFromServer{ID: id, Body: msg.Data}
-			case "push":
-				fmt.Printf("got update: %s\n", f[1])
 			default:
 				fmt.Printf("junk from server: %v\n", f)
 			}
 		}
 	}()
 
-	proxy := NewGameProxy(c)
-
-	stopUI, err := c.startUI(proxy)
+	stopUI, err := c.startUI()
 	if err != nil {
 		return err
 	}
@@ -221,16 +230,14 @@ func (c *client) Run() error {
 			// forward, unquestioning
 			upCh <- msg
 		case TextFromServer:
-			select {
-			case c.updateCh <- msg.Text:
-				// if ui is following
-			default:
-				c.updates = append(c.updates, msg.Text)
-			}
-		case game.AboutATurn:
-			c.updateTurn(msg)
+			// TODO
+		case game.TurnState:
+			c.receiveTurn(msg)
+		case game.GameUpdate:
+			c.receiveUpdate(msg)
 		case RequestForServer:
 			reqID := strconv.Itoa(c.reqNo)
+			c.reqNo++
 			mtype := "request:" + reqID + ":" + msg.rtype
 			c.reqs[reqID] = msg
 			upCh <- toSend{mtype, msg.rdata}
@@ -246,18 +253,42 @@ func (c *client) Run() error {
 	return nil
 }
 
-func (c *client) updateTurn(turn game.AboutATurn) {
-	c.turn = turn
-
-	// use channel to mark state has changed
-	select {
-	case c.turnCh <- true:
-	default:
+func (c *client) receiveTurn(turn game.TurnState) {
+	var state gameState
+	if s, ok := c.state.Get().(*gameState); ok {
+		// copy the old state
+		state = *s
 	}
+	state.turn = &turn
+	c.state.Put(&state)
 }
 
-func (c *client) getTurn() game.AboutATurn {
-	return c.turn
+func (c *client) receiveUpdate(update game.GameUpdate) {
+	var state gameState
+	if s, ok := c.state.Get().(*gameState); ok {
+		// copy the old state
+		state = *s
+	}
+
+	if update.Playing != c.name {
+		// not our turn, will be get reset when a turn object arrives
+		state.turn = nil
+	}
+
+	state.playing = update.Playing
+
+	if state.players == nil {
+		state.players = map[string]game.PlayerState{}
+	}
+	for _, pl := range update.Players {
+		state.players[pl.Name] = pl
+	}
+
+	for _, news := range update.News {
+		state.news = append(state.news, news)
+	}
+
+	c.state.Put(&state)
 }
 
 func (c *client) doRequest(rtype string, rbody interface{}, resp interface{}) error {
@@ -272,62 +303,77 @@ func (c *client) doRequest(rtype string, rbody interface{}, resp interface{}) er
 	return nil
 }
 
-func (c *client) printUpdates() {
-	updates := c.updates
-	c.updates = nil
-	for _, u := range updates {
+func (c *client) doGameStart() error {
+	res := game.StartResultJSON{}
+	err := c.doRequest("start", nil, &res)
+	if err != nil {
+		return err
+	}
+	if res.Err != nil {
+		return game.ReError(res.Err)
+	}
+	return nil
+}
+
+func (c *client) doGamePlay(command game.Command) (interface{}, error) {
+	res := game.PlayResultJSON{}
+	err := c.doRequest("play", command, &res)
+	if err != nil {
+		return "", err
+	}
+	if res.Err != nil {
+		return "", game.ReError(res.Err)
+	}
+	return res.Msg, nil
+}
+
+func (c *client) doGameQuery(cmd string, resp interface{}) error {
+	return c.doRequest("query:"+cmd, nil, resp)
+}
+
+func (c *client) printNews(state *gameState) {
+	news := state.news
+	state.news = nil // UGHs
+	for _, u := range news {
 		fmt.Println(">", u)
 	}
 }
 
-func (c *client) followUpdates() {
+func (c *client) follow(state *gameState) *gameState {
 	ctx, _ := signal.NotifyContext(context.TODO(), os.Interrupt)
-	for {
-		// stop following on my turn
-		if c.turn.Player == c.name {
-			return
-		}
 
-		c.printUpdates()
+loop:
+	for {
 		select {
-		case m := <-c.updateCh:
-			fmt.Println(">", m)
-		case <-c.turnCh:
-			// state has changed
-			// printTurn(c.turn)
+		case m := <-c.state.Listen(state):
+			state = m.(*gameState)
+			c.printNews(state)
+			if state.playing == c.name {
+				// stop following on my turn
+				break loop
+			}
 		case <-ctx.Done():
 			// stop following on interrupt
-			return
+			break loop
 		}
 	}
+
+	return state
 }
 
-func (c *client) startUI(g GameClient) (func() error, error) {
+func (c *client) startUI() (func() error, error) {
+	doItems := []rl.PrefixCompleterInterface{}
+	for action := range c.data.Actions {
+		doItems = append(doItems, rl.PcItem(action))
+	}
+
 	completer := rl.NewPrefixCompleter(
 		rl.PcItem("send"),
 		rl.PcItem("follow"),
 		rl.PcItem("start"),
-		rl.PcItem("query",
-			rl.PcItem("bank"),
-			rl.PcItem("places"),
-			rl.PcItem("place"),
-			rl.PcItem("players"),
-			rl.PcItem("player"),
-		),
+		rl.PcItem("query"),
 		rl.PcItem("do",
-			// TODO - make this from data
-			rl.PcItem("stop"),
-			rl.PcItem("takerisk"),
-			rl.PcItem("takeluck"),
-			rl.PcItem("useluck"),
-			rl.PcItem("dicemove"),
-			rl.PcItem("buyticket"),
-			rl.PcItem("changemoney"),
-			rl.PcItem("buysouvenir"),
-			rl.PcItem("gamble"),
-			rl.PcItem("pay"),
-			rl.PcItem("declare"),
-			rl.PcItem("end"),
+			doItems...,
 		),
 	)
 
@@ -344,110 +390,129 @@ func (c *client) startUI(g GameClient) (func() error, error) {
 	}
 
 	go func() {
-		defer l.Close()
-		defer close(c.coreCh)
-		c.gameRepl(l, g)
+		defer func() {
+			l.Close()
+			c.coreCh <- nil
+		}()
+		c.gameRepl(l)
 	}()
 
 	return l.Close, nil
 }
 
-func printSummary(state game.AboutATurn) {
-	where := "track"
-	if state.OnMap {
-		where = "map"
-	}
-	stopped := "not stopped"
-	if state.Stopped {
-		stopped = "stopped"
-	}
-	must := ""
-	if len(state.Must) > 0 {
-		must = fmt.Sprintf(", and must %v", state.Must)
-	}
-	fmt.Printf("%s is moving on the %s, has %s%s\n", state.Player, where, stopped, must)
+func (c *client) printBank() {
+	// fmt.Printf("Money:     %v\n", state.Money)
+	// fmt.Printf("Souvenirs: %v\n", state.Souvenirs)
 }
 
-func printBank(state game.AboutABank) {
-	fmt.Printf("Money:     %v\n", state.Money)
-	fmt.Printf("Souvenirs: %v\n", state.Souvenirs)
+func (c *client) printTurn(turn *game.TurnState) {
+	on := "track"
+	if turn.OnMap {
+		on = "map"
+	}
+	fmt.Printf("Player:  %s\n", turn.Player)
+	fmt.Printf("On:      %s\n", on)
+	fmt.Printf("Stopped: %t\n", turn.Stopped)
+	fmt.Printf("Can:     %s\n", turn.Can)
+	fmt.Printf("Must:    %s\n", turn.Must)
+	// fmt.Printf("%#v\n", turn)
 }
 
-func printTurn(state game.AboutATurn) {
-	fmt.Printf("Player:  %s\n", state.Player)
-	fmt.Printf("On map:  %t\n", state.OnMap)
-	fmt.Printf("Stopped: %t\n", state.Stopped)
-	fmt.Printf("Must:    %s\n", state.Must)
-}
+func (c *client) printPlace(placeId string) {
+	place, exists := c.data.Places[placeId]
+	if !exists {
+		fmt.Printf("unknown place: %s\n", placeId)
+	}
 
-func printPlace(state game.AboutAPlace) {
-	fmt.Printf("Place:    %s\n", state.Name)
-	fmt.Printf("Currency: %s\n", state.Currency)
-	if state.Souvenir != "" {
-		fmt.Printf("Souvenir: %s\n", state.Souvenir)
+	fmt.Printf("Place:    %s\n", place.Name)
+	fmt.Printf("Currency: %s\n", place.Currency)
+	if place.Souvenir != "" {
+		fmt.Printf("Souvenir: %s\n", place.Souvenir)
 	}
 	fmt.Printf("Routes:\n")
-	for k, v := range state.Prices {
+	for k, v := range place.Routes {
 		fmt.Printf("\t%s: %d\n", k, v)
 	}
+
+	// fmt.Printf("%#v\n", place)
 }
 
-func printPlayer(data game.GameData, state game.AboutAPlayer) {
-	fmt.Printf("Player:    %s\n", state.Name)
-	fmt.Printf("Money:     %v\n", state.Money)
-	fmt.Printf("Souvenirs: %v\n", state.Souvenirs)
-	if len(state.Lucks) > 0 {
+func (c *client) printPlayer(pl game.PlayerState) {
+	fmt.Printf("Player:    %s\n", pl.Name)
+	fmt.Printf("Money:     %v\n", pl.Money)
+	fmt.Printf("Souvenirs: %v\n", pl.Souvenirs)
+	if len(pl.Lucks) > 0 {
 		fmt.Printf("Lucks:\n")
-		for _, id := range state.Lucks {
-			fmt.Printf("\t%d: %s\n", id, data.Lucks[id].Name)
+		for _, id := range pl.Lucks {
+			fmt.Printf("\t%d: %s\n", id, c.data.Lucks[id].Name)
 		}
 	}
-	fmt.Printf("Square:    %s\n", data.Squares[state.Square].Name)
-	fmt.Printf("Dot:       %s\n", state.Dot)
-	fmt.Printf("Ticket:    %s\n", state.Ticket)
+	fmt.Printf("Square:    %s\n", c.data.Squares[pl.Square].Name)
+	fmt.Printf("Dot:       %s\n", pl.Dot)
+	fmt.Printf("Ticket:    %v\n", pl.Ticket)
+	// fmt.Printf("%#v\n", pl)
 }
 
-func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
+func (c *client) printPlayers(players map[string]game.PlayerState) {
+	for _, pl := range players {
+		c.printPlayer(pl)
+	}
+}
 
-	doPlayPrompt := func(s game.AboutATurn) {
-		number := s.Number
-		player := s.Player
+func (c *client) gameRepl(l *rl.Instance) error {
+	// wait for initial state
+	state := c.state.Wait(nil).(*gameState)
+	c.printNews(state)
+
+	doPlayPrompt := func(s *gameState) {
+		player := c.name
+		colour := col(c.colour)
+		number := s.turn.Number
+
 		loc := "track"
-		if s.OnMap {
+		if s.turn.OnMap {
 			loc = "map"
 		}
 		phase := "moving"
-		if s.Stopped {
+		if s.turn.Stopped {
 			phase = "stopped"
 		}
 		must := ""
-		if len(s.Must) > 0 {
+		if len(s.turn.Must) > 0 {
 			must = " !"
 		}
-		colour := col(s.Colour)
+
 		prompt := fmt.Sprintf("%d \033%s%s|%s|%s%s»\033[0m ", number, colour, player, loc, phase, must)
 		l.SetPrompt(prompt)
 	}
 
-	doIdlePrompt := func(s game.AboutATurn) {
-		number := s.Number
-		colour := col(s.Colour)
+	doIdlePrompt := func(s *gameState) {
+		playing := s.playing
+		colour := col(s.players[playing].Colour)
+		number := 0
 		prompt := fmt.Sprintf("%d \033%s»\033[0m ", number, colour)
 		l.SetPrompt(prompt)
 	}
 
+	follow := false
 	for {
-		state := c.getTurn()
-		if state.Player == c.name {
+		if follow {
+			follow = false
+			// follow until it's time to do something
+			state = c.follow(state)
+		} else {
+			state = c.state.Get().(*gameState)
+			c.printNews(state)
+		}
+
+		if state.turn != nil {
 			doPlayPrompt(state)
-			if len(state.Must) > 0 {
-				fmt.Printf("Tasks: %v\n", state.Must)
+			if len(state.turn.Must) > 0 {
+				fmt.Printf("Tasks: %v\n", state.turn.Must)
 			}
 		} else {
 			doIdlePrompt(state)
 		}
-
-		c.printUpdates()
 
 		line, err := l.Readline()
 		if err == rl.ErrInterrupt {
@@ -481,16 +546,16 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 		case "send":
 			c.coreCh <- toSend{mtype: "text", data: rest}
 		case "follow":
-			c.followUpdates()
+			follow = true
 		case "start":
-			err := g.Start()
+			err := c.doGameStart()
 			if err != nil {
 				if err != game.ErrAlreadyStarted {
 					fmt.Printf("Error: %v\n", err)
 					continue
 				}
 			}
-			c.followUpdates()
+			follow = true
 		case "query":
 			parts := strings.SplitN(strings.TrimSpace(rest), " ", 2)
 			rest := ""
@@ -499,16 +564,16 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 			}
 			switch parts[0] {
 			case "bank":
-				about := game.AboutABank{}
-				err := g.Query("bank", &about)
-				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					continue
-				}
-				printBank(about)
+				// about := game.AboutABank{}
+				// err := g.Query("bank", &about)
+				// if err != nil {
+				// 	fmt.Printf("error: %v\n", err)
+				// 	continue
+				// }
+				c.printBank()
 			case "places":
 				about := []string{}
-				err := g.Query("places", &about)
+				err := c.doGameQuery("places", &about)
 				if err != nil {
 					fmt.Printf("error: %v\n", err)
 					continue
@@ -524,16 +589,16 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 					continue
 				}
 
-				about := game.AboutAPlace{}
-				err = g.Query("place:"+name, &about)
-				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					continue
-				}
-				printPlace(about)
+				// about := game.AboutAPlace{}
+				// err = g.Query("place:"+name, &about)
+				// if err != nil {
+				// 	fmt.Printf("error: %v\n", err)
+				// 	continue
+				// }
+				c.printPlace(name)
 			case "players":
 				about := []string{}
-				err := g.Query("players", &about)
+				err := c.doGameQuery("players", &about)
 				if err != nil {
 					fmt.Printf("error: %v\n", err)
 					continue
@@ -549,36 +614,16 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 					continue
 				}
 
-				about := game.AboutAPlayer{}
-				err = g.Query("player:"+name, &about)
-				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					continue
-				}
-				printPlayer(c.data, about)
+				pl := state.players[name]
+				c.printPlayer(pl)
 			}
 		case "do":
 			s := strings.ReplaceAll(rest, " ", ":")
 			cmd := game.CommandString(s)
 
-			_, err := g.Play(game.Command{Command: cmd})
+			res, err := c.doGamePlay(game.Command{Command: cmd})
 			if err != nil {
-				if err == game.ErrNotStopped {
-					// try to auto stop
-					_, err = g.Play(game.Command{Command: "stop"})
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-					// fmt.Printf("%s\n", res)
-
-					// retry command
-					_, err = g.Play(game.Command{Command: cmd})
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-				} else if err == game.ErrBadRequest {
+				if err == game.ErrBadRequest {
 					a, ok := c.data.Actions[cmd.First()]
 					if !ok {
 						fmt.Printf("Bad request.")
@@ -590,14 +635,19 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 					continue
 				}
 			}
-			// fmt.Printf("%s\n", res)
-			// if cmd == "end" {
-			// auto follow on successful end
-			c.followUpdates()
-			// }
+			fmt.Printf("%v\n", res)
+			if cmd == "end" {
+				// auto follow on successful end
+				follow = true
+			}
+			// XXX - the resulting update might not arrive before the loop restarts
+		case "?":
+			fmt.Printf("some info\n")
+			if state.turn != nil {
+				c.printTurn(state.turn)
+			}
+			c.printPlayers(state.players)
 		case "":
-			state = c.getTurn()
-			printTurn(state)
 			continue
 		default:
 			fmt.Printf("unknown\n")
