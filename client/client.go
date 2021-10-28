@@ -558,14 +558,10 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 				printPlayer(c.data, about)
 			}
 		case "do":
-			ss := strings.SplitN(rest, " ", 2)
-			cmd := ss[0]
-			var options = ""
-			if len(ss) > 1 {
-				options = ss[1]
-			}
+			s := strings.ReplaceAll(rest, " ", ":")
+			cmd := game.CommandString(s)
 
-			_, err := g.Play(game.Command{Command: cmd, Options: options})
+			_, err := g.Play(game.Command{Command: cmd})
 			if err != nil {
 				if err == game.ErrNotStopped {
 					// try to auto stop
@@ -577,18 +573,18 @@ func (c *client) gameRepl(l *rl.Instance, g GameClient) error {
 					// fmt.Printf("%s\n", res)
 
 					// retry command
-					_, err = g.Play(game.Command{Command: cmd, Options: options})
+					_, err = g.Play(game.Command{Command: cmd})
 					if err != nil {
 						fmt.Printf("Error: %v\n", err)
 						continue
 					}
 				} else if err == game.ErrBadRequest {
-					a, ok := c.data.Actions[cmd]
+					a, ok := c.data.Actions[cmd.First()]
 					if !ok {
 						fmt.Printf("Bad request.")
 						continue
 					}
-					fmt.Printf("Usage: %s %s\n", cmd, a.Help)
+					fmt.Printf("Usage: %s %s\n", cmd.First(), a.Help)
 				} else {
 					fmt.Printf("Error: %v\n", err)
 					continue

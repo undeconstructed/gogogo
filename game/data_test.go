@@ -4,7 +4,43 @@ import (
 	"testing"
 )
 
-func TestLuckCard(t *testing.T) {
+func TestCommands_match(t *testing.T) {
+	cp := CommandPattern("buyticket:*:*:r")
+	args := cp.Match("buyticket:bombay:london:r")
+	if args == nil {
+		t.Errorf("error")
+	}
+	if len(args) != 4 {
+		t.Errorf("error")
+	}
+	if args[1] != "bombay" {
+		t.Errorf("error")
+	}
+}
+
+func TestCommands_nomatch(t *testing.T) {
+	cp := CommandPattern("buyticket:*:*:r")
+	args := cp.Match("buyticket:bombay:london:a")
+	if args != nil {
+		t.Errorf("error")
+	}
+}
+
+func TestCommands_longer(t *testing.T) {
+	cp := CommandPattern("useluck:*")
+	args := cp.Match("useluck:1:london:test")
+	if args == nil {
+		t.Errorf("error")
+	}
+	if len(args) != 4 {
+		t.Errorf("error")
+	}
+	if args[2] != "london" {
+		t.Errorf("error")
+	}
+}
+
+func TestLuckCard_getmoney(t *testing.T) {
 	lc := luckCard{Name: "foo", Code: "getmoney:st:10"}
 	code := lc.ParseCode()
 	if c, ok := code.(LuckGetMoney); ok {
@@ -16,6 +52,17 @@ func TestLuckCard(t *testing.T) {
 		}
 	} else {
 		t.Errorf("bad get money: %v", code)
+	}
+}
+func TestLuckCard_can(t *testing.T) {
+	lc := luckCard{Name: "foo", Code: "can:insurance"}
+	code := lc.ParseCode()
+	if c, ok := code.(LuckCan); ok {
+		if string(c.Can) != "insurance" {
+			t.Errorf("bad can command")
+		}
+	} else {
+		t.Errorf("bad can: %v", code)
 	}
 }
 
@@ -44,7 +91,7 @@ func TestRiskCard(t *testing.T) {
 	rc := riskCard{Name: "foo", Code: "rs/must:think"}
 	code := rc.ParseCode()
 	if c, ok := code.(RiskMust); ok {
-		if c.Command != "think" {
+		if string(c.Cmd) != "think" {
 			t.Errorf("bad must command")
 		}
 	} else {
@@ -59,11 +106,8 @@ func TestSquare(t *testing.T) {
 		t.Errorf("wrong size")
 	}
 	if opt, ok := opts[0].(OptionCan); ok {
-		if opt.Command != "buyticket" {
-			t.Errorf("bad can cmd: %s", opt.Command)
-		}
-		if opt.Options != "r" {
-			t.Errorf("bad can options: %s", opt.Options)
+		if string(opt.Cmd) != "buyticket:r" {
+			t.Errorf("bad can cmd: %s", opt.Cmd)
 		}
 	} else {
 		t.Errorf("bad can")

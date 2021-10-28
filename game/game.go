@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+type CommandHandler func(*turn, CommandPattern, []string) (interface{}, error)
+
 type Game interface {
 	// activities
 	AddPlayer(name string, colour string) error
@@ -32,6 +34,7 @@ type Game interface {
 }
 
 type game struct {
+	cmds       map[string]CommandHandler
 	settings   settings
 	squares    []trackSquare
 	currencies map[string]currency
@@ -51,6 +54,25 @@ type game struct {
 
 func NewGame(data GameData) Game {
 	g := &game{}
+
+	// static stuff
+
+	g.cmds = map[string]CommandHandler{}
+	g.cmds["airlift"] = g.turn_airlift
+	g.cmds["buysouvenir"] = g.turn_buysouvenir
+	g.cmds["buyticket"] = g.turn_buyticket
+	g.cmds["changemoney"] = g.turn_changemoney
+	g.cmds["declare"] = g.turn_declare
+	g.cmds["dicemove"] = g.turn_dicemove
+	g.cmds["gainlocal10"] = g.turn_gainlocal10
+	g.cmds["gamble"] = g.turn_gamble
+	g.cmds["pay"] = g.turn_pay
+	g.cmds["quarantine"] = g.turn_quarantine
+	g.cmds["stop"] = g.turn_stop
+	g.cmds["takeluck"] = g.turn_takeluck
+	g.cmds["takerisk"] = g.turn_takerisk
+	g.cmds["useluck"] = g.turn_useluck
+	g.cmds["end"] = g.doEnd
 
 	// import data
 
@@ -126,6 +148,12 @@ func NewGame(data GameData) Game {
 
 	// verify, by letting it panic now
 
+	for a := range data.Actions {
+		_, ok := g.cmds[a]
+		if !ok {
+			fmt.Printf("unmatched action: %s\n", a)
+		}
+	}
 	for _, s := range g.squares {
 		s.ParseOptions()
 	}
@@ -247,48 +275,52 @@ func (g *game) Play(player string, c Command) (PlayResult, error) {
 }
 
 func (g *game) doPlay(t *turn, c Command) (interface{}, error) {
-	switch c.Command {
-	case "airlift":
-		return g.turn_airlift(t)
-	case "buysouvenir":
-		return g.turn_buysouvenir(t)
-	case "buyticket":
-		return g.turn_buyticket(t, c.Options)
-	case "changemoney":
-		return g.turn_changemoney(t, c.Options)
-	case "declare":
-		return g.turn_declare(t, c.Options)
-	case "dicemove":
-		return g.turn_dicemove(t)
-	case "gainlocal10":
-		return g.turn_gainlocal10(t)
-	case "gamble":
-		return g.turn_gamble(t, c.Options)
-	case "pay":
-		return g.turn_pay(t, c.Options)
-	case "quarantine":
-		return g.turn_quarantine(t)
-	case "stop":
-		return g.turn_stop(t)
-	case "takeluck":
-		return g.turn_takeluck(t)
-	case "takerisk":
-		return g.turn_takerisk(t)
-	case "useluck":
-		return g.turn_useluck(t, c.Options)
-	case "end":
-		if !t.Stopped {
-			return nil, ErrNotStopped
-		}
-		if len(t.Must) > 0 {
-			return nil, ErrMustDo
-		}
-		g.toNextPlayer()
-		t.addEvent("goes to sleep")
-		return nil, nil
+	handler, ok := g.cmds[c.Command.First()]
+	if !ok {
+		return nil, errors.New("bad command: " + string(c.Command))
 	}
 
-	return nil, errors.New("bad command: " + c.Command)
+	if string(c.Command) == "end" {
+		// end is never in the can or must list
+		return g.doEnd(t, CommandPattern("end"), nil)
+	}
+
+	var pattern CommandPattern
+	var args []string
+	for _, canS := range t.Can {
+		can := CommandPattern(canS)
+		args = can.Match(c.Command)
+		if args != nil {
+			pattern = can
+			break
+		}
+	}
+	for _, mustS := range t.Must {
+		must := CommandPattern(mustS)
+		args = must.Match(c.Command)
+		if args != nil {
+			pattern = must
+			break
+		}
+	}
+
+	if args == nil {
+		return nil, ErrNotNow
+	}
+
+	return handler(t, pattern, args[1:])
+}
+
+func (g *game) doEnd(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	if !t.Stopped {
+		return nil, ErrNotStopped
+	}
+	if len(t.Must) > 0 {
+		return nil, ErrMustDo
+	}
+	g.toNextPlayer()
+	t.addEvent("goes to sleep")
+	return nil, nil
 }
 
 func (g *game) GetTurnState() TurnState {
@@ -400,19 +432,9 @@ func (g *game) stopOnTrack(t *turn) {
 	for _, o := range square.ParseOptions() {
 		switch option := o.(type) {
 		case OptionMust:
-			// XXX - split and now rejoin?!
-			c := option.Command
-			if option.Options != "" {
-				c += ":" + option.Options
-			}
-			t.Must = append(t.Must, c)
+			t.Must = append(t.Must, string(option.Cmd))
 		case OptionCan:
-			// XXX - split and now rejoin?!s
-			c := option.Command
-			if option.Options != "" {
-				c += ":" + option.Options
-			}
-			t.Can = append(t.Can, c)
+			t.Can = append(t.Can, string(option.Cmd))
 		case OptionMiss:
 			t.player.MissTurns += option.N
 			t.addEventf("will miss %d turns", option.N)

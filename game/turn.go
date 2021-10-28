@@ -2,32 +2,30 @@ package game
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
 
-func (g *game) turn_airlift(t *turn) (interface{}, error) {
-	if !stringListContains(t.Can, "airlift") {
-		return nil, ErrNotNow
-	}
-
+func (g *game) turn_airlift(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	// only option is capetown
 	placeId := "capetown"
 	g.jumpOnMap(t, placeId)
 
-	t.Can, _ = stringListWithout(t.Can, "airlift")
+	t.Can, _ = stringListWithout(t.Can, string(c))
 
 	t.addEvent("suddenly appears")
 	return nil, nil
 }
 
-func (g *game) turn_buysouvenir(t *turn) (interface{}, error) {
-	if !stringListContains(t.Can, "buysouvenir") {
+func (g *game) turn_buysouvenir(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	placeId := args[0]
+
+	atNow := g.dots[t.player.OnDot].Place
+
+	if placeId != atNow {
 		return nil, ErrNotNow
 	}
 
-	placeId := g.dots[t.player.OnDot].Place
 	place := g.places[placeId]
 	currencyId := place.Currency
 
@@ -50,35 +48,25 @@ func (g *game) turn_buysouvenir(t *turn) (interface{}, error) {
 	t.player.Souvenirs = append(t.player.Souvenirs, placeId)
 
 	t.player.HasBought = true
-	t.Can, _ = stringListWithout(t.Can, "buysouvenir")
+	t.Can, _ = stringListWithout(t.Can, string(c))
 
 	t.addEventf("buys a souvenir %s", place.Souvenir)
 	return nil, nil
 }
 
-func (g *game) turn_buyticket(t *turn, options string) (interface{}, error) {
-	from := g.dots[t.player.OnDot].Place
-	var to, modes string
-	_, err := fmt.Sscan(options, &to, &modes)
-	if err != nil {
-		return nil, ErrBadRequest
+func (g *game) turn_buyticket(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	from := args[0]
+	to := args[1]
+	modes := args[2]
+
+	atNow := g.dots[t.player.OnDot].Place
+
+	if from != atNow {
+		return nil, ErrNotNow
 	}
 
 	if t.player.Ticket != nil {
 		return nil, errors.New("already have ticket")
-	}
-
-	canBuy := stringListContains(t.Can, "buyticket:*")
-	if !canBuy {
-		// loop, because multimode is multiple letters
-		for _, mode0 := range modes {
-			if stringListContains(t.Can, "buyticket:"+string(mode0)) {
-				canBuy = true
-			}
-		}
-		if !canBuy {
-			return nil, ErrNotNow
-		}
 	}
 
 	ticket, err := g.makeTicket(from, to, modes)
@@ -98,18 +86,15 @@ func (g *game) turn_buyticket(t *turn, options string) (interface{}, error) {
 	return nil, nil
 }
 
-func (g *game) turn_changemoney(t *turn, options string) (interface{}, error) {
-	if !stringListContains(t.Can, "changemoney") {
+func (g *game) turn_changemoney(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	from := args[0]
+	to := args[1]
+	amount, _ := strconv.Atoi(args[2])
+
+	atNow := g.places[g.dots[t.player.OnDot].Place].Currency
+	if to != atNow {
 		return nil, ErrNotNow
 	}
-
-	var from string
-	var amount int
-	_, err := fmt.Sscan(options, &from, &amount)
-	if err != nil {
-		return nil, ErrBadRequest
-	}
-	to := g.places[g.dots[t.player.OnDot].Place].Currency
 
 	haveMoney := t.player.Money[from]
 	if haveMoney < amount {
@@ -131,23 +116,14 @@ func (g *game) turn_changemoney(t *turn, options string) (interface{}, error) {
 	return nil, nil
 }
 
-func (g *game) turn_declare(t *turn, options string) (interface{}, error) {
-	var place string
-	_, err := fmt.Sscan(options, &place)
-	if err != nil {
-		return nil, ErrBadRequest
-	}
-
-	must, changed := stringListWithout(t.Must, "declare")
-	if !changed {
-		return nil, ErrNotNow
-	}
+func (g *game) turn_declare(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	place := args[0]
 
 	if place == "none" {
 		if len(t.player.Souvenirs) > 0 {
 			return nil, errors.New("nice try")
 		}
-		t.Must = must
+		t.Must, _ = stringListWithout(t.Must, string(c))
 		t.addEvent("declares no souvenirs")
 		return nil, nil
 	}
@@ -159,17 +135,13 @@ func (g *game) turn_declare(t *turn, options string) (interface{}, error) {
 
 	t.player.Souvenirs = list
 	g.bank.Souvenirs[place]++
-	t.Must = must
+	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	t.addEventf("loses a souvenir from %s", place)
 	return nil, nil
 }
 
-func (g *game) turn_dicemove(t *turn) (interface{}, error) {
-	if !stringListContains(t.Can, "dicemove") {
-		return nil, ErrNotNow
-	}
-
+func (g *game) turn_dicemove(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	var roll int
 
 	if t.OnMap {
@@ -191,35 +163,21 @@ func (g *game) turn_dicemove(t *turn) (interface{}, error) {
 	return roll, nil
 }
 
-func (g *game) turn_gainlocal10(t *turn) (interface{}, error) {
-	can, changed := stringListWithout(t.Can, "gainlocal10")
-	if !changed {
-		return nil, ErrNotNow
-	}
-
+func (g *game) turn_gainlocal10(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	currencyId := g.places[g.dots[t.player.OnDot].Place].Currency
 	currency := g.currencies[currencyId]
 	amount := 10 * currency.Rate
 	g.moveMoney(g.bank.Money, t.player.Money, currencyId, amount)
 
-	t.Can = can
+	t.Can, _ = stringListWithout(t.Can, string(c))
 
 	t.addEventf("just finds %d %s", amount, currency.Name)
 	return nil, nil
 }
 
-func (g *game) turn_gamble(t *turn, options string) (interface{}, error) {
-	var currency string
-	var amount int
-	_, err := fmt.Sscan(options, &currency, &amount)
-	if err != nil {
-		return nil, ErrBadRequest
-	}
-
-	can, changed := stringListWithout(t.Can, "gamble")
-	if !changed {
-		return nil, ErrNotNow
-	}
+func (g *game) turn_gamble(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	currency := args[0]
+	amount, _ := strconv.Atoi(args[1])
 
 	haveMoney := t.player.Money[currency]
 	if haveMoney < amount {
@@ -228,7 +186,7 @@ func (g *game) turn_gamble(t *turn, options string) (interface{}, error) {
 
 	roll := g.rollDice()
 
-	t.Can = can
+	t.Can, _ = stringListWithout(t.Can, string(c))
 
 	if roll >= 4 {
 		g.moveMoney(g.bank.Money, t.player.Money, currency, amount)
@@ -241,43 +199,24 @@ func (g *game) turn_gamble(t *turn, options string) (interface{}, error) {
 	}
 }
 
-func (g *game) turn_pay(t *turn, options string) (interface{}, error) {
-	pay := ""
-	for _, must := range t.Must {
-		if strings.HasPrefix(must, "pay:") {
-			pay = must
-		}
-	}
-	if pay == "" {
-		return nil, ErrNotNow
-	}
-
+func (g *game) turn_pay(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	// TODO - this just removes the must
-	t.Must, _ = stringListWithout(t.Must, pay)
+	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	t.addEvent("abuses the fact that fines aren't implemented")
 	return nil, nil
 }
 
-func (g *game) turn_quarantine(t *turn) (interface{}, error) {
-	must, changed := stringListWithout(t.Must, "quarantine")
-	if !changed {
-		return nil, ErrNotNow
-	}
-
+func (g *game) turn_quarantine(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	t.player.MissTurns++
 
-	t.Must = must
+	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	t.addEvent("enters quarantine")
 	return nil, nil
 }
 
-func (g *game) turn_stop(t *turn) (interface{}, error) {
-	if !stringListContains(t.Can, "stop") {
-		return nil, ErrNotNow
-	}
-
+func (g *game) turn_stop(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	if t.OnMap {
 		g.stopOnMap(t)
 	} else {
@@ -285,17 +224,13 @@ func (g *game) turn_stop(t *turn) (interface{}, error) {
 	}
 
 	// cannot dicemove after stopping
-	t.Can, _ = stringListWithout(t.Can, "stop", "dicemove")
+	t.Can, _ = stringListWithout(t.Can, string(c), "dicemove")
 
 	return nil, nil
 }
 
-func (g *game) turn_takeluck(t *turn) (interface{}, error) {
-	must, changed := stringListWithout(t.Must, "takeluck")
-	if !changed {
-		return nil, ErrNotNow
-	}
-	t.Must = must
+func (g *game) turn_takeluck(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	cardId, pile := g.luckPile.Take()
 	if cardId < 0 {
@@ -317,7 +252,7 @@ func (g *game) turn_takeluck(t *turn) (interface{}, error) {
 	switch code := card.ParseCode().(type) {
 	case LuckCan:
 		// XXX - options
-		t.Can = append(t.Can, code.Command)
+		t.Can = append(t.Can, string(code.Can))
 	case LuckGo:
 		g.jumpOnTrack(t, code.Dest, true)
 	case LuckGetMoney:
@@ -333,12 +268,8 @@ func (g *game) turn_takeluck(t *turn) (interface{}, error) {
 	return cardId, nil
 }
 
-func (g *game) turn_takerisk(t *turn) (interface{}, error) {
-	must, changed := stringListWithout(t.Must, "takerisk")
-	if !changed {
-		return nil, ErrNotNow
-	}
-	t.Must = must
+func (g *game) turn_takerisk(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	cardId, pile := g.riskPile.Take()
 	if cardId < 0 {
@@ -375,12 +306,7 @@ func (g *game) turn_takerisk(t *turn) (interface{}, error) {
 
 	switch code := parsed.(type) {
 	case RiskMust:
-		// XXX - split and now rejoin?!
-		c := code.Command
-		if code.Options != "" {
-			c += ":" + code.Options
-		}
-		t.Must = append(t.Must, c)
+		t.Must = append(t.Must, string(code.Cmd))
 	case RiskGo:
 		t.LostTicket = t.player.Ticket
 		t.player.Ticket = nil
@@ -412,23 +338,13 @@ func (g *game) turn_takerisk(t *turn) (interface{}, error) {
 	return cardId, nil
 }
 
-func (g *game) turn_useluck(t *turn, options string) (interface{}, error) {
-	args := strings.Split(options, " ")
-
+func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	cardId, _ := strconv.Atoi(args[0])
-	_, err := fmt.Sscan(args[0], &cardId)
-	if err != nil {
-		return nil, ErrBadRequest
-	}
 	args = args[1:]
 
 	luckList, changed := intListWithout(t.player.LuckCards, cardId)
 	if !changed {
 		return nil, errors.New("card not held")
-	}
-
-	if !stringListContains(t.Can, "useluck") {
-		return nil, ErrNotNow
 	}
 
 	card := g.lucks[cardId]
@@ -489,12 +405,15 @@ func (g *game) turn_useluck(t *turn, options string) (interface{}, error) {
 			return nil, ErrNotNow
 		}
 
-		from := g.dots[t.player.OnDot].Place
-		args = append([]string{from}, args...)
-
 		from, to, modes, err := code.Match(args)
 		if err != nil {
 			return nil, err
+		}
+
+		atNow := g.dots[t.player.OnDot].Place
+
+		if from != atNow {
+			return nil, ErrNotNow
 		}
 
 		ticket, err := g.makeTicket(from, to, modes)
@@ -504,6 +423,7 @@ func (g *game) turn_useluck(t *turn, options string) (interface{}, error) {
 
 		// XXX - should the fare be 0 ?
 		t.player.Ticket = &ticket
+
 		t.player.LuckCards = luckList
 		g.luckPile = g.luckPile.Return(cardId)
 

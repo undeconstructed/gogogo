@@ -7,6 +7,35 @@ import (
 	"strings"
 )
 
+type CommandString string
+
+func (c CommandString) First() string {
+	return strings.SplitN(string(c), ":", 2)[0]
+}
+
+type CommandPattern string
+
+// if the string matches the pattern, you will get the parts
+func (p CommandPattern) Match(c CommandString) []string {
+	ps, cs := strings.Split(string(p), ":"), strings.Split(string(c), ":")
+
+	if len(cs) < len(ps) {
+		// command can be longer, but not shorter
+		return nil
+	}
+
+	for i := range ps {
+		pi := ps[i]
+		ci := cs[i]
+
+		if pi != "*" && pi != ci {
+			return nil
+		}
+	}
+
+	return cs
+}
+
 // Change is something that happened
 type Change struct {
 	Who   string `json:"who"`
@@ -95,8 +124,8 @@ type AboutATurn struct {
 }
 
 type Command struct {
-	Command string `json:"command"`
-	Options string `json:"options"`
+	Command CommandString `json:"command"`
+	// Options string        `json:"options"`
 }
 
 type CommandResult struct {
@@ -154,13 +183,8 @@ func (lc luckCard) ParseCode() LuckI {
 		n, _ := strconv.Atoi(ss[1])
 		return LuckAdvance{ctxt, n}
 	case "can":
-		ss1 := strings.SplitN(ss[1], ":", 2)
-		cmd := ss1[0]
-		options := ""
-		if len(ss1) > 1 {
-			options = ss1[1]
-		}
-		return LuckCan{ctxt, cmd, options}
+		cmd := ss[1]
+		return LuckCan{ctxt, CommandPattern(cmd)}
 	case "dest":
 		return LuckDest{}
 	case "freeinsurance":
@@ -202,8 +226,7 @@ type LuckAdvance struct {
 
 type LuckCan struct {
 	luckS
-	Command string
-	Options string
+	Can CommandPattern
 }
 
 type LuckDest struct {
@@ -299,13 +322,8 @@ func (rc riskCard) ParseCode() RiskI {
 		n, _ := strconv.Atoi(ss[1])
 		return RiskMiss{ctxt, n}
 	case "must":
-		ss1 := strings.SplitN(ss[1], ":", 2)
-		cmd := ss1[0]
-		options := ""
-		if len(ss1) > 1 {
-			options = ss1[1]
-		}
-		return RiskMust{ctxt, cmd, options}
+		cmd := ss[1]
+		return RiskMust{ctxt, CommandPattern(cmd)}
 	case "start":
 		return RiskStart{ctxt}
 	case "startx":
@@ -334,8 +352,7 @@ type RiskGo struct {
 
 type RiskMust struct {
 	riskS
-	Command string
-	Options string
+	Cmd CommandPattern
 }
 
 type RiskMiss struct {
@@ -380,13 +397,8 @@ func (t *trackSquare) ParseOptions() []OptionI {
 		ss := strings.SplitN(option, ":", 2)
 		switch ss[0] {
 		case "can":
-			ss1 := strings.SplitN(ss[1], ":", 2)
-			cmd := ss1[0]
-			options := ""
-			if len(ss1) > 1 {
-				options = ss1[1]
-			}
-			out = append(out, OptionCan{ctxt, cmd, options})
+			cmd := ss[1]
+			out = append(out, OptionCan{ctxt, CommandPattern(cmd)})
 		case "go":
 			dest := ss[1]
 			forwards := true
@@ -399,13 +411,8 @@ func (t *trackSquare) ParseOptions() []OptionI {
 			n, _ := strconv.Atoi(ss[1])
 			out = append(out, OptionMiss{ctxt, n})
 		case "must":
-			ss1 := strings.SplitN(ss[1], ":", 2)
-			cmd := ss1[0]
-			options := ""
-			if len(ss1) > 1 {
-				options = ss1[1]
-			}
-			out = append(out, OptionMust{ctxt, cmd, options})
+			cmd := ss[1]
+			out = append(out, OptionMust{ctxt, CommandPattern(cmd)})
 		default:
 			out = append(out, OptionCode{ctxt, option})
 		}
@@ -430,14 +437,12 @@ type OptionGo struct {
 
 type OptionCan struct {
 	optionS
-	Command string
-	Options string
+	Cmd CommandPattern
 }
 
 type OptionMust struct {
 	optionS
-	Command string
-	Options string
+	Cmd CommandPattern
 }
 
 type OptionMiss struct {

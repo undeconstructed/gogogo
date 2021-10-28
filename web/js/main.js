@@ -345,10 +345,7 @@ function plot(data) {
       let star = select(svg, '#'+point.place)
       console.assert(star, point.place)
       star.addEventListener('click', e => {
-        // doRequest('query:place:'+point.place, {}, (e, r) => {
-        //   if (e) { alert(e.message); return; }
-          showPrices(point.place)
-        // })
+        showPrices(point.place)
       })
       return
     }
@@ -361,10 +358,7 @@ function plot(data) {
       ndot.setAttributeNS(null, 'x', x-10);
       ndot.setAttributeNS(null, 'y', y-10);
       ndot.addEventListener('click', e => {
-        // doRequest('query:place:'+point.place, {}, (e, r) => {
-        //   if (e) { alert(e.message); return; }
-          showPrices(point.place)
-        // })
+        showPrices(point.place)
       })
       layer.append(ndot)
     } else {
@@ -402,20 +396,33 @@ function makeButtons() {
     makePlayButtons(buttonBox, state.turn.can, 'can')
     makePlayButtons(buttonBox, state.turn.must, 'must')
   }
+
+  // emergency button
+  // let button = document.createElement('button')
+  // button.classList.add('text')
+  // button.append('??')
+  // button.addEventListener('click', e => {
+  //   let cmd = prompt('??')
+  //   if (!cmd) { return; }
+  //   doRequest('play', { command: cmd }, console.log)
+  // })
+  // buttonBox.append(button)
 }
 
 function makePlayButtons(tgt, actions, clazz) {
   for (let a of actions || []) {
-    if (a === 'useluck') {
-      // can do this with the cards
-      continue
-    }
 
     let cmd = a.split(":")[0]
     let button = document.createElement('button')
     button.classList.add(clazz)
 
-    if (cmd === 'dicemove') {
+    if (cmd === 'useluck') {
+      // can do this with the cards
+      continue
+    } else if (cmd === 'buyticket') {
+      // use the price list, but you have to notice that you are allowed
+      continue
+    } else if (cmd === 'dicemove') {
       button.classList.add('img')
       button.style.backgroundImage = 'url(img/dice.svg)'
     } else {
@@ -469,20 +476,6 @@ function closeLucks() {
   }
 }
 
-function doSelf() {
-  doRequest('query:player:'+state.name, {}, (e, r) => {
-    if (e) {
-      alert(e.message); return
-    }
-    let lucks = {}
-    for (let cardId of r.lucks || []) {
-      lucks[cardId] = state.data.lucks[cardId].name
-    }
-    r.lucks = lucks
-    log(r)
-  })
-}
-
 function doSay() {
   let msg = prompt('Say what?')
   if (!msg) return
@@ -507,7 +500,7 @@ function doStart() {
 
 function doPlay(cmd, action) {
   let options = null
-  if (action.help) {
+  if (action && action.help) {
     options = prompt(`${cmd} ${action.help}`)
     if (!options) return
   }
@@ -538,7 +531,11 @@ function doPlay(cmd, action) {
     }
   }
 
-  doRequest(`play`, { command: cmd, options: options }, cb)
+  if (options) {
+    cmd += ':' + options
+  }
+
+  doRequest('play', { command: cmd }, cb)
 }
 
 function useLuck(id) {
@@ -549,7 +546,7 @@ function useLuck(id) {
     if (e) { alert(e.message); return; }
   }
 
-  doRequest(`play`, { command: 'useluck', options: options }, cb)
+  doRequest('play', { command: 'useluck', options: options }, cb)
 }
 
 function showLuckBlank() {
@@ -594,7 +591,7 @@ function hideRisk() {
   div.classList.remove('open')
 }
 
-function showPrices(placeId, xxx) {
+function showPrices(placeId) {
   let ele = select(document, '.prices')
   let tbody = select(ele, 'tbody')
   tbody.replaceChildren()
@@ -619,17 +616,21 @@ function showPrices(placeId, xxx) {
     linen++
 
     let ss = r.split(':')
-    let dest = state.data.places[ss[0]].name
-    let mode = makeByLine(ss[1])
+    let destId = ss[0]
+    let dest = state.data.places[destId].name
+    let modeId = ss[1]
+    let mode = makeByLine(modeId)
     let fare = place.routes[r]
 
     let td1 = document.createElement('td')
     td1.classList.add('place')
     td1.append(dest)
     tr.append(td1)
+
     let td2 = document.createElement('td')
     td2.append(mode)
     tr.append(td2)
+
     let td3 = document.createElement('td')
     td3.classList.add('fare')
     td3.append(`£${fare*stRate}`)
@@ -638,6 +639,14 @@ function showPrices(placeId, xxx) {
     td4.classList.add('fare')
     td4.append(`${fare*loRate}`)
     tr.append(td4)
+
+    tr.addEventListener('click', e => {
+      let cb = (e, r) => {
+        if (e) { alert(e.message); return; }
+      }
+
+      doRequest('play', { command: `buyticket:${placeId}:${destId}:${modeId}` }, cb)
+    })
 
     tbody.append(tr)
   }
@@ -756,4 +765,8 @@ document.addEventListener('DOMContentLoaded', function() {
         setup(data, name, colour)
       })
     })
+
+  window.cheat = function(cmd) {
+    doRequest('play', { command: cmd }, console.log)
+  }
 })
