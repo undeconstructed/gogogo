@@ -9,45 +9,6 @@ body {
   cursor: default;
 }
 
-#maparea {
-  box-sizing: content-box;
-  width: 1000px;
-  border: 10px solid black;
-  margin: auto;
-  padding: 0;
-  position: relative;
-}
-#maparea * {
-  box-sizing: content-box;
-}
-#maparea img {
-  display: block;
-}
-
-#jsonarea {
-  border: 10px solid black;
-  width: 1000px;
-  margin: auto;
-}
-#jsonarea textarea {
-  height: 100px;
-  width: 100%;
-  display: block;
-}
-.dot {
-  border: 2px solid white;
-  width: 6px;
-  height: 6px;
-  border-radius: 5px;
-  position: absolute;
-  font-size: 0px;
-}
-.line {
-  line-height: 0;
-}
-
-/* -------------------------------- */
-
 .game {
   font-size: smaller;
   width: 100vw;
