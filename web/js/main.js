@@ -40,21 +40,22 @@ function splitDotId(s) {
 
 // comms
 
-function connect(name, colour, then) {
+function connect(name, colour) {
   if (state.ws) return
 
   const conn = new WebSocket(`ws://${location.host}/ws?name=${name}&colour=${colour}`, 'comms')
 
   conn.onclose = ev => {
     console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`)
-    // if (ev.code !== 1001) {
-    //   console.log("Reconnecting in 1s")
-    //   setTimeout(dial, 1000)
-    // }
+    document.body.setAttribute('connected', false)
+    state.ws = null
+    if (ev.code !== 1001) {
+      setTimeout(connect, 5000)
+    }
   }
 
   conn.onopen = ev => {
-    console.info("websocket connected")
+    document.body.setAttribute('connected', true)
     state.ws = conn
   }
 
