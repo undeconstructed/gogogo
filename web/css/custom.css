@@ -91,13 +91,11 @@ body {
   position: absolute;
   top: 0; right: 0; left: 0;
   height: 3em;
-  padding: 1rem;
   display: flex;
   justify-content: center;
   flex-flow: row nowrap;
   align-items: center;
   gap: .5em;
-  background: rgba(255,255,255,0.6);
   cursor: default;
 }
 .state .colour {
@@ -109,12 +107,9 @@ body {
 .state .name {
 }
 
-.state > .hr {
-  background: black;
-  width: .5rem;
-  height: 100%;
-}
 .state > div {
+  padding: 1rem;
+  background: rgba(255,255,255,0.6);
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -124,12 +119,12 @@ body {
   display: block;
 }
 
-.money > div, .souvenirs > div {
+.money > div {
   position: absolute;
   display: none;
   padding: .5em;
 }
-.money:hover > div, .souvenirs:hover > div {
+.money:hover > div {
   display: block;
   background: rgba(255,255,255,.6);
 }
@@ -191,7 +186,7 @@ body {
 
 .actions {
   position: absolute;
-  top: 4rem; right: 1rem; width: 5rem;
+  top: 1rem; right: 1rem; width: 5rem;
   display: flex;
   flex-flow: column;
   justify-content: center;
@@ -272,6 +267,34 @@ body {
   opacity: 1;
 }
 
+.game[candice=false] .showdice {
+  display: none;
+}
+
+.showdice {
+  display: none;
+  position: absolute;
+  height: 9rem;
+  right: 10rem;
+  bottom: 4rem;
+  width: 9rem;
+}
+.showdice.open {
+  display: block;
+}
+.showdice .dice {
+  width: 100%;
+  height: 100%;
+  background-image: url('../img/dice.svg');
+  background-size: contain;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity .5s;
+}
+.showdice .dice:hover {
+  opacity: 1;
+}
+
 .game[ticket=false] .ticket {
   display: none;
 }
@@ -289,6 +312,7 @@ body {
   display: flex;
   flex-flow: column;
   padding: 1em;
+  box-shadow: 0px 0px 5px 0px #000000;
 }
 .ticket:hover {
   right: -2em;
@@ -418,12 +442,12 @@ body {
 
 .showrisk .riskcard, .showluck .luckcard {
   box-shadow: 0px 0px 5px 0px #000000;
-  transition: visibility 1s, opacity 1s;
+  transition: rotate 1s;
 }
 
 .showrisk.open.blank .riskcard, .showluck.open.blank .luckcard {
-  opacity: 0;
-  visibility: hidden;
+  cursor: pointer;
+  rotate: x 1turn;
 }
 
 .prices {
@@ -476,4 +500,69 @@ body {
   /* rotate: unset; */
   left: 20rem;
   width: 25rem;
+}
+
+.game[hassouvenir=false] .souvenirs {
+  display: none;
+}
+
+.souvenirs {
+  position: absolute;
+  width: 12rem;
+  height: 18rem;
+  transition: right .5s, rotate .5s, bottom .5s;
+}
+
+.souvenirs.stashed {
+  right: -14rem;
+  bottom: 18rem;
+  rotate: -.14turn;
+  cursor: pointer;
+  box-shadow: 0px 0px 5px 0px #000000;
+}
+.souvenirs.stashed:hover {
+  right: -10rem;
+  rotate: -.18turn;
+}
+
+.souvenirs.open {
+  right: 10rem;
+  bottom: 20rem;
+  rotate: 0;
+}
+
+.souvenircard {
+  width: 12rem;
+  height: 18rem;
+  background-color: white;
+  display: flex;
+  flex-flow: column;
+  justify-content: space-between;
+  padding: .5rem;
+}
+.souvenircard .bar {
+  background-color: #99939a;
+  height: 2rem;
+}
+.souvenircard .body {
+  text-align: center;
+  font-family: serif;
+  text-transform: uppercase;
+}
+.souvenircard .body div {
+  margin: .5rem 0;
+}
+
+.souvenirs .souvenircard {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+}
+
+.souvenirs.open .souvenircard {
+  box-shadow: 0px 0px 5px 0px #000000;
+  rotate: -.05turn;
+}
+
+.souvenirs.open .souvenircard:hover {
+  z-index: 1000;
 }

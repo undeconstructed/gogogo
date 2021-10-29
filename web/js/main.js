@@ -1,4 +1,12 @@
 
+// utils
+
+function select(parent, selector) {
+  return parent.querySelector(selector)
+}
+
+// state
+
 let state = {
   data: null,
   ws: null,
@@ -14,6 +22,23 @@ let state = {
   playing: null,
   turn: null,
 }
+
+// game utils
+
+function makeByLine(modes) {
+  let ms = []
+  for (let m of modes) {
+    ms.push(state.data.modes[m])
+  }
+  return ms.join('/')
+}
+
+function splitDotId(s) {
+  let ss = s.split(',')
+  return [parseInt(ss[0]), parseInt(ss[1])]
+}
+
+// comms
 
 function connect(name, colour, then) {
   if (state.ws) return
@@ -74,6 +99,8 @@ function send(type, data) {
   state.ws.send(jtext)
 }
 
+// receiving data
+
 function receiveUpdate(st) {
   if (!st.playing) {
     document.body.setAttribute('started', false)
@@ -93,7 +120,8 @@ function receiveUpdate(st) {
       // this is us
       receiveLucks(pl.lucks)
       receiveTicket(pl.ticket)
-      receiveStatus(pl.money, pl.souvenirs)
+      receiveSouvenirs(pl.souvenirs)
+      receiveStatus(pl.money)
     }
 
     if (prev.square != pl.square) {
@@ -149,14 +177,6 @@ function receiveLucks(lucks) {
   }
 }
 
-function makeByLine(modes) {
-  let ms = []
-  for (let m of modes) {
-    ms.push(state.data.modes[m])
-  }
-  return ms.join('/')
-}
-
 function receiveTicket(ticket) {
   if (!ticket) {
     document.body.setAttribute('ticket', false)
@@ -173,7 +193,33 @@ function receiveTicket(ticket) {
   }
 }
 
-function receiveStatus(money, souvenirs) {
+function receiveSouvenirs(souvenirs) {
+  let stack = select(document, '.souvenirs')
+  stack.replaceChildren()
+
+  if (!souvenirs) {
+    document.body.setAttribute('hassouvenir', false)
+  } else {
+    document.body.setAttribute('hassouvenir', true)
+
+    let tmpl = select(document, '#souvenirtemplate').content.firstElementChild
+
+    for (let placeId of souvenirs) {
+      let place = state.data.places[placeId]
+      let currency = state.data.currencies[place.currency]
+      let div = tmpl.cloneNode(true)
+      select(div, '.where').textContent = 'Souvenir from ' + place.name
+      let price = state.data.settings.souvenirPrice * currency.rate
+      select(div, '.price').textContent = '' + price + ' ' + currency.name
+      for (let bar of div.querySelectorAll('.bar')) {
+        bar.style.backgroundColor = currency.colour
+      }
+      stack.append(div)
+    }
+  }
+}
+
+function receiveStatus(money) {
   let s = select(document, '.aboutme')
 
   // XXX - this bit never changes
@@ -182,7 +228,7 @@ function receiveStatus(money, souvenirs) {
   let sn = select(s, '.name')
   sn.textContent = state.name
 
-  let md = select(document, '.money > div')
+  let md = select(s, '.money > div')
   md.replaceChildren()
   for (let cId in money || {}) {
     let cName = state.data.currencies[cId].name
@@ -190,21 +236,12 @@ function receiveStatus(money, souvenirs) {
     div.textContent = `${money[cId]} ${cName}`
     md.append(div)
   }
-
-  let sd = select(document, '.souvenirs > div')
-  sd.replaceChildren()
-  for (let s of souvenirs || []) {
-    let div = document.createElement('div')
-    let place = state.data.places[s]
-    div.textContent = `${place.souvenir} from ${place.name}`
-    sd.append(div)
-  }
 }
 
 function receiveTurn(st) {
   state.turn = st
 
-  let canLuck = st.can ? st.can.includes('useluck') : false
+  let canLuck = st.can ? st.can.includes('useluck:*') : false
   document.body.setAttribute('canluck', canLuck)
 
   let player = state.players.get(st.player)
@@ -257,7 +294,7 @@ function markOnMap(colour, dot) {
   let svg = select(document, '.map > object').contentDocument
   let layer = select(svg, '#dotslayer')
 
-  let [x, y] = split(dot)
+  let [x, y] = splitDotId(dot)
 
   let marker = select(svg, '#playerring')
   let nmarker = marker.cloneNode()
@@ -271,114 +308,13 @@ function markOnMap(colour, dot) {
 }
 
 function scrollMapTo(dot) {
-  let [x, y] = split(dot)
+  let [x, y] = splitDotId(dot)
 
   let scroller = select(document, '.map')
   let scrollee = scroller.firstElementChild
   let sLeft = (x/1000)*scrollee.offsetWidth-scroller.offsetWidth/2+scrollee.offsetLeft
   let sTop = (y/700)*scrollee.offsetHeight-scroller.offsetHeight/2+scrollee.offsetTop
   scroller.scrollTo({ top: sTop, left: sLeft, behavior: 'smooth' })
-}
-
-function select(parent, selector) {
-  return parent.querySelector(selector)
-}
-
-function makeSquares(data) {
-  let z = 1000
-
-  let area = select(document, '.squares')
-  for (let squareId in data.squares) {
-    let square = data.squares[squareId]
-
-    let el = document.createElement('div')
-    el.style.zIndex = z--
-
-    let background = 'squarex.svg'
-    if (square.type == 'customs1' || square.type == 'customs2' || square.type === 'luck' || square.type === 'hospital' || square.type === 'hotel') {
-      // some squares are yellow
-      // el.style.backgroundColor = '#ddb700'
-      background = 'squarey.svg'
-    }
-
-    // if using background
-    el.style.backgroundImage = `url(img/squarez.svg), url(img/${square.type}.svg), url(img/${background})`
-
-    // if using images
-    // let i = document.createElement('img')
-    // i.src = square.type+'.svg'
-    // el.append(i)
-
-    // if there is no image:
-    // for (let s of square.name.split(' - ')) {
-    //   let d = document.createElement('div')
-    //   d.append(s)
-    //   el.append(d)
-    // }
-
-    let sittingRoom = document.createElement('div')
-    sittingRoom.classList.add('sitting')
-    el.append(sittingRoom)
-
-    area.append(el)
-    state.squares[squareId] = el
-  }
-}
-
-function split(s) {
-  let ss = s.split(',')
-  return [parseInt(ss[0]), parseInt(ss[1])]
-}
-
-function plot(data) {
-  let svg = select(document, '.map > object').contentDocument
-  let layer = select(svg, '#dotslayer')
-
-  let normaldot = select(svg, '#traveldot-normal')
-  let terminaldot = select(svg, '#traveldot-place')
-  let dangerdot = select(svg, '#traveldot-danger')
-
-  let drawPoint = (pointId, point) => {
-    if (point.city) {
-      // let place = data.places[point.place]
-      // city marks are already in the SVG
-      let star = select(svg, '#'+point.place)
-      console.assert(star, point.place)
-      star.addEventListener('click', e => {
-        showPrices(point.place)
-      })
-      return
-    }
-
-    let [x, y] = split(pointId)
-
-    if (point.terminal) {
-      let ndot = terminaldot.cloneNode(true)
-      ndot.id = "dot-"+pointId
-      ndot.setAttributeNS(null, 'x', x-10);
-      ndot.setAttributeNS(null, 'y', y-10);
-      ndot.addEventListener('click', e => {
-        showPrices(point.place)
-      })
-      layer.append(ndot)
-    } else {
-      let ndot = null
-      if (point.danger) {
-        ndot = dangerdot.cloneNode()
-      } else {
-        ndot = normaldot.cloneNode()
-      }
-      ndot.id = "dot-"+pointId
-      ndot.setAttributeNS(null, 'cx', x);
-      ndot.setAttributeNS(null, 'cy', y);
-      ndot.addEventListener('click', e => { alert(pointId) })
-      layer.append(ndot)
-    }
-  }
-
-  for (let pointId in data.dots) {
-    drawPoint(pointId, data.dots[pointId])
-  }
 }
 
 function makeButtons() {
@@ -423,58 +359,24 @@ function makePlayButtons(tgt, actions, clazz) {
       // use the price list, but you have to notice that you are allowed
       continue
     } else if (cmd === 'dicemove') {
-      button.classList.add('img')
-      button.style.backgroundImage = 'url(img/dice.svg)'
+      setupForDiceMove()
+    } else if (cmd === 'takeluck') {
+      setupForTakeLuck()
+    } else if (cmd === 'tuckrisk') {
+      setupForTakeRisk()
     } else {
       button.classList.add('text')
       button.append(cmd)
+
+      button.addEventListener('click', e => {
+        doPlay(cmd, state.data.actions[cmd])
+      })
+      tgt.append(button)
     }
-
-    button.addEventListener('click', e => {
-      doPlay(cmd, state.data.actions[cmd])
-    })
-    tgt.append(button)
   }
 }
 
-function makeLuckStack() {
-  let stack = select(document, '.lucks')
-  stack.addEventListener('click', e => {
-    if (stack.classList.contains('stashed')) {
-      openLucks()
-    } else {
-      closeLucks()
-    }
-  })
-}
-
-function openLucks() {
-  let stack = select(document, '.lucks')
-
-  stack.classList.remove('stashed')
-  stack.classList.add('open')
-
-  let turn = .05
-  let howMany = stack.querySelectorAll('.luckcard').length
-  let totalTurn = howMany * turn
-
-  let n = -(totalTurn/2)
-  for (let card of stack.querySelectorAll('.luckcard')) {
-    card.style.rotate = n + 'turn'
-    n += turn
-  }
-}
-
-function closeLucks() {
-  let stack = select(document, '.lucks')
-
-  stack.classList.remove('open')
-  stack.classList.add('stashed')
-
-  for (let card of stack.querySelectorAll('.luckcard')) {
-    card.style.rotate = 'unset'
-  }
-}
+// actions
 
 function doSay() {
   let msg = prompt('Say what?')
@@ -509,28 +411,6 @@ function doPlay(cmd, action) {
     if (e) { alert(e.message); return; }
   }
 
-  if (cmd === 'takerisk') {
-    showRiskBlank()
-    cb = (e, r) => {
-      if (e) {
-        hideRisk()
-        alert(e.message)
-        return
-      }
-      showRiskCard(r.message)
-    }
-  } else if (cmd === 'takeluck') {
-    showLuckBlank()
-    cb = (e, r) => {
-      if (e) {
-        hideLuck()
-        alert(e.message)
-        return
-      }
-      showLuckCard(r.message)
-    }
-  }
-
   if (options) {
     cmd += ':' + options
   }
@@ -549,10 +429,119 @@ function useLuck(id) {
   doRequest('play', { command: 'useluck', options: options }, cb)
 }
 
-function showLuckBlank() {
+// ui manipulation
+
+function setupForDiceMove() {
+  let dice = select(document, '.showdice')
+  dice.classList.add('open')
+  dice.addEventListener('click', e => {
+    dice.classList.remove('open')
+    let cb = (e, r) => {
+      if (e) {
+        alert(e.message)
+        setupForDiceMove()
+        return
+      }
+      showLogLine('you rolled a ' + r.message)
+    }
+    doRequest('play', { command: 'dicemove' }, cb)
+  }, { once: true })
+}
+
+function makeLuckStack() {
+  let stack = select(document, '.lucks')
+  stack.addEventListener('click', e => {
+    if (stack.classList.contains('stashed')) {
+      openLucks()
+    } else {
+      closeLucks()
+    }
+  })
+}
+
+function makeSouvenirPile() {
+  let stack = select(document, '.souvenirs')
+  stack.addEventListener('click', e => {
+    if (stack.classList.contains('stashed')) {
+      openSouvenirs()
+    } else {
+      closeSouvenirs()
+    }
+  })
+}
+
+function openLucks() {
+  let stack = select(document, '.lucks')
+
+  stack.classList.remove('stashed')
+  stack.classList.add('open')
+
+  let turn = .05
+  let howMany = stack.querySelectorAll('.luckcard').length
+  let totalTurn = howMany * turn
+
+  let n = -(totalTurn/2)
+  for (let card of stack.querySelectorAll('.luckcard')) {
+    card.style.rotate = n + 'turn'
+    n += turn
+  }
+}
+
+function closeLucks() {
+  let stack = select(document, '.lucks')
+
+  stack.classList.remove('open')
+  stack.classList.add('stashed')
+
+  for (let card of stack.querySelectorAll('.luckcard')) {
+    card.style.rotate = 'unset'
+  }
+}
+
+function openSouvenirs() {
+  let stack = select(document, '.souvenirs')
+
+  stack.classList.remove('stashed')
+  stack.classList.add('open')
+
+  let move = -3
+
+  let n = 0
+  for (let card of stack.querySelectorAll('.souvenircard')) {
+    card.style.left = n + 'rem'
+    n += move
+  }
+}
+
+function closeSouvenirs() {
+  let stack = select(document, '.souvenirs')
+
+  stack.classList.remove('open')
+  stack.classList.add('stashed')
+
+  for (let card of stack.querySelectorAll('.souvenircard')) {
+    card.style.left = 0
+  }
+}
+
+function setupForTakeLuck() {
   let div = select(document, '.showluck')
   div.classList.add('open')
   div.classList.add('blank')
+  select(div, '.luckcard .body').textContent = 'click to turn ..'
+
+  div.addEventListener('click', e => {
+    let cb = (e, r) => {
+      if (e) {
+        hideLuck()
+        alert(e.message)
+        return
+      }
+      showLuckCard(r.message)
+    }
+    doRequest('play', { command: 'takeluck' }, cb)
+    // showLuckCard(1)
+  }, { once: true })
 }
 
 function showLuckCard(cardId) {
@@ -565,7 +554,14 @@ function showLuckCard(cardId) {
 
   let div = select(document, '.showluck')
   div.classList.remove('blank')
-  select(div, '.luckcard .body').textContent = card.name
+
+  setTimeout(() => {
+    select(div, '.luckcard .body').textContent = card.name
+  }, 500)
+
+  div.addEventListener('click', e => {
+    hideLuck()
+  }, { once: true })
 }
 
 function hideLuck() {
@@ -573,10 +569,22 @@ function hideLuck() {
   div.classList.remove('open')
 }
 
-function showRiskBlank() {
+function setupForTakeRisk() {
   let div = select(document, '.showrisk')
   div.classList.add('open')
   div.classList.add('blank')
+
+  div.addEventListener('click', e => {
+    let cb = (e, r) => {
+      if (e) {
+        hideRisk()
+        alert(e.message)
+        return
+      }
+      showRiskCard(r.message)
+    }
+    doRequest('play', { command: 'takerisk' }, cb)
+  }, { once: true })
 }
 
 function showRiskCard(cardId) {
@@ -584,6 +592,10 @@ function showRiskCard(cardId) {
   let div = select(document, '.showrisk')
   div.classList.remove('blank')
   select(div, '.riskcard .body').textContent = card.name
+
+  div.addEventListener('click', e => {
+    hideRisk()
+  }, { once: true })
 }
 
 function hideRisk() {
@@ -659,7 +671,9 @@ function hidePrices() {
   ele.classList.remove('open')
 }
 
-function fixup(indata) {
+// game setup
+
+function fixupData(indata) {
   for (let dotId in indata.dots) {
     let dot = indata.dots[dotId]
     if (dot.place) {
@@ -675,7 +689,7 @@ function fixup(indata) {
 }
 
 function setup(inData, name, colour) {
-  state.data = fixup(inData)
+  state.data = fixupData(inData)
   state.name = name
   state.colour = colour
 
@@ -686,14 +700,109 @@ function setup(inData, name, colour) {
   plot(state.data)
   makeButtons()
   makeLuckStack()
+  makeSouvenirPile()
 
-  select(document, '.showluck').addEventListener('click', hideLuck)
-  select(document, '.showrisk').addEventListener('click', hideRisk)
+  // select(document, '.showluck').addEventListener('click', hideLuck)
+  // select(document, '.showrisk').addEventListener('click', hideRisk)
 
   select(document, '.prices').addEventListener('click', hidePrices)
 
   connect(state.name, state.colour)
 }
+
+function makeSquares(data) {
+  let z = 1000
+
+  let area = select(document, '.squares')
+  for (let squareId in data.squares) {
+    let square = data.squares[squareId]
+
+    let el = document.createElement('div')
+    el.style.zIndex = z--
+
+    let background = 'squarex.svg'
+    if (square.type == 'customs1' || square.type == 'customs2' || square.type === 'luck' || square.type === 'hospital' || square.type === 'hotel') {
+      // some squares are yellow
+      // el.style.backgroundColor = '#ddb700'
+      background = 'squarey.svg'
+    }
+
+    // if using background
+    el.style.backgroundImage = `url(img/squarez.svg), url(img/${square.type}.svg), url(img/${background})`
+
+    // if using images
+    // let i = document.createElement('img')
+    // i.src = square.type+'.svg'
+    // el.append(i)
+
+    // if there is no image:
+    // for (let s of square.name.split(' - ')) {
+    //   let d = document.createElement('div')
+    //   d.append(s)
+    //   el.append(d)
+    // }
+
+    let sittingRoom = document.createElement('div')
+    sittingRoom.classList.add('sitting')
+    el.append(sittingRoom)
+
+    area.append(el)
+    state.squares[squareId] = el
+  }
+}
+
+function plot(data) {
+  let svg = select(document, '.map > object').contentDocument
+  let layer = select(svg, '#dotslayer')
+
+  let normaldot = select(svg, '#traveldot-normal')
+  let terminaldot = select(svg, '#traveldot-place')
+  let dangerdot = select(svg, '#traveldot-danger')
+
+  let drawPoint = (pointId, point) => {
+    if (point.city) {
+      // let place = data.places[point.place]
+      // city marks are already in the SVG
+      let star = select(svg, '#'+point.place)
+      console.assert(star, point.place)
+      star.addEventListener('click', e => {
+        showPrices(point.place)
+      })
+      return
+    }
+
+    let [x, y] = splitDotId(pointId)
+
+    if (point.terminal) {
+      let ndot = terminaldot.cloneNode(true)
+      ndot.id = "dot-"+pointId
+      ndot.setAttributeNS(null, 'x', x-10);
+      ndot.setAttributeNS(null, 'y', y-10);
+      ndot.addEventListener('click', e => {
+        showPrices(point.place)
+      })
+      layer.append(ndot)
+    } else {
+      let ndot = null
+      if (point.danger) {
+        ndot = dangerdot.cloneNode()
+      } else {
+        ndot = normaldot.cloneNode()
+      }
+      ndot.id = "dot-"+pointId
+      ndot.setAttributeNS(null, 'cx', x);
+      ndot.setAttributeNS(null, 'cy', y);
+      ndot.addEventListener('click', e => { alert(pointId) })
+      layer.append(ndot)
+    }
+  }
+
+  for (let pointId in data.dots) {
+    drawPoint(pointId, data.dots[pointId])
+  }
+}
+
+// showing messages
 
 function log(msg) {
   let s = select(document, '.messages')
@@ -747,6 +856,8 @@ function showOneLogLine() {
     messages = null
   }
 }
+
+// main()
 
 document.addEventListener('DOMContentLoaded', function() {
   let urlParams = new URLSearchParams(window.location.search)

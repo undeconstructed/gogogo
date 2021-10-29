@@ -586,7 +586,7 @@ func (g *game) toNextPlayer() {
 		}
 
 		onMap := p1.Ticket != nil
-		can := []string{"dicemove", "useluck"}
+		can := []string{"dicemove", "useluck:*"}
 
 		// the rules aren't clear about when exactly you can buy a souvenir.
 		if !onMap && !p1.HasBought {

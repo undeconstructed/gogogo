@@ -29,7 +29,9 @@
     "gamble": {
       "help": "<currency> <amount>"
     },
-    "pay": {},
+    "pay": {
+      "help": "<currency> <amount>"
+    },
     "quarantine": {},
     "stop": {},
     "takeluck": {},
@@ -271,58 +273,69 @@
       "rate": 10,
       "units": [ 200 ]
     },
-    "st": {
-      "name": "Sterling",
-      "rate": 10,
-      "units": [ 10, 50, 100 ]
-    },
-    "us": {
-      "name": "US Dollars",
-      "rate": 25,
-      "units": [ 25, 50, 100 ]
-    },
-    "ro": {
-      "name": "Roubles",
-      "rate": 25,
-      "units": [ 25, 50, 100 ]
-    },
     "fr": {
       "name": "Francs",
+      "colour": "#3f8a3f",
       "rate": 100,
       "units": [ 100, 500 ]
+    },
+    "hk": {
+      "name": "HK Dollars",
+      "colour": "#819e41",
+      "rate": 150,
+      "units": [ 150, 300 ]
+    },
+    "li": {
+      "name": "Lire",
+      "colour": "#676094",
+      "rate": 10000,
+      "units": [ 10000, 50000 ]
     },
     "ma": {
       "name": "Marks",
-      "rate": 100,
-      "units": [ 100, 500 ]
-    },
-    "ru": {
-      "name": "Rupees",
+      "colour": "#99939a",
       "rate": 100,
       "units": [ 100, 500 ]
     },
     "pe": {
       "name": "Pesos",
+      "colour": "#cfad03",
       "rate": 500,
       "units": [ 500, 1000, 2500 ]
     },
-    "hk": {
-      "name": "HK Dollars",
-      "rate": 150,
-      "units": [ 150, 300 ]
-    },
     "pi": {
       "name": "Piastres",
+      "colour": "#e8cdba",
       "rate": 1000,
       "units": [ 1000, 5000 ]
     },
-    "li": {
-      "name": "Lire",
-      "rate": 10000,
-      "units": [ 10000, 50000 ]
+    "ro": {
+      "name": "Roubles",
+      "colour": "#eb7132",
+      "rate": 25,
+      "units": [ 25, 50, 100 ]
+    },
+    "ru": {
+      "name": "Rupees",
+      "colour": "#e493a6",
+      "rate": 100,
+      "units": [ 100, 500 ]
+    },
+    "st": {
+      "name": "Sterling",
+      "colour": "#cf293f",
+      "rate": 10,
+      "units": [ 10, 50, 100 ]
+    },
+    "us": {
+      "name": "US Dollars",
+      "colour": "#373eea",
+      "rate": 25,
+      "units": [ 25, 50, 100 ]
     },
     "ye": {
       "name": "Yen",
+      "colour": "#9f5b91",
       "rate": 10000,
       "units": [ 10000, 50000 ]
     }

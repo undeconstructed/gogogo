@@ -15,7 +15,7 @@
   <script type="module" src="js/main.js"></script>
 </head>
 
-<body class="game" started="false" ontrack="true" ticket="false" hasluck="false" canluck="false">
+<body class="game" started="false" ontrack="true" ticket="false" hasluck="false" canluck="false" hassouvenir="false">
 
   <div class="board">
     <div class="squares">
@@ -33,12 +33,10 @@
       <span class="colour"></span>
       <span class="name"></span>
     </div>
-    <div class="hr"></div>
     <div class="aboutme">
       <span class="colour"></span>
       <span class="name"></span>
       <div class="money">Money 🠋 <div></div></div>
-      <div class="souvenirs">Souvenirs 🠋 <div></div></div>
     </div>
   </div>
 
@@ -108,16 +106,24 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <th>Archangel</th>
-            <td>London</td>
-            <td>Sea</td>
-            <td>£50</td>
-            <td>125</td>
-          </tr>
         </tbody>
       </table>
     </div>
+  </div>
+
+  <template id="souvenirtemplate">
+    <div class="souvenircard">
+      <div class="bar"></div>
+      <div class="body">
+        <div class="where">SOUVENIR FROM BERLIN</div>
+        <div class="price">600 MARKS</div>
+        <div>(£60 Sterling)</div>
+      </div>
+      <div class="bar"></div>
+    </div>
+  </template>
+
+  <div class="souvenirs stashed">
   </div>
 
 </body>
