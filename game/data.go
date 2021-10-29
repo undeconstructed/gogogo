@@ -16,6 +16,14 @@ func (c CommandString) First() string {
 // CommandPattern defines something that is allowed
 type CommandPattern string
 
+func (p CommandPattern) Sub(subs map[string]string) CommandPattern {
+	s := string(p)
+	for f, t := range subs {
+		s = strings.ReplaceAll(s, f, t)
+	}
+	return CommandPattern(s)
+}
+
 // if the string matches the pattern, you will get the parts
 func (p CommandPattern) Match(c CommandString) []string {
 	ps, cs := strings.Split(string(p), ":"), strings.Split(string(c), ":")

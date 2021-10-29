@@ -343,36 +343,72 @@ function makeButtons() {
   //   doRequest('play', { command: cmd }, console.log)
   // })
   // buttonBox.append(button)
+
+  showButtons()
+}
+
+function showButtons() {
+  let buttonBox = select(document, '.actions')
+  buttonBox.classList.add('open')
+}
+
+function hideButtons() {
+  let buttonBox = select(document, '.actions')
+  buttonBox.classList.remove('open')
 }
 
 function makePlayButtons(tgt, actions, clazz) {
   for (let a of actions || []) {
+    let parts = a.split(":")
 
-    let cmd = a.split(":")[0]
+    let cmd = parts[0]
+    let action = state.data.actions[cmd]
+
     let button = document.createElement('button')
     button.classList.add(clazz)
+
+    let cb = null
 
     if (cmd === 'useluck') {
       // can do this with the cards
       continue
     } else if (cmd === 'buyticket') {
       // use the price list, but you have to notice that you are allowed
+      // let placeId = parts[1]
+      // showPrices(placeId)
       continue
     } else if (cmd === 'dicemove') {
-      setupForDiceMove()
+      button.classList.add('dice')
+      cb = r => showLogLine('you rolled a ' + r.message)
+    } else if (cmd === 'gamble') {
+      button.classList.add('dice')
+      cb = r => showLogLine('you gambled a ' + r.message)
     } else if (cmd === 'takeluck') {
       setupForTakeLuck()
-    } else if (cmd === 'tuckrisk') {
+      continue
+    } else if (cmd === 'takerisk') {
       setupForTakeRisk()
+      continue
+    } else if (cmd === 'obeyrisk') {
+      let cardId = parseInt(parts[1])
+      setupForObeyRisk(cardId)
+    } else if (cmd === 'buysouvenir') {
+      button.classList.add('buysouvenir')
+      // we know this command is complete, so no prompt
+      cmd = a
+      action = null
+      cb = r => showLogLine('you have bought a ' + r.message)
+    } else if (cmd === 'end') {
+      button.classList.add('end')
     } else {
       button.classList.add('text')
       button.append(cmd)
-
-      button.addEventListener('click', e => {
-        doPlay(cmd, state.data.actions[cmd])
-      })
-      tgt.append(button)
     }
+
+    button.addEventListener('click', e => {
+      doPlay(cmd, action, cb)
+    })
+    tgt.append(button)
   }
 }
 
@@ -400,53 +436,42 @@ function doStart() {
   })
 }
 
-function doPlay(cmd, action) {
+function doPlay(cmd, action, cb) {
   let options = null
   if (action && action.help) {
     options = prompt(`${cmd} ${action.help}`)
     if (!options) return
   }
 
-  let cb = (e, r) => {
-    if (e) { alert(e.message); return; }
+  hideButtons()
+
+  let cb0 = (e, r) => {
+    if (e) {
+      alert(e.message)
+      showButtons()
+      return
+    }
+    cb && cb(r)
   }
 
   if (options) {
     cmd += ':' + options
   }
 
-  doRequest('play', { command: cmd }, cb)
+  doRequest('play', { command: cmd }, cb0)
 }
 
 function useLuck(id) {
   let options = prompt('options (or none)')
-  options = '' + id + ' ' + options
 
   let cb = (e, r) => {
     if (e) { alert(e.message); return; }
   }
 
-  doRequest('play', { command: 'useluck', options: options }, cb)
+  doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
 }
 
 // ui manipulation
-
-function setupForDiceMove() {
-  let dice = select(document, '.showdice')
-  dice.classList.add('open')
-  dice.addEventListener('click', e => {
-    dice.classList.remove('open')
-    let cb = (e, r) => {
-      if (e) {
-        alert(e.message)
-        setupForDiceMove()
-        return
-      }
-      showLogLine('you rolled a ' + r.message)
-    }
-    doRequest('play', { command: 'dicemove' }, cb)
-  }, { once: true })
-}
 
 function makeLuckStack() {
   let stack = select(document, '.lucks')
@@ -528,13 +553,13 @@ function setupForTakeLuck() {
   let div = select(document, '.showluck')
   div.classList.add('open')
   div.classList.add('blank')
-  select(div, '.luckcard .body').textContent = 'click to turn ..'
+  select(div, '.luckcard .body').textContent = 'click to turn'
 
   div.addEventListener('click', e => {
     let cb = (e, r) => {
       if (e) {
-        hideLuck()
         alert(e.message)
+        setupForTakeLuck()
         return
       }
       showLuckCard(r.message)
@@ -556,7 +581,7 @@ function showLuckCard(cardId) {
   div.classList.remove('blank')
 
   setTimeout(() => {
-    select(div, '.luckcard .body').textContent = card.name
+    select(div, '.card .body').textContent = card.name
   }, 500)
 
   div.addEventListener('click', e => {
@@ -573,18 +598,44 @@ function setupForTakeRisk() {
   let div = select(document, '.showrisk')
   div.classList.add('open')
   div.classList.add('blank')
+  select(div, '.riskcard .body').textContent = 'click to turn'
 
   div.addEventListener('click', e => {
     let cb = (e, r) => {
       if (e) {
-        hideRisk()
         alert(e.message)
+        setupForTakeRisk()
         return
       }
       showRiskCard(r.message)
     }
     doRequest('play', { command: 'takerisk' }, cb)
   }, { once: true })
+}
+
+function setupForObeyRisk(cardId) {
+  let div = select(document, '.showrisk')
+  div.classList.add('open')
+  div.classList.remove('blank')
+
+  let card = state.data.risks[cardId]
+  select(div, '.card .body').textContent = card.name
+
+  let obeyButton = document.createElement('button')
+  obeyButton.append('[obey]')
+  obeyButton.addEventListener('click', e => {
+    hideRisk()
+    let cb = (e, r) => {
+      if (e) {
+        setupForObeyRisk(cardId)
+        alert(e.message)
+        return
+      }
+    }
+    doRequest('play', { command: 'obeyrisk:'+cardId }, cb)
+  }, { once: true })
+
+  select(div, '.foot').replaceChildren(obeyButton)
 }
 
 function showRiskCard(cardId) {
@@ -653,11 +704,9 @@ function showPrices(placeId) {
     tr.append(td4)
 
     tr.addEventListener('click', e => {
-      let cb = (e, r) => {
-        if (e) { alert(e.message); return; }
-      }
+      let cb = r => showLogLine('you have bought a ticket')
 
-      doRequest('play', { command: `buyticket:${placeId}:${destId}:${modeId}` }, cb)
+      doPlay(`buyticket:${placeId}:${destId}:${modeId}`, null, cb)
     })
 
     tbody.append(tr)
@@ -765,6 +814,7 @@ function plot(data) {
       // city marks are already in the SVG
       let star = select(svg, '#'+point.place)
       console.assert(star, point.place)
+      star.style.cursor = 'pointer'
       star.addEventListener('click', e => {
         showPrices(point.place)
       })
@@ -778,6 +828,7 @@ function plot(data) {
       ndot.id = "dot-"+pointId
       ndot.setAttributeNS(null, 'x', x-10);
       ndot.setAttributeNS(null, 'y', y-10);
+      ndot.style.cursor = 'pointer'
       ndot.addEventListener('click', e => {
         showPrices(point.place)
       })

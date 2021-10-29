@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -51,7 +52,7 @@ func (g *game) turn_buysouvenir(t *turn, c CommandPattern, args []string) (inter
 	t.Can, _ = stringListWithout(t.Can, string(c))
 
 	t.addEventf("buys a souvenir %s", place.Souvenir)
-	return nil, nil
+	return place.Souvenir, nil
 }
 
 func (g *game) turn_buyticket(t *turn, c CommandPattern, args []string) (interface{}, error) {
@@ -146,8 +147,8 @@ func (g *game) turn_dicemove(t *turn, c CommandPattern, args []string) (interfac
 
 	if t.OnMap {
 		roll = g.rollDice()
-		arrived := g.moveOnMap(t, roll)
-		if arrived {
+		g.moveOnMap(t, roll)
+		if t.Stopped {
 			t.Can, _ = stringListWithout(t.Can, "stop")
 		} else {
 			t.Can, _ = stringListWith(t.Can, "stop")
@@ -191,12 +192,58 @@ func (g *game) turn_gamble(t *turn, c CommandPattern, args []string) (interface{
 	if roll >= 4 {
 		g.moveMoney(g.bank.Money, t.player.Money, currency, amount)
 		t.addEventf("gambles, rolls %d, and wins!", roll)
-		return nil, nil
+		return roll, nil
 	} else {
 		g.moveMoney(t.player.Money, g.bank.Money, currency, amount)
 		t.addEventf("gambles, rolls %d, and loses!", roll)
-		return nil, nil
+		return roll, nil
 	}
+}
+
+func (g *game) turn_obeyrisk(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	cardId, _ := strconv.Atoi(args[0])
+	args = args[1:]
+
+	if cardId > len(g.risks) {
+		return nil, ErrNotNow
+	}
+
+	card := g.risks[cardId]
+
+	switch code := card.ParseCode().(type) {
+	case RiskMust:
+		t.Must = append(t.Must, string(code.Cmd))
+	case RiskGo:
+		t.LostTicket = t.player.Ticket
+		t.player.Ticket = nil
+		g.jumpOnMap(t, code.Dest)
+		t.addEvent("suddenly appears")
+	case RiskMiss:
+		t.player.MissTurns += code.N
+	case RiskStart:
+		dest := t.player.Ticket.From
+		t.LostTicket = t.player.Ticket
+		t.player.Ticket = nil
+		g.jumpOnMap(t, dest)
+		t.addEvent("is back, ticketless")
+	case RiskStartX:
+		dest := t.player.Ticket.From
+		g.jumpOnMap(t, dest)
+		t.addEvent("is back")
+	case RiskDest:
+		dest := t.player.Ticket.To
+		t.player.Ticket = nil
+		g.jumpOnMap(t, dest)
+		t.addEvent("arrives early")
+	case RiskCode:
+		t.addEvent("finds out that his risk card is unimplemented")
+	default:
+		panic("bad risk card " + card.Code)
+	}
+
+	t.Must, _ = stringListWithout(t.Must, string(c))
+
+	return nil, nil
 }
 
 func (g *game) turn_pay(t *turn, c CommandPattern, args []string) (interface{}, error) {
@@ -223,8 +270,9 @@ func (g *game) turn_stop(t *turn, c CommandPattern, args []string) (interface{},
 		g.stopOnTrack(t)
 	}
 
+	t.Can, _ = stringListWithout(t.Can, string(c))
 	// cannot dicemove after stopping
-	t.Can, _ = stringListWithout(t.Can, string(c), "dicemove")
+	t.Can, _ = stringListWithout(t.Can, "dicemove")
 
 	return nil, nil
 }
@@ -251,8 +299,8 @@ func (g *game) turn_takeluck(t *turn, c CommandPattern, args []string) (interfac
 
 	switch code := card.ParseCode().(type) {
 	case LuckCan:
-		// XXX - options
-		t.Can = append(t.Can, string(code.Can))
+		can := code.Can.Sub(g.makeSubs())
+		t.Can = append(t.Can, string(can))
 	case LuckGo:
 		g.jumpOnTrack(t, code.Dest, true)
 	case LuckGetMoney:
@@ -304,36 +352,7 @@ func (g *game) turn_takerisk(t *turn, c CommandPattern, args []string) (interfac
 		return cardId, nil
 	}
 
-	switch code := parsed.(type) {
-	case RiskMust:
-		t.Must = append(t.Must, string(code.Cmd))
-	case RiskGo:
-		t.LostTicket = t.player.Ticket
-		t.player.Ticket = nil
-		g.jumpOnMap(t, code.Dest)
-		t.addEvent("suddenly appears")
-	case RiskMiss:
-		t.player.MissTurns += code.N
-	case RiskStart:
-		dest := t.player.Ticket.From
-		t.LostTicket = t.player.Ticket
-		t.player.Ticket = nil
-		g.jumpOnMap(t, dest)
-		t.addEvent("is back, ticketless")
-	case RiskStartX:
-		dest := t.player.Ticket.From
-		g.jumpOnMap(t, dest)
-		t.addEvent("is back")
-	case RiskDest:
-		dest := t.player.Ticket.To
-		t.player.Ticket = nil
-		g.jumpOnMap(t, dest)
-		t.addEvent("arrives early")
-	case RiskCode:
-		t.addEvent("finds out that his risk card is unimplemented")
-	default:
-		panic("bad risk card " + card.Code)
-	}
+	t.Must = append(t.Must, fmt.Sprintf("obeyrisk:%d", cardId))
 
 	return cardId, nil
 }
@@ -348,7 +367,6 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 	}
 
 	card := g.lucks[cardId]
-	out := []Change{}
 
 	switch code := card.ParseCode().(type) {
 	case LuckAdvance:
@@ -360,8 +378,9 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 		g.luckPile = g.luckPile.Return(cardId)
 
 		if t.OnMap {
-			arrived := g.moveOnMap(t, code.N)
-			if arrived {
+			g.moveOnMap(t, code.N)
+			if t.Stopped {
+				t.Can, _ = stringListWithout(t.Can, "dicemove")
 				t.Can, _ = stringListWithout(t.Can, "stop")
 			} else {
 				t.Can, _ = stringListWith(t.Can, "stop")
@@ -460,5 +479,5 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 		panic("bad luck card " + card.Code)
 	}
 
-	return out, nil
+	return nil, nil
 }

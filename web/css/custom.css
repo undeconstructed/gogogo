@@ -6,6 +6,7 @@
 
 body {
   background-color: #0d8db0;
+  cursor: default;
 }
 
 #maparea {
@@ -75,6 +76,9 @@ body {
   align-items: center;
   background: #ffffffaa;
 }
+.game[started=true] .nostate {
+  display: none;
+}
 .nostate button {
   width: 50%;
   height: 50%;
@@ -85,7 +89,6 @@ body {
   background-repeat: no-repeat;
   background-position: center center;
 }
-
 
 .state {
   position: absolute;
@@ -98,6 +101,9 @@ body {
   gap: .5em;
   cursor: default;
 }
+.game[started=false] .state {
+  display: none;
+}
 .state .colour {
   display: inline-block;
   width: 1em;
@@ -106,7 +112,6 @@ body {
 }
 .state .name {
 }
-
 .state > div {
   padding: 1rem;
   background: rgba(255,255,255,0.6);
@@ -142,7 +147,6 @@ body {
 .squares:hover {
   opacity: 1;
 }
-
 .squares > div {
   height: 11.375rem;
   /* padding: 1em 3em;
@@ -156,20 +160,16 @@ body {
   background-size: 100% 100%;
   position: relative;
 }
-
 .squares > div > *:first-child {
   font-size: larger;
   font-weight: bold;
 }
-
 .squares > div > img {
   width: 100%;
 }
-
 .squares > div+div {
   margin-top: -1.5em;
 }
-
 .squares .sitting {
   display: flex;
   flex-flow: column wrap;
@@ -177,7 +177,6 @@ body {
   gap: .5em;
   justify-content: flex-start;
 }
-
 .squares .mark {
   height: 3rem;
   width: 3rem;
@@ -185,15 +184,17 @@ body {
 }
 
 .actions {
+  display: none;
   position: absolute;
   top: 1rem; right: 1rem; width: 5rem;
-  display: flex;
   flex-flow: column;
   justify-content: center;
   gap: .5rem;
   z-index: 10;
 }
-
+.actions.open {
+  display: flex;
+}
 .actions > button {
   height: 5rem;
   opacity: 0.6;
@@ -213,21 +214,39 @@ body {
 .actions > button.text.must {
   outline: 2px solid red;
 }
-
 .actions > button.img {
   background-color: transparent;
   background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 .actions > button.img.must {
   background-color: red;
 }
 
-.game[started=true] .nostate {
-  display: none;
+.actions > button.buysouvenir {
+  background-image: url('../img/buysouvenir.svg');
+  background-color: white;
+  border-radius: 2.5rem;
+  overflow: clip;
 }
 
-.game[started=false] .state {
-  display: none;
+.actions > button.dice {
+  position: absolute;
+  top: 4rem;
+  height: 9rem;
+  right: 10rem;
+  width: 9rem;
+  background-color: transparent;
+  background-image: url('../img/dice.svg');
+  background-size: contain;
+}
+
+.actions > button.end {
+  background-image: url('../img/zzzz.svg');
+  background-color: white;
+  border-radius: 2.5rem;
+  overflow: clip;
 }
 
 .showmessage {
@@ -267,10 +286,6 @@ body {
   opacity: 1;
 }
 
-.game[candice=false] .showdice {
-  display: none;
-}
-
 .showdice {
   display: none;
   position: absolute;
@@ -278,6 +293,9 @@ body {
   right: 10rem;
   bottom: 4rem;
   width: 9rem;
+}
+.game[candice=false] .showdice {
+  display: none;
 }
 .showdice.open {
   display: block;
@@ -295,10 +313,6 @@ body {
   opacity: 1;
 }
 
-.game[ticket=false] .ticket {
-  display: none;
-}
-
 .ticket {
   position: absolute;
   background-color: #dfd8c7;
@@ -314,6 +328,9 @@ body {
   padding: 1em;
   box-shadow: 0px 0px 5px 0px #000000;
 }
+.game[ticket=false] .ticket {
+  display: none;
+}
 .ticket:hover {
   right: -2em;
   rotate: -.06turn;
@@ -321,7 +338,6 @@ body {
 .ticket > div {
   flex: 1 0 auto;
 }
-
 .ticket .head {
   text-align: center;
 }
@@ -341,8 +357,37 @@ body {
   font-size: 60%;
 }
 
-.game[hasluck=false] .lucks {
-  display: none;
+.card {
+  width: 16rem;
+  height: 12rem;
+  padding: 1em;
+  text-align: center;
+  display: flex;
+  flex-flow: column;
+}
+.card .head {
+  font-weight: bold;
+  text-decoration: underline;
+  flex: 1 0 auto;
+}
+.card .body {
+  flex: 1 0 auto;
+}
+.card .foot button {
+  border: 0;
+  background: transparent;
+  color: black;
+}
+
+.luckcard {
+  background-color: #ffcb50;
+}
+.luckcard .foot button {
+  visibility: hidden;
+}
+
+.riskcard {
+  background-color: #ff8484;
 }
 
 .lucks {
@@ -351,7 +396,9 @@ body {
   height: 12rem;
   transition: right .5s, rotate .5s, bottom .5s;
 }
-
+.game[hasluck=false] .lucks {
+  display: none;
+}
 .lucks.stashed {
   right: -14rem;
   bottom: 2rem;
@@ -362,92 +409,51 @@ body {
   right: -10rem;
   rotate: -.18turn;
 }
-
 .lucks.open {
   right: 20rem;
   bottom: 20rem;
 }
-
 .lucks .luckcard {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
+  transition: rotate .5s;
 }
 .lucks.open .luckcard {
   box-shadow: 0px 0px 5px 0px #000000;
   transform-origin: bottom right;
 }
-
 .lucks.open .luckcard:hover {
   z-index: 1000;
 }
-
-.luckcard {
-  background-color: #ffcb50;
-  width: 16rem;
-  height: 12rem;
-  padding: 1em;
-  text-align: center;
-  display: flex;
-  flex-flow: column;
-  transition: rotate .5s;
-}
-.luckcard .head {
-  font-weight: bold;
-  text-decoration: underline;
-  flex: 1 0 auto;
-}
-.luckcard .body {
-  flex: 1 0 auto;
-}
-.luckcard .foot button {
-  visibility: hidden;
-  border: 0;
-  background: transparent;
-  color: black;
-}
-.game[canluck=true] .luckcard .foot button {
+.game[canluck=true] .lucks.open .luckcard .foot button {
   visibility: visible !important;
 }
 
-.riskcard {
-  background-color: #ff8484;
-  width: 16rem;
-  height: 12rem;
-  padding: 1em;
-  text-align: center;
-  display: flex;
-  flex-flow: column;
-}
-.riskcard .head {
-  font-weight: bold;
-  text-decoration: underline;
-  flex: 1 0 auto;
-}
-.riskcard .body {
-  flex: 1 0 auto;
-}
-
-.showrisk, .showluck {
+.showcard {
   background: rgba(0,0,0,.5);
   display: none;
   position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
+  bottom: 15rem;
+  right: 15rem;
   justify-content: center;
   align-items: center;
 }
-
-.showrisk.open, .showluck.open {
+.showcard.open {
   display: flex;
 }
-
-.showrisk .riskcard, .showluck .luckcard {
+.showcard .card {
   box-shadow: 0px 0px 5px 0px #000000;
   transition: rotate 1s;
 }
-
-.showrisk.open.blank .riskcard, .showluck.open.blank .luckcard {
+.showcard.open.blank .card {
   cursor: pointer;
   rotate: x 1turn;
+}
+.showcard.open.blank .card > div {
+  visibility: hidden;
+}
+.showcard.open.blank .card > div.body {
+  visibility: visible;
 }
 
 .prices {
@@ -460,6 +466,11 @@ body {
   transition: left .5s, width .5s, rotate .5s;
   background-color: #fdf3d7;
   overflow: auto;
+}
+.prices.open {
+  /* rotate: unset; */
+  left: 20rem;
+  width: 25rem;
 }
 .prices > * {
   width: 25rem;
@@ -496,41 +507,6 @@ body {
   text-align: right;
 }
 
-.prices.open {
-  /* rotate: unset; */
-  left: 20rem;
-  width: 25rem;
-}
-
-.game[hassouvenir=false] .souvenirs {
-  display: none;
-}
-
-.souvenirs {
-  position: absolute;
-  width: 12rem;
-  height: 18rem;
-  transition: right .5s, rotate .5s, bottom .5s;
-}
-
-.souvenirs.stashed {
-  right: -14rem;
-  bottom: 18rem;
-  rotate: -.14turn;
-  cursor: pointer;
-  box-shadow: 0px 0px 5px 0px #000000;
-}
-.souvenirs.stashed:hover {
-  right: -10rem;
-  rotate: -.18turn;
-}
-
-.souvenirs.open {
-  right: 10rem;
-  bottom: 20rem;
-  rotate: 0;
-}
-
 .souvenircard {
   width: 12rem;
   height: 18rem;
@@ -553,16 +529,39 @@ body {
   margin: .5rem 0;
 }
 
+.souvenirs {
+  position: absolute;
+  width: 12rem;
+  height: 18rem;
+  transition: right .5s, rotate .5s, bottom .5s;
+}
+.game[hassouvenir=false] .souvenirs {
+  display: none;
+}
+.souvenirs.stashed {
+  right: -14rem;
+  bottom: 18rem;
+  rotate: -.14turn;
+  cursor: pointer;
+  box-shadow: 0px 0px 5px 0px #000000;
+}
+.souvenirs.stashed:hover {
+  right: -10rem;
+  rotate: -.18turn;
+}
+.souvenirs.open {
+  right: 10rem;
+  bottom: 20rem;
+  rotate: 0;
+}
 .souvenirs .souvenircard {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
 }
-
 .souvenirs.open .souvenircard {
   box-shadow: 0px 0px 5px 0px #000000;
   rotate: -.05turn;
 }
-
 .souvenirs.open .souvenircard:hover {
   z-index: 1000;
 }

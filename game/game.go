@@ -58,6 +58,7 @@ func NewGame(data GameData) Game {
 	g.cmds["dicemove"] = g.turn_dicemove
 	g.cmds["gainlocal10"] = g.turn_gainlocal10
 	g.cmds["gamble"] = g.turn_gamble
+	g.cmds["obeyrisk"] = g.turn_obeyrisk
 	g.cmds["pay"] = g.turn_pay
 	g.cmds["quarantine"] = g.turn_quarantine
 	g.cmds["stop"] = g.turn_stop
@@ -272,10 +273,10 @@ func (g *game) doPlay(t *turn, c Command) (interface{}, error) {
 		return nil, errors.New("bad command: " + string(c.Command))
 	}
 
-	if string(c.Command) == "end" {
-		// end is never in the can or must list
-		return g.doEnd(t, CommandPattern("end"), nil)
-	}
+	// if string(c.Command) == "end" {
+	// 	// end is never in the can or must list
+	// 	return g.doEnd(t, CommandPattern("end"), nil)
+	// }
 
 	var pattern CommandPattern
 	var args []string
@@ -415,6 +416,17 @@ func (g *game) passGo(t *turn) {
 	t.addEvent("passes go")
 }
 
+func (g *game) makeSubs() map[string]string {
+	subs := map[string]string{}
+	do := g.dots[g.turn.player.OnDot]
+	pl, ok := g.places[do.Place]
+	if ok {
+		subs["<lp>"] = do.Place
+		subs["<lc>"] = pl.Currency
+	}
+	return subs
+}
+
 func (g *game) stopOnTrack(t *turn) {
 	t.Stopped = true
 
@@ -426,7 +438,8 @@ func (g *game) stopOnTrack(t *turn) {
 		case OptionMust:
 			t.Must = append(t.Must, string(option.Cmd))
 		case OptionCan:
-			t.Can = append(t.Can, string(option.Cmd))
+			can := option.Cmd.Sub(g.makeSubs())
+			t.Can = append(t.Can, string(can))
 		case OptionMiss:
 			t.player.MissTurns += option.N
 			t.addEventf("will miss %d turns", option.N)
@@ -474,12 +487,11 @@ func (g *game) jumpOnTrack(t *turn, to string, forward bool) []Change {
 	return out
 }
 
-func (g *game) moveOnMap(t *turn, n int) bool {
+func (g *game) moveOnMap(t *turn, n int) {
 	need := len(t.player.Ticket.Route)
 	if n > need {
 		// overshot
 		t.addEventf("tries to move %d, but overshoots", n)
-		return false
 	} else if n == need {
 		// reached
 		t.player.OnDot = t.player.Ticket.Route[need-1]
@@ -487,14 +499,22 @@ func (g *game) moveOnMap(t *turn, n int) bool {
 		t.Moved = true
 		t.addEventf("moves %d and arrives", n)
 		g.stopOnMap(t)
-		return true
 	} else {
-		t.player.OnDot = t.player.Ticket.Route[n-1]
+		wouldDot := t.player.Ticket.Route[n-1]
+
+		for _, pl := range g.players {
+			if pl.OnDot == wouldDot {
+				t.Moved = true
+				t.addEventf("tries to move %d, but %s is there", n, pl.Name)
+				return
+			}
+		}
+
+		t.player.OnDot = wouldDot
 		t.player.Ticket.Route = t.player.Ticket.Route[n:]
 		t.Moved = true
 
 		t.addEventf("moves %d", n)
-		return false
 	}
 }
 
@@ -700,6 +720,9 @@ type turn struct {
 
 	// miscellaneous things collected for some reason
 	LostTicket *ticket `json:"lostTicket"`
+
+	// anything to be paid, in neutral currency unit
+	Debt int `json:"debt"`
 
 	// things that happened in this execution
 	news []Change

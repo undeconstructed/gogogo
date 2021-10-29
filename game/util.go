@@ -36,15 +36,13 @@ func stringListContains(l []string, s string) bool {
 	return false
 }
 
-func stringListWithout(l []string, ss ...string) ([]string, bool) {
+func stringListWithout(l []string, remove string) ([]string, bool) {
 	for i, x := range l {
-		for _, s := range ss {
-			if x == s {
-				var out []string
-				out = append(out, l[0:i]...)
-				out = append(out, l[i+1:]...)
-				return out, true
-			}
+		if x == remove {
+			var out []string
+			out = append(out, l[0:i]...)
+			out = append(out, l[i+1:]...)
+			return out, true
 		}
 	}
 	return l, false
@@ -59,9 +57,9 @@ func stringListWith(l []string, s string) ([]string, bool) {
 	return append(l, s), true
 }
 
-func intListWithout(l []int, s int) ([]int, bool) {
+func intListWithout(l []int, remove int) ([]int, bool) {
 	for i, x := range l {
-		if x == s {
+		if x == remove {
 			var out []int
 			out = append(out, l[0:i]...)
 			out = append(out, l[i+1:]...)

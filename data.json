@@ -29,6 +29,9 @@
     "gamble": {
       "help": "<currency> <amount>"
     },
+    "obeyrisk": {
+      "help": "<cardId>"
+    },
     "pay": {
       "help": "<currency> <amount>"
     },
@@ -46,7 +49,7 @@
       "type": "bank",
       "name": "Start - Bank - Bureau de Change",
       "options": [
-        "can:changemoney:*:*:*"
+        "can:changemoney:*:<lc>:*"
       ]
     },
     {
@@ -60,14 +63,14 @@
       "type": "overland",
       "name": "Overland Car Hire co. booking office",
       "options": [
-        "can:buyticket:*:*:l"
+        "can:buyticket:<lp>:*:l"
       ]
     },
     {
       "type": "overseas",
       "name": "Overseas Shipping Agency",
       "options": [
-        "can:buyticket:*:*:s", "can:buyticket:*:*:sr", "can:buyticket:*:*:rs"
+        "can:buyticket:<lp>:*:s", "can:buyticket:<lp>:*:sr", "can:buyticket:<lp>:*:rs"
       ]
     },
     {
@@ -81,7 +84,7 @@
       "type": "bdc",
       "name": "Bureau de Change",
       "options": [
-        "can:changemoney:*:*:*"
+        "can:changemoney:*:<lc>:*"
       ]
     },
     {
@@ -99,8 +102,8 @@
       "type": "cooks",
       "name": "Thos. Cook and son / Bureau de change",
       "options": [
-        "can:changemoney:*:*:*",
-        "can:buyticket:*:*:*"
+        "can:changemoney:*:<lc>:*",
+        "can:buyticket:<lp>:*:*"
       ]
     },
     {
@@ -121,28 +124,28 @@
       "type": "overland",
       "name": "Overland Car Hire co. booking office",
       "options": [
-        "can:buyticket:*:*:l"
+        "can:buyticket:<lp>:*:l"
       ]
     },
     {
       "type": "railway",
       "name": "International Railways booking office",
       "options": [
-        "can:buyticket:*:*:r", "can:buyticket:*:*:sr", "can:buyticket:*:*:rs"
+        "can:buyticket:<lp>:*:r", "can:buyticket:<lp>:*:sr", "can:buyticket:<lp>:*:rs"
       ]
     },
     {
       "type": "bdc",
       "name": "Bureau de Change",
       "options": [
-        "can:changemoney:*:*:*"
+        "can:changemoney:*:<lc>:*"
       ]
     },
     {
       "type": "boac",
       "name": "B.O.A.C. air ticket office",
       "options": [
-        "can:buyticket:*:*:a"
+        "can:buyticket:<lp>:*:a"
       ]
     },
     {
@@ -177,14 +180,14 @@
       "type": "bdc",
       "name": "Bureau de Change",
       "options": [
-        "can:changemoney:*:*:*"
+        "can:changemoney:*:<lc>:*"
       ]
     },
     {
       "type": "railway",
       "name": "International Railways booking office",
       "options": [
-        "can:buyticket:*:*:r", "can:buyticket:*:*:sr", "can:buyticket:*:*:rs"
+        "can:buyticket:<lp>:*:r", "can:buyticket:<lp>:*:sr", "can:buyticket:<lp>:*:rs"
       ]
     },
     {
@@ -198,15 +201,15 @@
       "type": "hotel",
       "name": "Hotel bill - £100 - Payable in local currency",
       "options": [
-        "must:pay:local:10"
+        "must:pay:<lc>:10"
       ]
     },
     {
       "type": "cooks",
       "name": "Thos. Cook and son / Bureau de change",
       "options": [
-        "can:changemoney:*:*:*",
-        "can:buyticket:*:*:*"
+        "can:changemoney:*:<lc>:*",
+        "can:buyticket:<lp>:*:*"
       ]
     },
     {
@@ -220,14 +223,14 @@
       "type": "overseas",
       "name": "Overseas Shipping Agency",
       "options": [
-        "can:buyticket:*:*:s", "can:buyticket:*:*:sr", "can:buyticket:*:*:rs"
+        "can:buyticket:<lp>:*:s", "can:buyticket:<lp>:*:sr", "can:buyticket:<lp>:*:rs"
       ]
     },
     {
       "type": "bdc",
       "name": "Bureau de Change",
       "options": [
-        "can:changemoney:*:*:*"
+        "can:changemoney:*:<lc>:*"
       ]
     },
     {
@@ -241,7 +244,7 @@
       "type": "boac",
       "name": "B.O.A.C. air ticket office",
       "options": [
-        "can:buyticket:*:*:a"
+        "can:buyticket:<lp>:*:a"
       ]
     },
     {
@@ -255,8 +258,8 @@
       "type": "cooks",
       "name": "Thos. Cook and son / Bureau de change",
       "options": [
-        "can:changemoney:*:*:*",
-        "can:buyticket:*:*:*"
+        "can:changemoney:*:<lc>:*",
+        "can:buyticket:<lp>:*:*"
       ]
     },
     {
