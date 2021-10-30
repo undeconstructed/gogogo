@@ -69,6 +69,8 @@ func (lc LuckCard) ParseCode() LuckI {
 		return LuckImmunity{ctxt}
 	case "inoculation":
 		return LuckInoculation{ctxt}
+	case "speculation":
+		return LuckSpeculation{ctxt}
 	default:
 		return LuckCode{ctxt, code}
 	}
@@ -152,6 +154,10 @@ type LuckInoculation struct {
 	luckS
 }
 
+type LuckSpeculation struct {
+	luckS
+}
+
 type LuckCode struct {
 	luckS
 	Code string
@@ -176,11 +182,17 @@ func (rc RiskCard) ParseCode() RiskI {
 
 	ss = strings.SplitN(code, ":", 2)
 	switch ss[0] {
+	case "customshalf":
+		return RiskCustomsHalf{ctxt}
 	case "dest":
 		return RiskDest{ctxt}
+	case "fog":
+		return RiskFog{ctxt}
 	case "go":
 		dest := ss[1]
 		return RiskGo{ctxt, dest}
+	case "loseticket":
+		return RiskLoseTicket{ctxt}
 	case "miss":
 		n, _ := strconv.Atoi(ss[1])
 		return RiskMiss{ctxt, n}
@@ -208,14 +220,25 @@ func (r riskS) GetModes() string {
 	return r.Modes
 }
 
+type RiskFog struct {
+	riskS
+}
+
 type RiskGo struct {
 	riskS
 	Dest string
 }
 
-type RiskMust struct {
+type RiskCustomsHalf struct {
 	riskS
-	Cmd CommandPattern
+}
+
+type RiskDest struct {
+	riskS
+}
+
+type RiskLoseTicket struct {
+	riskS
 }
 
 type RiskMiss struct {
@@ -223,15 +246,16 @@ type RiskMiss struct {
 	N int
 }
 
+type RiskMust struct {
+	riskS
+	Cmd CommandPattern
+}
+
 type RiskStart struct {
 	riskS
 }
 
 type RiskStartX struct {
-	riskS
-}
-
-type RiskDest struct {
 	riskS
 }
 

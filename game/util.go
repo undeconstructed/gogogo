@@ -2,6 +2,12 @@ package game
 
 import "math/rand"
 
+var colours = []string{"red", "blue", "green", "pink", "purple", "yellow", "white", "black"}
+
+func isAColour(colour string) bool {
+	return stringListContains(colours, colour)
+}
+
 type CardStack []int
 
 func NewCardStack(size int) CardStack {

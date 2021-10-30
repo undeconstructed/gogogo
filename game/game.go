@@ -58,6 +58,8 @@ func NewGame(data GameData) Game {
 	g.cmds["dicemove"] = g.turn_dicemove
 	g.cmds["gainlocal10"] = g.turn_gainlocal10
 	g.cmds["gamble"] = g.turn_gamble
+	g.cmds["ignorerisk"] = g.turn_ignorerisk
+	g.cmds["insurance"] = g.turn_insurance
 	g.cmds["obeyrisk"] = g.turn_obeyrisk
 	g.cmds["pay"] = g.turn_pay
 	g.cmds["quarantine"] = g.turn_quarantine
@@ -200,8 +202,18 @@ func NewFromSaved(data GameData, r io.Reader) (Game, error) {
 func (g *game) AddPlayer(name string, colour string) error {
 	for _, pl := range g.players {
 		if pl.Name == name {
-			return ErrPlayerExists
+			if pl.Colour == colour {
+				return ErrPlayerExists
+			}
+			return errors.New("name conflict")
 		}
+		if pl.Colour == colour && pl.Name != name {
+			return errors.New("colour conflict")
+		}
+	}
+
+	if !isAColour(colour) {
+		return fmt.Errorf("not a colour: %s", colour)
 	}
 
 	homePlace := g.places[g.settings.Home]
@@ -589,6 +601,15 @@ func (g *game) makeTicket(from, to, modes string) (ticket, error) {
 	}, nil
 }
 
+func (g *game) loseTicket(t *turn, badly bool) {
+	if badly {
+		t.LostTicket = t.player.Ticket
+	}
+
+	t.player.Insurance = false
+	t.player.Ticket = nil
+}
+
 func (g *game) toNextPlayer() {
 	np := -1
 	if g.turn != nil {
@@ -750,6 +771,7 @@ type player struct {
 	Souvenirs []string       `json:"souvenirs"`
 	Ticket    *ticket        `json:"ticket"`
 	LuckCards []int          `json:"lucks"`
+	Insurance bool           `json:"insurance"`
 
 	MissTurns int    `json:"missTurns"`
 	OnSquare  int    `json:"onSquare"`

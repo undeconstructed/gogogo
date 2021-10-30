@@ -40,10 +40,10 @@ function splitDotId(s) {
 
 // comms
 
-function connect(name, colour) {
+function connect() {
   if (state.ws) return
 
-  const conn = new WebSocket(`ws://${location.host}/ws?name=${name}&colour=${colour}`, 'comms')
+  const conn = new WebSocket(`ws://${location.host}/ws?name=${state.name}&colour=${state.colour}`, 'comms')
 
   conn.onclose = ev => {
     console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`)
@@ -393,6 +393,8 @@ function makePlayButtons(tgt, actions, clazz) {
     } else if (cmd === 'obeyrisk') {
       let cardId = parseInt(parts[1])
       setupForObeyRisk(cardId)
+    } else if (cmd === 'ignorerisk') {
+      // only happens when obey is also enabled
     } else if (cmd === 'buysouvenir') {
       button.classList.add('buysouvenir')
       // we know this command is complete, so no prompt
@@ -622,6 +624,21 @@ function setupForObeyRisk(cardId) {
   let card = state.data.risks[cardId]
   select(div, '.card .body').textContent = card.name
 
+  // TOOD - only show this when allowed
+  let ignoreButton = document.createElement('button')
+  ignoreButton.append('[ignore]')
+  ignoreButton.addEventListener('click', e => {
+    hideRisk()
+    let cb = (e, r) => {
+      if (e) {
+        setupForObeyRisk(cardId)
+        alert(e.message)
+        return
+      }
+    }
+    doRequest('play', { command: 'ignorerisk:'+cardId }, cb)
+  }, { once: true })
+
   let obeyButton = document.createElement('button')
   obeyButton.append('[obey]')
   obeyButton.addEventListener('click', e => {
@@ -636,7 +653,7 @@ function setupForObeyRisk(cardId) {
     doRequest('play', { command: 'obeyrisk:'+cardId }, cb)
   }, { once: true })
 
-  select(div, '.foot').replaceChildren(obeyButton)
+  select(div, '.foot').replaceChildren(ignoreButton, obeyButton)
 }
 
 function showRiskCard(cardId) {
@@ -757,7 +774,7 @@ function setup(inData, name, colour) {
 
   select(document, '.prices').addEventListener('click', hidePrices)
 
-  connect(state.name, state.colour)
+  connect()
 }
 
 function makeSquares(data) {

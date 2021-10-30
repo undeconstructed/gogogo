@@ -29,6 +29,7 @@
     "gamble": {
       "help": "<currency> <amount>"
     },
+    "insurance": {},
     "obeyrisk": {
       "help": "<cardId>"
     },
@@ -2298,7 +2299,7 @@
   "risks": [
     {
       "name": "Customs - Pay duty on all your souvenirs - half the purchase price. - (Pay to bank in any currency)",
-      "code": "payhalf"
+      "code": "customshalf"
     },
     {
       "name": "All transport - Travel sickness. Miss one turn.",
@@ -2306,7 +2307,7 @@
     },
     {
       "name": "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected.",
-      "code": "fog??"
+      "code": "fog"
     },
     {
       "name": "Plane diverted - Land in Perth (Australia). - Surrender ticket for present journey. - Purchase new ticket to leave.",
@@ -2370,7 +2371,7 @@
     },
     {
       "name": "Train derailed - Return to point of departure and start again. - No new ticket required.",
-      "code": "???"
+      "code": "r/startx"
     },
     {
       "name": "Cablegram - Urgent Business - Return to London at once! - All tickets forfeited.",
@@ -2378,7 +2379,7 @@
     },
     {
       "name": "All transport - You have lost your ticket! - A new one must be purchased before continuing journey.",
-      "code": "???"
+      "code": "loseticket"
     },
     {
       "name": "Plane changes course - Diverted to Falkand Isles. - Surrender ticket for present journey. Purchase new ticket to leave.",
@@ -2406,7 +2407,7 @@
     },
     {
       "name": "Car breakdown - Return to point of departure to obtain a new car. - No new ticket required.",
-      "code": "l/???"
+      "code": "l/startx"
     },
     {
       "name": "Trains only - Train ahead of schedule. - Proceed immediately to your destination.",

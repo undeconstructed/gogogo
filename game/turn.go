@@ -200,6 +200,22 @@ func (g *game) turn_gamble(t *turn, c CommandPattern, args []string) (interface{
 	}
 }
 
+func (g *game) turn_insurance(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	// TODO - someone needs to pay for this
+
+	t.player.Insurance = true
+
+	return nil, nil
+}
+
+func (g *game) turn_ignorerisk(t *turn, c CommandPattern, args []string) (interface{}, error) {
+	id := args[0]
+
+	t.Must, _ = stringListWithout(t.Must, "obeyrisk:"+id)
+
+	return nil, nil
+}
+
 func (g *game) turn_obeyrisk(t *turn, c CommandPattern, args []string) (interface{}, error) {
 	cardId, _ := strconv.Atoi(args[0])
 	args = args[1:]
@@ -211,30 +227,48 @@ func (g *game) turn_obeyrisk(t *turn, c CommandPattern, args []string) (interfac
 	card := g.risks[cardId]
 
 	switch code := card.ParseCode().(type) {
-	case RiskMust:
-		t.Must = append(t.Must, string(code.Cmd))
+	case RiskCustomsHalf:
+		t.addEvent("finds out customs is not very efficient")
+	case RiskDest:
+		dest := t.player.Ticket.To
+		g.loseTicket(t, false)
+		g.jumpOnMap(t, dest)
+		t.addEvent("arrives early")
+	case RiskFog:
+		// "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected."
+		modes := t.player.Ticket.Mode
+		switch {
+		case strings.Contains(modes, "a"):
+			dest := t.player.Ticket.From
+			g.jumpOnMap(t, dest)
+			t.addEvent("is back")
+		case strings.Contains(modes, "s"):
+			fallthrough
+		case strings.Contains(modes, "l"):
+			t.player.MissTurns += 1
+		}
 	case RiskGo:
-		t.LostTicket = t.player.Ticket
-		t.player.Ticket = nil
+		g.loseTicket(t, true)
 		g.jumpOnMap(t, code.Dest)
 		t.addEvent("suddenly appears")
+	case RiskLoseTicket:
+		// XXX - have to work out how to get a new one ..
+		// g.loseTicket(t, true)
+		// t.addEvent("loses his ticket")
+		t.addEvent("thought that he'd lost his ticket")
 	case RiskMiss:
 		t.player.MissTurns += code.N
+	case RiskMust:
+		t.Must = append(t.Must, string(code.Cmd))
 	case RiskStart:
 		dest := t.player.Ticket.From
-		t.LostTicket = t.player.Ticket
-		t.player.Ticket = nil
+		g.loseTicket(t, true)
 		g.jumpOnMap(t, dest)
 		t.addEvent("is back, ticketless")
 	case RiskStartX:
 		dest := t.player.Ticket.From
 		g.jumpOnMap(t, dest)
 		t.addEvent("is back")
-	case RiskDest:
-		dest := t.player.Ticket.To
-		t.player.Ticket = nil
-		g.jumpOnMap(t, dest)
-		t.addEvent("arrives early")
 	case RiskCode:
 		t.addEvent("finds out that his risk card is unimplemented")
 	default:
@@ -307,6 +341,9 @@ func (g *game) turn_takeluck(t *turn, c CommandPattern, args []string) (interfac
 		currency := g.currencies[code.CurrencyId]
 		amount := code.Amount * currency.Rate
 		g.moveMoney(g.bank.Money, t.player.Money, code.CurrencyId, amount)
+	case LuckSpeculation:
+		// TODO
+		t.addEvent("needs to think about how to implement this luck card")
 	case LuckCode:
 		t.addEvent("finds out that his luck card is unimplemented")
 	default:
@@ -353,6 +390,9 @@ func (g *game) turn_takerisk(t *turn, c CommandPattern, args []string) (interfac
 	}
 
 	t.Must = append(t.Must, fmt.Sprintf("obeyrisk:%d", cardId))
+	if t.player.Insurance {
+		t.Must = append(t.Must, fmt.Sprintf("ignorerisk:%d", cardId))
+	}
 
 	return cardId, nil
 }
@@ -396,7 +436,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 
 		dest := t.player.Ticket.To
 		g.jumpOnMap(t, dest)
-		t.player.Ticket = nil
+		g.loseTicket(t, false)
 		g.stopOnMap(t)
 
 		t.player.LuckCards = luckList
@@ -404,14 +444,15 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 
 		t.addEvent("luckily arrives early")
 	case LuckFreeInsurance:
-		if t.LostTicket != nil {
+		if t.LostTicket == nil {
 			return nil, ErrNotNow
 		}
 
 		fare := t.LostTicket.Fare
 		// the card says sterling ..
+		lcRate := g.currencies[t.LostTicket.Currency].Rate
 		stRate := g.currencies["st"].Rate
-		refund := fare * stRate * 2
+		refund := fare * stRate / lcRate * 2
 
 		g.moveMoney(g.bank.Money, t.player.Money, "st", refund)
 

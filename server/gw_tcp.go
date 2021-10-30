@@ -57,6 +57,11 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 			name = fields[1]
 			colour = fields[2]
 
+			if name == "" || colour == "" {
+				fmt.Printf("refusing %s\n", addr)
+				return
+			}
+
 			resCh := make(chan error)
 			server.coreCh <- ConnectMsg{name, colour, clientBundle{downCh}, resCh}
 			err = <-resCh

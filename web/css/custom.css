@@ -116,6 +116,7 @@ body {
   overflow: auto;
   opacity: 0.6;
   background-color: black;
+  box-shadow: 0px 0px 5px 0px #000000;
 }
 .game[ontrack=true] .squares {
   opacity: 1;
@@ -380,6 +381,7 @@ body {
   bottom: 2rem;
   rotate: -.14turn;
   cursor: pointer;
+  box-shadow: 0px 0px 5px 0px #000000;
 }
 .lucks.stashed:hover {
   right: -10rem;
