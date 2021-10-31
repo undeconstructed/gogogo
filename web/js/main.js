@@ -401,6 +401,7 @@ function makePlayButtons(tgt, actions, clazz) {
     } else if (cmd === 'obeyrisk') {
       let cardId = parseInt(parts[1])
       setupForObeyRisk(cardId)
+      continue
     } else if (cmd === 'ignorerisk') {
       // only happens when obey is also enabled
     } else if (cmd === 'buysouvenir') {
@@ -632,20 +633,26 @@ function setupForObeyRisk(cardId) {
   let card = state.data.risks[cardId]
   select(div, '.card .body').textContent = card.name
 
-  // TOOD - only show this when allowed
-  let ignoreButton = document.createElement('button')
-  ignoreButton.append('[ignore]')
-  ignoreButton.addEventListener('click', e => {
-    hideRisk()
-    let cb = (e, r) => {
-      if (e) {
-        setupForObeyRisk(cardId)
-        alert(e.message)
-        return
+  let foot = select(div, '.foot')
+  foot.replaceChildren()
+
+  if (state.turn.can.includes('ignorerisk:'+cardId)) {
+    let ignoreButton = document.createElement('button')
+    ignoreButton.append('[ignore]')
+    ignoreButton.addEventListener('click', e => {
+      hideRisk()
+      let cb = (e, r) => {
+        if (e) {
+          setupForObeyRisk(cardId)
+          alert(e.message)
+          return
+        }
       }
-    }
-    doRequest('play', { command: 'ignorerisk:'+cardId }, cb)
-  }, { once: true })
+      doRequest('play', { command: 'ignorerisk:'+cardId }, cb)
+    }, { once: true })
+
+    foot.append(obeyButton)
+  }
 
   let obeyButton = document.createElement('button')
   obeyButton.append('[obey]')
@@ -661,7 +668,7 @@ function setupForObeyRisk(cardId) {
     doRequest('play', { command: 'obeyrisk:'+cardId }, cb)
   }, { once: true })
 
-  select(div, '.foot').replaceChildren(ignoreButton, obeyButton)
+  foot.append(obeyButton)
 }
 
 function showRiskCard(cardId) {
