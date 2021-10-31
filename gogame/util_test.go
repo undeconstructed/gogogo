@@ -1,4 +1,4 @@
-package game
+package gogame
 
 import (
 	"strings"

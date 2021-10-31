@@ -8,6 +8,7 @@ import (
 
 	"github.com/undeconstructed/gogogo/client"
 	"github.com/undeconstructed/gogogo/game"
+	"github.com/undeconstructed/gogogo/gogame"
 	"github.com/undeconstructed/gogogo/server"
 )
 
@@ -31,24 +32,26 @@ func main() {
 
 func serverMain() {
 	rand.Seed(time.Now().Unix())
-	data := game.LoadJson()
+	data := gogame.LoadJson()
 
 	var g game.Game
 
 	f, err := os.Open("state.json")
 	if err != nil {
 		fmt.Printf("cannot open state file: %v\n", err)
-		g = game.NewGame(data)
+		g = gogame.NewGame(data)
 	} else {
 		// XXX - random seed not restored
-		g, err = game.NewFromSaved(data, f)
+		g, err = gogame.NewFromSaved(data, f)
 		if err != nil {
 			fmt.Printf("cannot restore state: %v\n", err)
 			return
 		}
 	}
 
-	server := server.NewServer(g)
+	server := server.NewServer(func() (game.Game, error) {
+		return g, nil
+	})
 	err = server.Run()
 	if err != nil {
 		fmt.Printf("server ended: %v\n", err)
@@ -57,7 +60,7 @@ func serverMain() {
 }
 
 func clientMain(name, colour string) {
-	data := game.LoadJson()
+	data := gogame.LoadJson()
 
 	client := client.NewClient(data, name, colour, "game.socket")
 	err := client.Run()

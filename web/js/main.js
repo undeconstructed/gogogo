@@ -102,7 +102,17 @@ function send(type, data) {
 
 // receiving data
 
+function promoteCustom(o) {
+  for (let x in o.custom) {
+    o[x] = o.custom[x]
+  }
+  delete o.custom
+  return o
+}
+
 function receiveUpdate(st) {
+  promoteCustom(st)
+
   if (!st.playing) {
     document.body.setAttribute('started', false)
   } else {
@@ -115,6 +125,8 @@ function receiveUpdate(st) {
   }
 
   for (let pl of st.players) {
+    promoteCustom(pl)
+
     let prev = state.players.get(pl.name) || {}
 
     if (pl.name == state.name) {
@@ -122,7 +134,7 @@ function receiveUpdate(st) {
       receiveLucks(pl.lucks)
       receiveTicket(pl.ticket)
       receiveSouvenirs(pl.souvenirs)
-      receiveStatus(pl.money)
+      receiveMoney(pl.money)
     }
 
     if (prev.square != pl.square) {
@@ -220,14 +232,8 @@ function receiveSouvenirs(souvenirs) {
   }
 }
 
-function receiveStatus(money) {
+function receiveMoney(money) {
   let s = select(document, '.aboutme')
-
-  // XXX - this bit never changes
-  let sc = select(s, '.colour')
-  sc.style.backgroundColor = state.colour
-  let sn = select(s, '.name')
-  sn.textContent = state.name
 
   let md = select(s, '.money > div')
   md.replaceChildren()
@@ -240,6 +246,8 @@ function receiveStatus(money) {
 }
 
 function receiveTurn(st) {
+  promoteCustom(st)
+
   state.turn = st
 
   let canLuck = st.can ? st.can.includes('useluck:*') : false
@@ -759,6 +767,12 @@ function setup(inData, name, colour) {
   state.data = fixupData(inData)
   state.name = name
   state.colour = colour
+
+  let s = select(document, '.aboutme')
+  let sc = select(s, '.colour')
+  sc.style.backgroundColor = state.colour
+  let sn = select(s, '.name')
+  sn.textContent = state.name
 
   let startButton = select(document, '#startbutton')
   startButton.addEventListener('click', doStart)

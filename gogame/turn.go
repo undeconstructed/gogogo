@@ -1,13 +1,15 @@
-package game
+package gogame
 
 import (
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/undeconstructed/gogogo/game"
 )
 
-func (g *game) turn_airlift(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_airlift(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	// only option is capetown
 	placeId := "capetown"
 	g.jumpOnMap(t, placeId)
@@ -18,13 +20,13 @@ func (g *game) turn_airlift(t *turn, c CommandPattern, args []string) (interface
 	return nil, nil
 }
 
-func (g *game) turn_buysouvenir(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_buysouvenir(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	placeId := args[0]
 
 	atNow := g.dots[t.player.OnDot].Place
 
 	if placeId != atNow {
-		return nil, ErrNotNow
+		return nil, game.ErrNotNow
 	}
 
 	place := g.places[placeId]
@@ -55,7 +57,7 @@ func (g *game) turn_buysouvenir(t *turn, c CommandPattern, args []string) (inter
 	return place.Souvenir, nil
 }
 
-func (g *game) turn_buyticket(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_buyticket(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	from := args[0]
 	to := args[1]
 	modes := args[2]
@@ -63,7 +65,7 @@ func (g *game) turn_buyticket(t *turn, c CommandPattern, args []string) (interfa
 	atNow := g.dots[t.player.OnDot].Place
 
 	if from != atNow {
-		return nil, ErrNotNow
+		return nil, game.ErrNotNow
 	}
 
 	if t.player.Ticket != nil {
@@ -87,14 +89,14 @@ func (g *game) turn_buyticket(t *turn, c CommandPattern, args []string) (interfa
 	return nil, nil
 }
 
-func (g *game) turn_changemoney(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_changemoney(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	from := args[0]
 	to := args[1]
 	amount, _ := strconv.Atoi(args[2])
 
 	atNow := g.places[g.dots[t.player.OnDot].Place].Currency
 	if to != atNow {
-		return nil, ErrNotNow
+		return nil, game.ErrNotNow
 	}
 
 	haveMoney := t.player.Money[from]
@@ -117,7 +119,7 @@ func (g *game) turn_changemoney(t *turn, c CommandPattern, args []string) (inter
 	return nil, nil
 }
 
-func (g *game) turn_declare(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_declare(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	place := args[0]
 
 	if place == "none" {
@@ -142,7 +144,7 @@ func (g *game) turn_declare(t *turn, c CommandPattern, args []string) (interface
 	return nil, nil
 }
 
-func (g *game) turn_dicemove(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_dicemove(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	var roll int
 
 	if t.OnMap {
@@ -164,7 +166,7 @@ func (g *game) turn_dicemove(t *turn, c CommandPattern, args []string) (interfac
 	return roll, nil
 }
 
-func (g *game) turn_gainlocal10(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_gainlocal10(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	currencyId := g.places[g.dots[t.player.OnDot].Place].Currency
 	currency := g.currencies[currencyId]
 	amount := 10 * currency.Rate
@@ -176,7 +178,7 @@ func (g *game) turn_gainlocal10(t *turn, c CommandPattern, args []string) (inter
 	return nil, nil
 }
 
-func (g *game) turn_gamble(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_gamble(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	currency := args[0]
 	amount, _ := strconv.Atoi(args[1])
 
@@ -200,7 +202,7 @@ func (g *game) turn_gamble(t *turn, c CommandPattern, args []string) (interface{
 	}
 }
 
-func (g *game) turn_insurance(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_insurance(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	// TODO - someone needs to pay for this
 
 	t.player.Insurance = true
@@ -208,7 +210,7 @@ func (g *game) turn_insurance(t *turn, c CommandPattern, args []string) (interfa
 	return nil, nil
 }
 
-func (g *game) turn_ignorerisk(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_ignorerisk(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	id := args[0]
 
 	t.Must, _ = stringListWithout(t.Must, "obeyrisk:"+id)
@@ -216,12 +218,12 @@ func (g *game) turn_ignorerisk(t *turn, c CommandPattern, args []string) (interf
 	return nil, nil
 }
 
-func (g *game) turn_obeyrisk(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	cardId, _ := strconv.Atoi(args[0])
 	args = args[1:]
 
 	if cardId > len(g.risks) {
-		return nil, ErrNotNow
+		return nil, game.ErrNotNow
 	}
 
 	card := g.risks[cardId]
@@ -280,7 +282,7 @@ func (g *game) turn_obeyrisk(t *turn, c CommandPattern, args []string) (interfac
 	return nil, nil
 }
 
-func (g *game) turn_pay(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_pay(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	// TODO - this just removes the must
 	t.Must, _ = stringListWithout(t.Must, string(c))
 
@@ -288,7 +290,7 @@ func (g *game) turn_pay(t *turn, c CommandPattern, args []string) (interface{}, 
 	return nil, nil
 }
 
-func (g *game) turn_quarantine(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_quarantine(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	t.player.MissTurns++
 
 	t.Must, _ = stringListWithout(t.Must, string(c))
@@ -297,7 +299,7 @@ func (g *game) turn_quarantine(t *turn, c CommandPattern, args []string) (interf
 	return nil, nil
 }
 
-func (g *game) turn_stop(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_stop(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	if t.OnMap {
 		g.stopOnMap(t)
 	} else {
@@ -311,7 +313,7 @@ func (g *game) turn_stop(t *turn, c CommandPattern, args []string) (interface{},
 	return nil, nil
 }
 
-func (g *game) turn_takeluck(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_takeluck(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	cardId, pile := g.luckPile.Take()
@@ -353,7 +355,7 @@ func (g *game) turn_takeluck(t *turn, c CommandPattern, args []string) (interfac
 	return cardId, nil
 }
 
-func (g *game) turn_takerisk(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_takerisk(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	cardId, pile := g.riskPile.Take()
@@ -397,7 +399,7 @@ func (g *game) turn_takerisk(t *turn, c CommandPattern, args []string) (interfac
 	return cardId, nil
 }
 
-func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface{}, error) {
+func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	cardId, _ := strconv.Atoi(args[0])
 	args = args[1:]
 
@@ -411,7 +413,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 	switch code := card.ParseCode().(type) {
 	case LuckAdvance:
 		if t.Stopped {
-			return nil, ErrNotNow
+			return nil, game.ErrNotNow
 		}
 
 		t.player.LuckCards = luckList
@@ -431,7 +433,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 		}
 	case LuckDest:
 		if !t.OnMap {
-			return nil, ErrNotNow
+			return nil, game.ErrNotNow
 		}
 
 		dest := t.player.Ticket.To
@@ -445,7 +447,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 		t.addEvent("luckily arrives early")
 	case LuckFreeInsurance:
 		if t.LostTicket == nil {
-			return nil, ErrNotNow
+			return nil, game.ErrNotNow
 		}
 
 		fare := t.LostTicket.Fare
@@ -462,7 +464,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 		t.addEvent("luckily gets a big refund")
 	case LuckFreeTicket:
 		if t.player.Ticket != nil {
-			return nil, ErrNotNow
+			return nil, game.ErrNotNow
 		}
 
 		from, to, modes, err := code.Match(args)
@@ -473,7 +475,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 		atNow := g.dots[t.player.OnDot].Place
 
 		if from != atNow {
-			return nil, ErrNotNow
+			return nil, game.ErrNotNow
 		}
 
 		ticket, err := g.makeTicket(from, to, modes)
@@ -492,7 +494,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 		// XXX - this is not the only type of customs
 		must, changed := stringListWithout(t.Must, "declare")
 		if !changed {
-			return nil, ErrNotNow
+			return nil, game.ErrNotNow
 		}
 
 		t.Must = must
@@ -503,7 +505,7 @@ func (g *game) turn_useluck(t *turn, c CommandPattern, args []string) (interface
 	case LuckInoculation:
 		must, changed := stringListWithout(t.Must, "quarantine")
 		if !changed {
-			return nil, ErrNotNow
+			return nil, game.ErrNotNow
 		}
 
 		t.Must = must

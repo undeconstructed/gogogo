@@ -1,4 +1,4 @@
-package game
+package gogame
 
 import (
 	"fmt"
@@ -52,7 +52,7 @@ func (c *circle) At(x, y int) color.Color {
 // func (l *Line) At(x, y int) color.Color {
 // }
 
-func Draw(g *game, file string) error {
+func Draw(g *gogame, file string) error {
 	img := image.NewNRGBA(image.Rect(0, 0, 1000, 700))
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Src)
 	img.Set(10, 10, color.Black)

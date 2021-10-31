@@ -1,8 +1,10 @@
-package game
+package gogame
 
 import (
 	"strconv"
 	"strings"
+
+	"github.com/undeconstructed/gogogo/game"
 )
 
 type WorldDot struct {
@@ -47,7 +49,7 @@ func (lc LuckCard) ParseCode() LuckI {
 		return LuckAdvance{ctxt, n}
 	case "can":
 		cmd := ss[1]
-		return LuckCan{ctxt, CommandPattern(cmd)}
+		return LuckCan{ctxt, game.CommandPattern(cmd)}
 	case "dest":
 		return LuckDest{}
 	case "freeinsurance":
@@ -91,7 +93,7 @@ type LuckAdvance struct {
 
 type LuckCan struct {
 	luckS
-	Can CommandPattern
+	Can game.CommandPattern
 }
 
 type LuckDest struct {
@@ -111,7 +113,7 @@ type LuckFreeTicket struct {
 
 func (l LuckFreeTicket) Match(args []string) (to, from, modes string, err error) {
 	if len(args) != 3 {
-		err = ErrBadRequest
+		err = game.ErrBadRequest
 		return
 	}
 
@@ -120,15 +122,15 @@ func (l LuckFreeTicket) Match(args []string) (to, from, modes string, err error)
 	modes = args[2]
 
 	if l.From != "*" && l.From != from {
-		err = ErrBadRequest
+		err = game.ErrBadRequest
 		return
 	}
 	if l.To != "*" && l.To != to {
-		err = ErrBadRequest
+		err = game.ErrBadRequest
 		return
 	}
 	if l.Modes != "*" && l.Modes != modes {
-		err = ErrBadRequest
+		err = game.ErrBadRequest
 		return
 	}
 
@@ -198,7 +200,7 @@ func (rc RiskCard) ParseCode() RiskI {
 		return RiskMiss{ctxt, n}
 	case "must":
 		cmd := ss[1]
-		return RiskMust{ctxt, CommandPattern(cmd)}
+		return RiskMust{ctxt, game.CommandPattern(cmd)}
 	case "start":
 		return RiskStart{ctxt}
 	case "startx":
@@ -248,7 +250,7 @@ type RiskMiss struct {
 
 type RiskMust struct {
 	riskS
-	Cmd CommandPattern
+	Cmd game.CommandPattern
 }
 
 type RiskStart struct {
@@ -285,7 +287,7 @@ func (t *trackSquare) ParseOptions() []OptionI {
 		switch ss[0] {
 		case "can":
 			cmd := ss[1]
-			out = append(out, OptionCan{ctxt, CommandPattern(cmd)})
+			out = append(out, OptionCan{ctxt, game.CommandPattern(cmd)})
 		case "go":
 			dest := ss[1]
 			forwards := true
@@ -299,7 +301,7 @@ func (t *trackSquare) ParseOptions() []OptionI {
 			out = append(out, OptionMiss{ctxt, n})
 		case "must":
 			cmd := ss[1]
-			out = append(out, OptionMust{ctxt, CommandPattern(cmd)})
+			out = append(out, OptionMust{ctxt, game.CommandPattern(cmd)})
 		default:
 			out = append(out, OptionCode{ctxt, option})
 		}
@@ -324,12 +326,12 @@ type OptionGo struct {
 
 type OptionCan struct {
 	optionS
-	Cmd CommandPattern
+	Cmd game.CommandPattern
 }
 
 type OptionMust struct {
 	optionS
-	Cmd CommandPattern
+	Cmd game.CommandPattern
 }
 
 type OptionMiss struct {

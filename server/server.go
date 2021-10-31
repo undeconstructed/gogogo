@@ -10,12 +10,16 @@ import (
 	"github.com/undeconstructed/gogogo/game"
 )
 
+type MakeGameFunc func() (game.Game, error)
+
 // Server serves just one game, that's enough
 type Server interface {
 	Run() error
 }
 
-func NewServer(game game.Game) Server {
+func NewServer(f MakeGameFunc) Server {
+	game, _ := f()
+
 	coreCh := make(chan interface{}, 100)
 	return &server{
 		coreCh: coreCh,
@@ -101,9 +105,8 @@ func (s *server) Run() error {
 		if len(news) > 0 {
 			s.saveGame()
 
-			playing := s.game.GetTurnState().Player
-			players := s.game.GetPlayerSummary()
-			update := game.GameUpdate{News: news, Playing: playing, Players: players}
+			state := s.game.GetGameState()
+			update := game.GameUpdate{News: news, State: state.State, Playing: state.Playing, Players: state.Players}
 			msg, err := comms.Encode("update", update)
 			if err != nil {
 				fmt.Printf("failed to encode update: %v\n", err)

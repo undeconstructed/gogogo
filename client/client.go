@@ -13,6 +13,7 @@ import (
 
 	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
+	"github.com/undeconstructed/gogogo/gogame"
 
 	rl "github.com/chzyer/readline"
 )
@@ -48,7 +49,7 @@ type Client interface {
 	Run() error
 }
 
-func NewClient(data game.GameData, name, colour string, server string) Client {
+func NewClient(data gogame.GameData, name, colour string, server string) Client {
 	coreCh := make(chan interface{}, 100)
 	return &client{
 		data:   data,
@@ -88,8 +89,16 @@ type gameState struct {
 	turn    *game.TurnState
 }
 
+func goTurn(s game.TurnState) gogame.TurnState {
+	return s.Custom.(gogame.TurnState)
+}
+
+func goPlayer(s game.PlayerState) gogame.PlayerState {
+	return s.Custom.(gogame.PlayerState)
+}
+
 type client struct {
-	data   game.GameData
+	data   gogame.GameData
 	name   string
 	colour string
 	server string
@@ -406,13 +415,14 @@ func (c *client) printBank() {
 }
 
 func (c *client) printTurn(turn *game.TurnState) {
+	goturn := goTurn(*turn)
 	on := "track"
-	if turn.OnMap {
+	if goturn.OnMap {
 		on = "map"
 	}
 	fmt.Printf("Player:  %s\n", turn.Player)
 	fmt.Printf("On:      %s\n", on)
-	fmt.Printf("Stopped: %t\n", turn.Stopped)
+	fmt.Printf("Stopped: %t\n", goturn.Stopped)
 	fmt.Printf("Can:     %s\n", turn.Can)
 	fmt.Printf("Must:    %s\n", turn.Must)
 	// fmt.Printf("%#v\n", turn)
@@ -438,18 +448,19 @@ func (c *client) printPlace(placeId string) {
 }
 
 func (c *client) printPlayer(pl game.PlayerState) {
+	gopl := goPlayer(pl)
 	fmt.Printf("Player:    %s\n", pl.Name)
-	fmt.Printf("Money:     %v\n", pl.Money)
-	fmt.Printf("Souvenirs: %v\n", pl.Souvenirs)
-	if len(pl.Lucks) > 0 {
+	fmt.Printf("Money:     %v\n", gopl.Money)
+	fmt.Printf("Souvenirs: %v\n", gopl.Souvenirs)
+	if len(gopl.Lucks) > 0 {
 		fmt.Printf("Lucks:\n")
-		for _, id := range pl.Lucks {
+		for _, id := range gopl.Lucks {
 			fmt.Printf("\t%d: %s\n", id, c.data.Lucks[id].Name)
 		}
 	}
-	fmt.Printf("Square:    %s\n", c.data.Squares[pl.Square].Name)
-	fmt.Printf("Dot:       %s\n", pl.Dot)
-	fmt.Printf("Ticket:    %v\n", pl.Ticket)
+	fmt.Printf("Square:    %s\n", c.data.Squares[gopl.Square].Name)
+	fmt.Printf("Dot:       %s\n", gopl.Dot)
+	fmt.Printf("Ticket:    %v\n", gopl.Ticket)
 	// fmt.Printf("%#v\n", pl)
 }
 
@@ -470,11 +481,11 @@ func (c *client) gameRepl(l *rl.Instance) error {
 		number := s.turn.Number
 
 		loc := "track"
-		if s.turn.OnMap {
+		if goTurn(*s.turn).OnMap {
 			loc = "map"
 		}
 		phase := "moving"
-		if s.turn.Stopped {
+		if goTurn(*s.turn).Stopped {
 			phase = "stopped"
 		}
 		must := ""
