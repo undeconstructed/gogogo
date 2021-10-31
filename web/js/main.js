@@ -265,8 +265,8 @@ function receiveTurn(st) {
   promoteCustom(st)
 
   state.turn = st
-  state.can = state.can || []
-  state.must = state.must || []
+  state.turn.can = state.turn.can || []
+  state.turn.must = state.turn.must || []
 
   let canLuck = st.can ? st.can.includes('useluck:*') : false
   document.body.setAttribute('canluck', canLuck)
@@ -699,6 +699,8 @@ function showRiskCard(cardId) {
   let div = select(document, '.showrisk')
   div.classList.remove('blank')
   select(div, '.riskcard .body').textContent = card.name
+  let foot = select(div, '.foot')
+  foot.replaceChildren()
 
   // will be followed by update, and the obey button will appear
   div.addEventListener('click', e => {
