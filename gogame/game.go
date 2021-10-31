@@ -329,11 +329,17 @@ func (g *gogame) GetTurnState() game.TurnState {
 }
 
 func (g *gogame) GetGameState() game.GameState {
-	state := "playing"
+	status := game.StatusInProgress
 
 	playing := ""
-	if pl0 := g.turn.player; pl0 != nil {
-		playing = pl0.Name
+	if g.turn != nil {
+		if pl0 := g.turn.player; pl0 != nil {
+			playing = pl0.Name
+		}
+	}
+
+	if playing == "" {
+		status = game.StatusUnstarted
 	}
 
 	var players []game.PlayerState
@@ -364,7 +370,7 @@ func (g *gogame) GetGameState() game.GameState {
 	}
 
 	return game.GameState{
-		State:   state,
+		Status:  status,
 		Playing: playing,
 		Players: players,
 	}
@@ -442,10 +448,11 @@ func (g *gogame) stopOnTrack(t *turn) {
 	for _, o := range square.ParseOptions() {
 		switch option := o.(type) {
 		case OptionMust:
-			t.Must = append(t.Must, string(option.Cmd))
+			cmd := option.Cmd.Sub(g.makeSubs())
+			t.Must = append(t.Must, string(cmd))
 		case OptionCan:
-			can := option.Cmd.Sub(g.makeSubs())
-			t.Can = append(t.Can, string(can))
+			cmd := option.Cmd.Sub(g.makeSubs())
+			t.Can = append(t.Can, string(cmd))
 		case OptionMiss:
 			t.player.MissTurns += option.N
 			t.addEventf("will miss %d turns", option.N)

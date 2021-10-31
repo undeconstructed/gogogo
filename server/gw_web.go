@@ -25,12 +25,15 @@ func runWsGateway(server *server, addr string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("ws listening on http://%v\n", l.Addr())
+	fmt.Printf("web listening on http://%v\n", l.Addr())
 
 	m := http.NewServeMux()
 	m.Handle("/", http.FileServer(http.Dir("web")))
 	m.HandleFunc("/data.json", serveDataFile)
-	m.Handle("/ws", commsServer{
+	m.Handle("/create", createHandler{
+		server: server,
+	})
+	m.Handle("/ws", commsHandler{
 		server: server,
 		logf:   log.Printf,
 	})
@@ -51,19 +54,43 @@ func serveDataFile(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "data.json")
 }
 
-type commsServer struct {
+type createHandler struct {
+	server *server
+}
+
+func (s createHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	name := q.Get("name")
+
+	if name == "" {
+		w.WriteHeader(400)
+		return
+	}
+
+	err := s.server.CreateGame(name)
+	if err != nil {
+		fmt.Printf("create game error: %v\n", err)
+		w.WriteHeader(400)
+		return
+	}
+
+	w.WriteHeader(200)
+}
+
+type commsHandler struct {
 	server *server
 	logf   func(f string, v ...interface{})
 }
 
-func (s commsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	addr := r.RemoteAddr
 
 	q := r.URL.Query()
+	gameId := q.Get("game")
 	name := q.Get("name")
 	colour := q.Get("colour")
 
-	if name == "" || colour == "" {
+	if gameId == "" || name == "" || colour == "" {
 		w.WriteHeader(400)
 		return
 	}
@@ -91,13 +118,12 @@ func (s commsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	downCh := make(chan interface{}, 100)
 
-	resCh := make(chan error)
-	server.coreCh <- ConnectMsg{name, colour, clientBundle{downCh}, resCh}
-	err = <-resCh
+	err = server.Connect(gameId, name, colour, clientBundle{downCh})
 	if err != nil {
 		fmt.Printf("refusing %s\n", addr)
 		msg, _ := comms.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
 		sendDownWs(c, msg)
+		c.Close(websocket.StatusNormalClosure, "cannot connect")
 		return
 	}
 
@@ -127,7 +153,7 @@ func (s commsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			s.logf("failed to read from %v: %v", r.RemoteAddr, err)
-			server.coreCh <- DisconnectMsg{Name: name}
+			server.coreCh <- disconnectMsg{Name: name}
 			return
 		}
 		fmt.Printf("received from %s: %s %s\n", name, msg.Head, string(msg.Data))
@@ -141,13 +167,13 @@ func (s commsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("bad text message: %v\n", err)
 				return
 			}
-			server.coreCh <- TextFromUser{name, text}
+			server.coreCh <- textFromUser{gameId, name, text}
 		case "request":
 			id := f[1]
 			rest := f[2:]
 			// cannot decode body yet?!
 			body := msg.Data
-			req := RequestFromUser{name, id, rest, body}
+			req := requestFromUser{gameId, name, id, rest, body}
 			// fmt.Printf("request in: %v\n", req)
 			server.coreCh <- req
 		default:

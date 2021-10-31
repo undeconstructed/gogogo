@@ -4,6 +4,15 @@ import (
 	"io"
 )
 
+type GameStatus string
+
+const (
+	StatusInProgress GameStatus = "inprogress"
+	StatusUnstarted             = "unstarted"
+	StatusWon                   = "won"
+	StatusComplete              = "complete"
+)
+
 type TurnState struct {
 	Number int    `json:"number"`
 	Player string `json:"player"`
@@ -15,7 +24,7 @@ type TurnState struct {
 }
 
 type GameState struct {
-	State   string        `json:"state"`
+	Status  GameStatus    `json:"status"`
 	Playing string        `json:"playing"`
 	Players []PlayerState `json:"players"`
 

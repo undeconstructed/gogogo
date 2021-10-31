@@ -261,7 +261,8 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	case RiskMiss:
 		t.player.MissTurns += code.N
 	case RiskMust:
-		t.Must = append(t.Must, string(code.Cmd))
+		cmd := code.Cmd.Sub(g.makeSubs())
+		t.Must = append(t.Must, string(cmd))
 	case RiskStart:
 		dest := t.player.Ticket.From
 		g.loseTicket(t, true)

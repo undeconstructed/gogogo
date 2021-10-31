@@ -12,7 +12,7 @@ func encodeDown(down interface{}) (comms.Message, error) {
 	case comms.Message:
 		// send preformatted message
 		return msg, nil
-	case ResponseToUser:
+	case responseToUser:
 		// send response
 		cmsg, err := comms.Encode("response:"+msg.ID, msg.Body)
 		if err != nil {

@@ -40,7 +40,7 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 	dnStream := comms.NewEncoder(conn)
 
 	go func() {
-		var name, colour string
+		var gameId, name, colour string
 
 		msg1, err := upStream.Decode()
 		if err != nil {
@@ -48,23 +48,22 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 			return
 		} else {
 			fields := msg1.Head.Fields()
-			if len(fields) != 3 || fields[0] != "connect" {
+			if len(fields) != 4 || fields[0] != "connect" {
 				fmt.Printf("bad first message head from %s\n", addr)
 				return
 			}
 
 			// cheat and just use header for everything
-			name = fields[1]
-			colour = fields[2]
+			gameId = fields[1]
+			name = fields[2]
+			colour = fields[3]
 
 			if name == "" || colour == "" {
 				fmt.Printf("refusing %s\n", addr)
 				return
 			}
 
-			resCh := make(chan error)
-			server.coreCh <- ConnectMsg{name, colour, clientBundle{downCh}, resCh}
-			err = <-resCh
+			err = server.Connect(gameId, name, colour, clientBundle{downCh})
 			if err != nil {
 				fmt.Printf("refusing %s\n", addr)
 				dnStream.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
@@ -111,19 +110,19 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 					fmt.Printf("bad text message: %v\n", err)
 					return
 				}
-				server.coreCh <- TextFromUser{name, text}
+				server.coreCh <- textFromUser{gameId, name, text}
 			case "request":
 				id := f[1]
 				rest := f[2:]
 				// cannot decode body yet?!
 				body := msg.Data
-				server.coreCh <- RequestFromUser{name, id, rest, body}
+				server.coreCh <- requestFromUser{gameId, name, id, rest, body}
 			default:
 				fmt.Printf("junk from client: %v\n", f)
 			}
 		}
 
-		server.coreCh <- DisconnectMsg{name}
+		server.coreCh <- disconnectMsg{gameId, name}
 	}()
 
 	return nil

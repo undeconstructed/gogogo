@@ -43,7 +43,7 @@ function splitDotId(s) {
 function connect() {
   if (state.ws) return
 
-  const conn = new WebSocket(`ws://${location.host}/ws?name=${state.name}&colour=${state.colour}`, 'comms')
+  const conn = new WebSocket(`ws://${location.host}/ws?game=${state.gameId}&name=${state.name}&colour=${state.colour}`, 'comms')
 
   conn.onclose = ev => {
     console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`)
@@ -770,8 +770,9 @@ function fixupData(indata) {
   return indata
 }
 
-function setup(inData, name, colour) {
+function setup(inData, gameId, name, colour) {
   state.data = fixupData(inData)
+  state.gameId = gameId
   state.name = name
   state.colour = colour
 
@@ -951,10 +952,11 @@ function showOneLogLine() {
 
 document.addEventListener('DOMContentLoaded', function() {
   let urlParams = new URLSearchParams(window.location.search)
+  let gameId = urlParams.get('gameId')
   let name = urlParams.get('name')
   let colour = urlParams.get('colour')
 
-  if (!name || !colour) {
+  if (!gameId || !name || !colour) {
     alert('missing params')
     return
   }
@@ -968,7 +970,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch('data.json').
       then(rez => rez.json()).
       then(data => {
-        setup(data, name, colour)
+        setup(data, gameId, name, colour)
       })
     })
 

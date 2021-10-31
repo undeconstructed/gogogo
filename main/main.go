@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"time"
@@ -20,7 +21,7 @@ func main() {
 	case "server":
 		serverMain()
 	case "client":
-		clientMain(os.Args[2], os.Args[3])
+		clientMain(os.Args[2], os.Args[3], os.Args[4])
 	}
 
 	// upCh, downCh, err := server.LocalConnect("local")
@@ -34,35 +35,23 @@ func serverMain() {
 	rand.Seed(time.Now().Unix())
 	data := gogame.LoadJson()
 
-	var g game.Game
-
-	f, err := os.Open("state.json")
-	if err != nil {
-		fmt.Printf("cannot open state file: %v\n", err)
-		g = gogame.NewGame(data)
-	} else {
-		// XXX - random seed not restored
-		g, err = gogame.NewFromSaved(data, f)
-		if err != nil {
-			fmt.Printf("cannot restore state: %v\n", err)
-			return
-		}
-	}
-
 	server := server.NewServer(func() (game.Game, error) {
-		return g, nil
+		return gogame.NewGame(data), nil
+	}, func(in io.Reader) (game.Game, error) {
+		return gogame.NewFromSaved(data, in)
 	})
-	err = server.Run()
+
+	err := server.Run()
 	if err != nil {
 		fmt.Printf("server ended: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func clientMain(name, colour string) {
+func clientMain(gameId, name, colour string) {
 	data := gogame.LoadJson()
 
-	client := client.NewClient(data, name, colour, "game.socket")
+	client := client.NewClient(data, gameId, name, colour, "game.socket")
 	err := client.Run()
 	if err != nil {
 		fmt.Printf("client ended: %v\n", err)

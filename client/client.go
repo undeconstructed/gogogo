@@ -49,10 +49,11 @@ type Client interface {
 	Run() error
 }
 
-func NewClient(data gogame.GameData, name, colour string, server string) Client {
+func NewClient(data gogame.GameData, gameId, name, colour string, server string) Client {
 	coreCh := make(chan interface{}, 100)
 	return &client{
 		data:   data,
+		gameId: gameId,
 		name:   name,
 		colour: colour,
 		server: server,
@@ -99,6 +100,7 @@ func goPlayer(s game.PlayerState) gogame.PlayerState {
 
 type client struct {
 	data   gogame.GameData
+	gameId string
 	name   string
 	colour string
 	server string
@@ -124,7 +126,7 @@ func (c *client) Run() error {
 	upStream := comms.NewEncoder(conn)
 	dnStream := comms.NewDecoder(conn)
 
-	err = upStream.Encode("connect:"+c.name+":"+c.colour, comms.ConnectRequest{})
+	err = upStream.Encode(fmt.Sprintf("connect:%s:%s:%s", c.gameId, c.name, c.colour), comms.ConnectRequest{})
 	if err != nil {
 		return err
 	}

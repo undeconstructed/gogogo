@@ -5,30 +5,39 @@ type toSend struct {
 	data  interface{}
 }
 
-type ConnectMsg struct {
+type createGameMsg struct {
+	Name string
+	Rep  chan error
+}
+
+type connectMsg struct {
+	Game   string
 	Name   string
 	Colour string
 	Client clientBundle
 	Rep    chan error
 }
 
-type DisconnectMsg struct {
+type disconnectMsg struct {
+	Game string
 	Name string
 }
 
-type TextFromUser struct {
+type textFromUser struct {
+	Game string
 	Who  string
 	Text string
 }
 
-type RequestFromUser struct {
+type requestFromUser struct {
+	Game string
 	Who  string
 	ID   string
 	Cmd  []string
 	Body interface{}
 }
 
-type ResponseToUser struct {
+type responseToUser struct {
 	ID   string
 	Body interface{}
 }
