@@ -1,38 +1,58 @@
 package server
 
 import (
-	"fmt"
 	"io"
 	"net"
 
 	"github.com/undeconstructed/gogogo/comms"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func runTcpGateway(server *server, addr string) error {
+	log := log.With().Str("gw", "tcp").Logger()
+
 	// ln, err := net.Listen("unix", "game.socket")
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("tcp listening on http://%v\n", ln.Addr())
 
+	log.Info().Msgf("comms listening on tcp:%v", ln.Addr())
+
+	m := &tcpManager{
+		server: server,
+		log:    log,
+	}
 	go func() {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				fmt.Printf("listener error: %v\n", err)
-				continue
-			}
-			manageTcpConnection(server, conn)
-		}
+		_ = m.Serve(ln)
 	}()
 
 	return nil
 }
 
-func manageTcpConnection(server *server, conn net.Conn) error {
+type tcpManager struct {
+	server *server
+	log    zerolog.Logger
+}
+
+func (m *tcpManager) Serve(ln net.Listener) error {
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			m.log.Error().Err(err).Msg("listener error")
+			return err
+		}
+		m.manageTcpConnection(conn)
+	}
+}
+
+func (m *tcpManager) manageTcpConnection(conn net.Conn) error {
 	addr := conn.RemoteAddr()
-	fmt.Printf("connection from: %s\n", addr)
+
+	log := m.log.With().Str("client", addr.String()).Logger()
+	log.Info().Msgf("connecting")
 
 	downCh := make(chan interface{}, 100)
 
@@ -44,12 +64,12 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 
 		msg1, err := upStream.Decode()
 		if err != nil {
-			fmt.Printf("bad first message from %s\n", addr)
+			log.Info().Err(err).Msg("first message error")
 			return
 		} else {
 			fields := msg1.Head.Fields()
 			if len(fields) != 4 || fields[0] != "connect" {
-				fmt.Printf("bad first message head from %s\n", addr)
+				log.Info().Msg("bad first message head")
 				return
 			}
 
@@ -59,13 +79,13 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 			colour = fields[3]
 
 			if name == "" || colour == "" {
-				fmt.Printf("refusing %s\n", addr)
+				log.Info().Msg("missing params")
 				return
 			}
 
-			err = server.Connect(gameId, name, colour, clientBundle{downCh})
+			err = m.server.Connect(gameId, name, colour, clientBundle{downCh})
 			if err != nil {
-				fmt.Printf("refusing %s\n", addr)
+				log.Info().Err(err).Msg("connect error")
 				dnStream.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
 				return
 			}
@@ -78,28 +98,27 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 			for down := range downCh {
 				msg, err := encodeDown(down)
 				if err != nil {
-					fmt.Printf("encode error: %v\n", err)
+					log.Info().Err(err).Msg("encode error")
 					break
 				}
 				err = dnStream.Send(msg)
 				if err != nil {
-					fmt.Printf("send error: %v\n", err)
+					log.Info().Err(err).Msg("send error")
 					break
 				}
 			}
 		}()
 
-		// this is the connection's main loop
 		for {
 			// read conn, despatch into server
 			msg, err := upStream.Decode()
 			if err != nil {
 				if err != io.EOF {
-					fmt.Printf("decode error: %#v\n", err)
+					log.Info().Err(err).Msg("decode error")
 				}
 				break
 			}
-			fmt.Printf("received from %s: %s %s\n", name, msg.Head, string(msg.Data))
+			log.Info().Msgf("received: %s %s", msg.Head, string(msg.Data))
 
 			f := msg.Head.Fields()
 			switch f[0] {
@@ -107,22 +126,22 @@ func manageTcpConnection(server *server, conn net.Conn) error {
 				var text string
 				err := comms.Decode(msg, &text)
 				if err != nil {
-					fmt.Printf("bad text message: %v\n", err)
+					log.Error().Err(err).Msg("decode text error")
 					return
 				}
-				server.coreCh <- textFromUser{gameId, name, text}
+				m.server.coreCh <- textFromUser{gameId, name, text}
 			case "request":
 				id := f[1]
 				rest := f[2:]
 				// cannot decode body yet?!
 				body := msg.Data
-				server.coreCh <- requestFromUser{gameId, name, id, rest, body}
+				m.server.coreCh <- requestFromUser{gameId, name, id, rest, body}
 			default:
-				fmt.Printf("junk from client: %v\n", f)
+				log.Info().Msgf("junk from client: %v", f)
 			}
 		}
 
-		server.coreCh <- disconnectMsg{gameId, name}
+		m.server.coreCh <- disconnectMsg{gameId, name}
 	}()
 
 	return nil

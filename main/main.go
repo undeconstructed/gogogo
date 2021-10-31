@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"math/rand"
 	"os"
@@ -11,11 +10,17 @@ import (
 	"github.com/undeconstructed/gogogo/game"
 	"github.com/undeconstructed/gogogo/gogame"
 	"github.com/undeconstructed/gogogo/server"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	mode := os.Args[1]
-	fmt.Printf("gogogo %s\n", mode)
+	log.Info().Str("mode", mode).Msg("start")
 
 	switch mode {
 	case "server":
@@ -23,12 +28,6 @@ func main() {
 	case "client":
 		clientMain(os.Args[2], os.Args[3], os.Args[4])
 	}
-
-	// upCh, downCh, err := server.LocalConnect("local")
-	// if err != nil {
-	// 	fmt.Printf("failed connect: %v\n", err)
-	// 	os.Exit(1)
-	// }
 }
 
 func serverMain() {
@@ -43,7 +42,7 @@ func serverMain() {
 
 	err := server.Run()
 	if err != nil {
-		fmt.Printf("server ended: %v\n", err)
+		log.Info().Err(err).Msg("server ended")
 		os.Exit(1)
 	}
 }
@@ -54,7 +53,7 @@ func clientMain(gameId, name, colour string) {
 	client := client.NewClient(data, gameId, name, colour, "game.socket")
 	err := client.Run()
 	if err != nil {
-		fmt.Printf("client ended: %v\n", err)
+		log.Info().Err(err).Msg("client ended")
 		os.Exit(1)
 	}
 }

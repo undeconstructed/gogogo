@@ -45,9 +45,3 @@ func (b *Box[T]) WaitCh(seen *T) chan<- *T {
 	}()
 	return ch
 }
-
-func Print[T any](s []T) {
-	for _, v := range s {
-		fmt.Print(v)
-	}
-}

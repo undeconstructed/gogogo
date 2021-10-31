@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/undeconstructed/gogogo/game"
 )
 
@@ -134,7 +135,7 @@ func NewGame(data GameData) game.Game {
 	for a := range data.Actions {
 		_, ok := g.cmds[a]
 		if !ok {
-			fmt.Printf("unmatched action: %s\n", a)
+			log.Warn().Msgf("unmatched action: %s", a)
 		}
 	}
 	for _, s := range g.squares {
@@ -143,13 +144,13 @@ func NewGame(data GameData) game.Game {
 	for _, lc := range g.lucks {
 		code := lc.ParseCode()
 		if _, ok := code.(LuckCode); ok {
-			fmt.Printf("unparsed luck card: %s\n", lc.Code)
+			log.Warn().Msgf("unparsed luck card: %s", lc.Code)
 		}
 	}
 	for _, rc := range g.risks {
 		code := rc.ParseCode()
 		if _, ok := code.(RiskCode); ok {
-			fmt.Printf("unparsed risk card: %s\n", rc.Code)
+			log.Warn().Msgf("unparsed risk card: %s", rc.Code)
 		}
 	}
 

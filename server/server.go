@@ -11,6 +11,9 @@ import (
 
 	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type MakeGameFunc func() (game.Game, error)
@@ -26,21 +29,23 @@ func NewServer(makeGame MakeGameFunc, loadGame LoadGameFunc) Server {
 	games := map[string]*oneGame{}
 	files, err := ioutil.ReadDir(".")
 	if err != nil {
-		fmt.Printf("not loading anything: %v\n", err)
+		log.Error().Err(err).Msg("not loading anything")
 	} else {
 		for _, f := range files {
 			fname := f.Name()
 			if strings.HasPrefix(fname, "state-") && strings.HasSuffix(fname, ".json") {
 				gameId := fname[6 : len(fname)-5]
+				log := log.With().Str("game", gameId).Logger()
+
 				f, err := os.Open(f.Name())
 				if err != nil {
-					fmt.Printf("cannot open state file: %v\n", err)
+					log.Error().Err(err).Msg("cannot open state file")
 					continue
 				}
 
 				g, err := loadGame(f)
 				if err != nil {
-					fmt.Printf("cannot restore state: %v\n", err)
+					log.Error().Err(err).Msg("cannot restore state")
 					continue
 				}
 
@@ -48,9 +53,10 @@ func NewServer(makeGame MakeGameFunc, loadGame LoadGameFunc) Server {
 					name:    gameId,
 					game:    g,
 					clients: map[string]*clientBundle{},
+					log:     log,
 				}
 
-				fmt.Printf("loaded state: %s\n", gameId)
+				log.Info().Msg("loaded state")
 			}
 		}
 	}
@@ -68,6 +74,7 @@ type oneGame struct {
 	game    game.Game
 	turn    *game.TurnState
 	clients map[string]*clientBundle
+	log     zerolog.Logger
 }
 
 type server struct {
@@ -77,11 +84,11 @@ type server struct {
 }
 
 func (s *server) Run() error {
-	fmt.Printf("server running\n")
-	defer fmt.Printf("server stopping\n")
+	log.Info().Msg("server running")
+	defer log.Info().Msg("server stopping")
 
 	_ = runTcpGateway(s, "0.0.0.0:1234")
-	_ = runWsGateway(s, "0.0.0.0:1235")
+	_ = runWebGateway(s, "0.0.0.0:1235")
 
 	// this is the server's main loop
 	for in := range s.coreCh {
@@ -95,7 +102,7 @@ func (s *server) Run() error {
 			update := game.GameUpdate{News: news, Status: state.Status, Playing: state.Playing, Players: state.Players}
 			msg, err := comms.Encode("update", update)
 			if err != nil {
-				fmt.Printf("failed to encode update: %v\n", err)
+				g.log.Error().Err(err).Msg("failed to encode update")
 				panic("encode update error")
 			}
 			s.broadcast(g, msg, "")
@@ -104,12 +111,12 @@ func (s *server) Run() error {
 		if g != nil && g.turn != nil {
 			c, ok := g.clients[g.turn.Player]
 			if !ok {
-				fmt.Printf("current player not connected: %s\n", g.turn.Player)
+				g.log.Info().Msgf("current player not connected: %s", g.turn.Player)
 			}
 
 			msg, err := comms.Encode("turn", g.turn)
 			if err != nil {
-				fmt.Printf("failed to encode turn: %v\n", err)
+				g.log.Error().Err(err).Msg("failed to encode turn")
 				panic("encode turn error")
 			}
 
@@ -118,7 +125,7 @@ func (s *server) Run() error {
 				g.turn = nil
 			default:
 				// client lagging
-				fmt.Printf("client lagging: %s\n", g.turn.Player)
+				g.log.Info().Msgf("client lagging: %s", g.turn.Player)
 			}
 		}
 	}
@@ -129,6 +136,8 @@ func (s *server) Run() error {
 func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 	switch msg := in.(type) {
 	case createGameMsg:
+		log := log.With().Str("game", msg.Name).Logger()
+
 		game, err := s.makeGame()
 		if err != nil {
 			msg.Rep <- err
@@ -138,8 +147,11 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 			name:    msg.Name,
 			game:    game,
 			clients: map[string]*clientBundle{},
+			log:     log,
 		}
-		fmt.Printf("created game: %s\n", msg.Name)
+
+		log.Info().Msg("created")
+
 		msg.Rep <- nil
 		return nil, nil
 	case connectMsg:
@@ -190,7 +202,8 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 			return nil, nil
 		}
 
-		fmt.Printf("client gone: %s\n", msg.Name)
+		g.log.Info().Msgf("client gone: %s", msg.Name)
+
 		delete(g.clients, msg.Name)
 		return g, []game.Change{{
 			Who:  msg.Name,
@@ -213,7 +226,7 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 
 		return g, news
 	default:
-		fmt.Printf("nonsense in core: %#v\n", in)
+		log.Warn().Msgf("nonsense in core: %#v", in)
 	}
 	return nil, nil
 }
@@ -233,7 +246,7 @@ func (s *server) CreateGame(name string) error {
 func (s *server) saveGame(g *oneGame) {
 	outFile, err := os.Create(fmt.Sprintf("state-%s.json", g.name))
 	if err != nil {
-		fmt.Printf("can't save: %v\n", err)
+		g.log.Error().Err(err).Msg("can't save")
 		return
 	}
 	defer outFile.Close()
@@ -336,7 +349,7 @@ func (s *server) broadcast(g *oneGame, msg comms.Message, skip string) {
 		case c.downCh <- msg:
 		default:
 			// client lagging
-			fmt.Printf("client lagging: %s\n", n)
+			g.log.Info().Msgf("client lagging: %s", n)
 		}
 	}
 }

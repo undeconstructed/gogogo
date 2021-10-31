@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/undeconstructed/gogogo/comms"
+
+	"github.com/rs/zerolog/log"
 )
 
 func encodeDown(down interface{}) (comms.Message, error) {
@@ -16,7 +18,7 @@ func encodeDown(down interface{}) (comms.Message, error) {
 		// send response
 		cmsg, err := comms.Encode("response:"+msg.ID, msg.Body)
 		if err != nil {
-			fmt.Printf("encode error: %v\n", err)
+			log.Warn().Err(err).Msg("encode error")
 			break
 		}
 		return cmsg, nil
@@ -24,11 +26,12 @@ func encodeDown(down interface{}) (comms.Message, error) {
 		// send anything
 		cmsg, err := comms.Encode(msg.mtype, msg.data)
 		if err != nil {
-			fmt.Printf("encode error: %v\n", err)
+			log.Warn().Err(err).Msg("encode error")
 			return cmsg, nil
 		}
 		return cmsg, nil
 	default:
+		log.Warn().Msgf("trying to send nonsense: %v", msg)
 		return comms.Message{}, fmt.Errorf("cannot send: %#v", msg)
 	}
 

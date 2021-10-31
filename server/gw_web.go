@@ -3,15 +3,16 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/undeconstructed/gogogo/comms"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"nhooyr.io/websocket"
 )
 
@@ -20,22 +21,26 @@ type WsJSONMessage struct {
 	Data json.RawMessage `json:"data"`
 }
 
-func runWsGateway(server *server, addr string) error {
-	l, err := net.Listen("tcp", addr)
+func runWebGateway(server *server, addr string) error {
+	log := log.With().Str("gw", "web").Logger()
+
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("web listening on http://%v\n", l.Addr())
+
+	log.Info().Msgf("web listening on http://%v", ln.Addr())
 
 	m := http.NewServeMux()
 	m.Handle("/", http.FileServer(http.Dir("web")))
 	m.HandleFunc("/data.json", serveDataFile)
 	m.Handle("/create", createHandler{
 		server: server,
+		log:    log,
 	})
 	m.Handle("/ws", commsHandler{
 		server: server,
-		logf:   log.Printf,
+		log:    log,
 	})
 
 	s := &http.Server{
@@ -44,7 +49,7 @@ func runWsGateway(server *server, addr string) error {
 		WriteTimeout: time.Second * 10,
 	}
 	go func() {
-		_ = s.Serve(l)
+		_ = s.Serve(ln)
 	}()
 
 	return nil
@@ -56,6 +61,7 @@ func serveDataFile(w http.ResponseWriter, r *http.Request) {
 
 type createHandler struct {
 	server *server
+	log    zerolog.Logger
 }
 
 func (s createHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +75,7 @@ func (s createHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err := s.server.CreateGame(name)
 	if err != nil {
-		fmt.Printf("create game error: %v\n", err)
+		s.log.Error().Err(err).Msg("create game error")
 		w.WriteHeader(400)
 		return
 	}
@@ -79,11 +85,14 @@ func (s createHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type commsHandler struct {
 	server *server
-	logf   func(f string, v ...interface{})
+	log    zerolog.Logger
 }
 
 func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	addr := r.RemoteAddr
+
+	log := s.log.With().Str("client", addr).Logger()
+	log.Info().Msgf("connecting")
 
 	q := r.URL.Query()
 	gameId := q.Get("game")
@@ -104,7 +113,7 @@ func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		OriginPatterns: []string{"localhost:8080"},
 	})
 	if err != nil {
-		s.logf("%v", err)
+		log.Info().Err(err).Msg("websocket accept error")
 		return
 	}
 	defer c.Close(websocket.StatusInternalError, "the sky is falling")
@@ -120,7 +129,7 @@ func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = server.Connect(gameId, name, colour, clientBundle{downCh})
 	if err != nil {
-		fmt.Printf("refusing %s\n", addr)
+		log.Info().Msgf("refusing: %s", addr)
 		msg, _ := comms.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
 		sendDownWs(c, msg)
 		c.Close(websocket.StatusNormalClosure, "cannot connect")
@@ -135,28 +144,29 @@ func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for down := range downCh {
 			msg, err := encodeDown(down)
 			if err != nil {
-				fmt.Printf("encode error: %v\n", err)
+				log.Info().Err(err).Msg("encode error")
 				break
 			}
 			err = sendDownWs(c, msg)
 			if err != nil {
-				fmt.Printf("send error: %v\n", err)
+				log.Info().Err(err).Msg("send error")
 				break
 			}
 		}
 	}()
 
 	for {
+		// read conn, despatch into server
 		msg, err = readMessageWs(c)
 		if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 			return
 		}
 		if err != nil {
-			s.logf("failed to read from %v: %v", r.RemoteAddr, err)
+			log.Info().Err(err).Msgf("client read error: %v", addr)
 			server.coreCh <- disconnectMsg{Name: name}
 			return
 		}
-		fmt.Printf("received from %s: %s %s\n", name, msg.Head, string(msg.Data))
+		log.Info().Msgf("received from: %s %s", msg.Head, string(msg.Data))
 
 		f := msg.Head.Fields()
 		switch f[0] {
@@ -164,7 +174,7 @@ func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			var text string
 			err := comms.Decode(msg, &text)
 			if err != nil {
-				fmt.Printf("bad text message: %v\n", err)
+				log.Info().Err(err).Msg("decode text error")
 				return
 			}
 			server.coreCh <- textFromUser{gameId, name, text}
@@ -174,10 +184,9 @@ func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// cannot decode body yet?!
 			body := msg.Data
 			req := requestFromUser{gameId, name, id, rest, body}
-			// fmt.Printf("request in: %v\n", req)
 			server.coreCh <- req
 		default:
-			fmt.Printf("junk from client: %v\n", f)
+			log.Info().Msgf("junk from client: %v", f)
 		}
 	}
 }
@@ -225,7 +234,6 @@ func readMessageWs(c *websocket.Conn) (comms.Message, error) {
 
 		return comms.Message{Head: comms.Head(msg.Head), Data: msg.Data}, nil
 	} else {
-		fmt.Printf("can't deal with a %v\n", typ)
-		return comms.Message{}, errors.New("TODO")
+		return comms.Message{}, fmt.Errorf("client sent a %v", typ)
 	}
 }
