@@ -423,22 +423,35 @@ body {
   justify-content: center;
   align-items: center;
 }
+.showcard .button {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 .showcard.open {
   display: flex;
 }
 .showcard .card {
   box-shadow: 0px 0px 5px 0px #000000;
-  transition: rotate 1s;
+  transition: rotate .5s;
 }
-.showcard.open.blank .card {
+.showcard.back .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  rotate: x 1turn;
 }
-.showcard.open.blank .card > div {
+.showcard.back .card {
+  rotate: x .5turn;
+}
+.showcard.middle .card {
+  rotate: x .25turn;
+}
+.showcard.blank .card > div {
   visibility: hidden;
-}
-.showcard.open.blank .card > div.body {
-  visibility: visible;
 }
 
 .prices {

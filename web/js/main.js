@@ -581,11 +581,12 @@ function closeSouvenirs() {
 
 function setupForTakeLuck() {
   let div = select(document, '.showluck')
-  div.classList.add('open')
   div.classList.add('blank')
-  select(div, '.luckcard .body').textContent = 'click to turn'
+  div.classList.add('back')
+  div.classList.add('open')
 
-  div.addEventListener('click', e => {
+  let button = select(div, '.button')
+  button.addEventListener('click', e => {
     let cb = (e, r) => {
       if (e) {
         alert(e.message)
@@ -595,7 +596,6 @@ function setupForTakeLuck() {
       showLuckCard(r.message)
     }
     doRequest('play', { command: 'takeluck' }, cb)
-    // showLuckCard(1)
   }, { once: true })
 }
 
@@ -608,9 +608,12 @@ function showLuckCard(cardId) {
   }
 
   let div = select(document, '.showluck')
-  div.classList.remove('blank')
+  div.classList.remove('back')
+  div.classList.add('middle')
 
   setTimeout(() => {
+    div.classList.remove('middle')
+    div.classList.remove('blank')
     select(div, '.card .body').textContent = card.name
   }, 500)
 
@@ -626,11 +629,12 @@ function hideLuck() {
 
 function setupForTakeRisk() {
   let div = select(document, '.showrisk')
-  div.classList.add('open')
   div.classList.add('blank')
-  select(div, '.riskcard .body').textContent = 'click to turn'
+  div.classList.add('back')
+  div.classList.add('open')
 
-  div.addEventListener('click', e => {
+  let button = select(div, '.button')
+  button.addEventListener('click', e => {
     let cb = (e, r) => {
       if (e) {
         alert(e.message)
@@ -696,19 +700,26 @@ function setupForObeyRisk(cardId) {
 
 function showRiskCard(cardId) {
   let card = state.data.risks[cardId]
+
   let div = select(document, '.showrisk')
-  div.classList.remove('blank')
-  select(div, '.riskcard .body').textContent = card.name
   let foot = select(div, '.foot')
   foot.replaceChildren()
+  div.classList.remove('back')
+  div.classList.add('middle')
 
-  // will be followed by update, and the obey button will appear
-  div.addEventListener('click', e => {
-    if (!state.turn.must.includes('obeyrisk:'+cardId)) {
-      // need to disable this if obey is enabled, but this is un ugly way to do it
-      hideRisk()
-    }
-  }, { once: true })
+  setTimeout(() => {
+    div.classList.remove('middle')
+    div.classList.remove('blank')
+    select(div, '.card .body').textContent = card.name
+
+    // will be followed by update, and the obey button will appear
+    div.addEventListener('click', e => {
+      if (!state.turn.must.includes('obeyrisk:'+cardId)) {
+        // need to disable this if obey is enabled, but this is un ugly way to do it
+        hideRisk()
+      }
+    }, { once: true })
+  }, 500)
 }
 
 function hideRisk() {
