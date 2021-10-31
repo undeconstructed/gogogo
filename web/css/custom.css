@@ -214,16 +214,16 @@ body {
   height: 9rem;
   right: 10rem;
   width: 9rem;
-  background-color: transparent;
-  background-image: url('../img/dice.svg');
-  background-size: contain;
+  background: transparent url("../img/dice.svg") no-repeat center/contain;
 }
 
 .actions > button.end {
-  background-image: url('../img/zzzz.svg');
-  background-color: white;
-  border-radius: 2.5rem;
-  overflow: clip;
+  position: absolute;
+  top: 14em;
+  height: 9rem;
+  right: 2rem;
+  width: 9rem;
+  background: transparent url("../img/bedtime.svg") no-repeat center/contain;
 }
 
 .showmessage {
