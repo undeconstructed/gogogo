@@ -149,6 +149,13 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 			return nil, nil
 		}
 
+		if msg.Colour == "" {
+			// just watching
+			g.clients[msg.Name] = &msg.Client
+			msg.Rep <- nil
+			return nil, nil
+		}
+
 		err := g.game.AddPlayer(msg.Name, msg.Colour)
 		if err == game.ErrPlayerExists {
 			// assume this is same player rejoining

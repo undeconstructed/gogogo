@@ -501,26 +501,41 @@ func (g *gogame) jumpOnTrack(t *turn, to string, forward bool) []game.Change {
 }
 
 func (g *gogame) moveOnMap(t *turn, n int) {
+	arrived := g.moveAlongRoute(t, n)
+	if arrived {
+		g.stopOnMap(t)
+	}
+}
+
+func (g *gogame) dotIsFree(dotId string) bool {
+	for _, pl := range g.players {
+		if pl.OnDot == dotId {
+			return false
+		}
+	}
+	return true
+}
+
+func (g *gogame) moveAlongRoute(t *turn, n int) bool {
 	need := len(t.player.Ticket.Route)
 	if n > need {
 		// overshot
 		t.addEventf("tries to move %d, but overshoots", n)
+		return false
 	} else if n == need {
 		// reached
 		t.player.OnDot = t.player.Ticket.Route[need-1]
 		t.player.Ticket = nil
 		t.Moved = true
 		t.addEventf("moves %d and arrives", n)
-		g.stopOnMap(t)
+		return true
 	} else {
 		wouldDot := t.player.Ticket.Route[n-1]
-
-		for _, pl := range g.players {
-			if pl.OnDot == wouldDot {
-				t.Moved = true
-				t.addEventf("tries to move %d, but %s is there", n, pl.Name)
-				return
-			}
+		isFree := g.dotIsFree(wouldDot)
+		if !isFree {
+			t.Moved = true
+			t.addEventf("tries to move %d, but someone else is there", n)
+			return false
 		}
 
 		t.player.OnDot = wouldDot
@@ -528,6 +543,7 @@ func (g *gogame) moveOnMap(t *turn, n int) {
 		t.Moved = true
 
 		t.addEventf("moves %d", n)
+		return false
 	}
 }
 

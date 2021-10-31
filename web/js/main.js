@@ -124,7 +124,7 @@ function receiveUpdate(st) {
     state.playing = st.playing
   }
 
-  for (let pl of st.players) {
+  for (let pl of st.players || {}) {
     promoteCustom(pl)
 
     let prev = state.players.get(pl.name) || {}
@@ -151,6 +151,22 @@ function receiveUpdate(st) {
     }
 
     state.players.set(pl.name, pl)
+  }
+
+  let md = select(document, '.aboutgame .players > div')
+  md.replaceChildren()
+  for (let pl of state.players.values()) {
+    let div = document.createElement('div')
+    div.classList.add('aplayer')
+    let colSpan = document.createElement('span')
+    colSpan.classList.add('colour')
+    colSpan.style.backgroundColor = pl.colour || 'transparent'
+    div.append(colSpan)
+    let nameSpan = document.createElement('span')
+    nameSpan.classList.add('name')
+    nameSpan.append(pl.name)
+    div.append(nameSpan)
+    md.append(div)
   }
 
   for (let n of st.news) {
@@ -249,6 +265,8 @@ function receiveTurn(st) {
   promoteCustom(st)
 
   state.turn = st
+  state.can = state.can || []
+  state.must = state.must || []
 
   let canLuck = st.can ? st.can.includes('useluck:*') : false
   document.body.setAttribute('canluck', canLuck)
@@ -256,7 +274,7 @@ function receiveTurn(st) {
   let player = state.players.get(st.player)
   document.body.setAttribute('ontrack', !st.onmap)
 
-  let s = select(document, '.currentturn')
+  let s = select(document, '.aboutgame')
 
   let sc = select(s, '.colour')
   sc.style.backgroundColor = player.colour
@@ -636,6 +654,8 @@ function setupForObeyRisk(cardId) {
   let foot = select(div, '.foot')
   foot.replaceChildren()
 
+  let buttons = []
+
   if (state.turn.can.includes('ignorerisk:'+cardId)) {
     let ignoreButton = document.createElement('button')
     ignoreButton.append('[ignore]')
@@ -651,24 +671,27 @@ function setupForObeyRisk(cardId) {
       doRequest('play', { command: 'ignorerisk:'+cardId }, cb)
     }, { once: true })
 
-    foot.append(obeyButton)
+    buttons.push(obeyButton)
   }
 
-  let obeyButton = document.createElement('button')
-  obeyButton.append('[obey]')
-  obeyButton.addEventListener('click', e => {
-    hideRisk()
-    let cb = (e, r) => {
-      if (e) {
-        setupForObeyRisk(cardId)
-        alert(e.message)
-        return
+  if (state.turn.must.includes('obeyrisk:'+cardId)) {
+    let obeyButton = document.createElement('button')
+    obeyButton.append('[obey]')
+    obeyButton.addEventListener('click', e => {
+      hideRisk()
+      let cb = (e, r) => {
+        if (e) {
+          setupForObeyRisk(cardId)
+          alert(e.message)
+          return
+        }
       }
-    }
-    doRequest('play', { command: 'obeyrisk:'+cardId }, cb)
-  }, { once: true })
+      doRequest('play', { command: 'obeyrisk:'+cardId }, cb)
+    }, { once: true })
+    buttons.push(obeyButton)
+  }
 
-  foot.append(obeyButton)
+  foot.replaceChildren(...buttons)
 }
 
 function showRiskCard(cardId) {
@@ -677,8 +700,12 @@ function showRiskCard(cardId) {
   div.classList.remove('blank')
   select(div, '.riskcard .body').textContent = card.name
 
+  // will be followed by update, and the obey button will appear
   div.addEventListener('click', e => {
-    hideRisk()
+    if (!state.turn.must.includes('obeyrisk:'+cardId)) {
+      // need to disable this if obey is enabled, but this is un ugly way to do it
+      hideRisk()
+    }
   }, { once: true })
 }
 
@@ -956,9 +983,13 @@ document.addEventListener('DOMContentLoaded', function() {
   let name = urlParams.get('name')
   let colour = urlParams.get('colour')
 
-  if (!gameId || !name || !colour) {
+  if (!gameId || !name) {
     alert('missing params')
     return
+  }
+  if (!colour) {
+    // if colour is null, then just observe
+    colour = ""
   }
 
   let mapObject = document.createElement('object')

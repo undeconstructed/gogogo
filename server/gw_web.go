@@ -90,7 +90,7 @@ func (s commsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	name := q.Get("name")
 	colour := q.Get("colour")
 
-	if gameId == "" || name == "" || colour == "" {
+	if gameId == "" || name == "" {
 		w.WriteHeader(400)
 		return
 	}
