@@ -235,6 +235,8 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 		dest := t.player.Ticket.To
 		g.loseTicket(t, false)
 		g.jumpOnMap(t, dest)
+		g.stopOnMap(t)
+
 		t.addEvent("arrives early")
 	case RiskFog:
 		// "All transport - Fog. - Planes return to point of departure. - No new ticket required. - Ships and cars miss one turn. - Trains unaffected."
@@ -243,6 +245,7 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 		case strings.Contains(modes, "a"):
 			dest := t.player.Ticket.From
 			g.jumpOnMap(t, dest)
+			g.stopOnMap(t)
 			t.addEvent("is back")
 		case strings.Contains(modes, "s"):
 			fallthrough
@@ -252,6 +255,8 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	case RiskGo:
 		g.loseTicket(t, true)
 		g.jumpOnMap(t, code.Dest)
+		g.stopOnMap(t)
+
 		t.addEvent("suddenly appears")
 	case RiskLoseTicket:
 		// XXX - have to work out how to get a new one ..
@@ -267,10 +272,14 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 		dest := t.player.Ticket.From
 		g.loseTicket(t, true)
 		g.jumpOnMap(t, dest)
+		g.stopOnMap(t)
+
 		t.addEvent("is back, ticketless")
 	case RiskStartX:
 		dest := t.player.Ticket.From
 		g.jumpOnMap(t, dest)
+		g.stopOnMap(t)
+
 		t.addEvent("is back")
 	case RiskCode:
 		t.addEvent("finds out that his risk card is unimplemented")
@@ -422,15 +431,14 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 
 		if t.OnMap {
 			g.moveOnMap(t, code.N)
-			if t.Stopped {
-				t.Can, _ = stringListWithout(t.Can, "dicemove")
-				t.Can, _ = stringListWithout(t.Can, "stop")
-			} else {
+			if !t.Stopped {
 				t.Can, _ = stringListWith(t.Can, "stop")
 			}
 		} else {
 			g.moveOnTrack(t, code.N)
-			t.Can, _ = stringListWith(t.Can, "stop")
+			if !t.Stopped {
+				t.Can, _ = stringListWith(t.Can, "stop")
+			}
 		}
 	case LuckDest:
 		if !t.OnMap {
@@ -438,8 +446,8 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		}
 
 		dest := t.player.Ticket.To
-		g.jumpOnMap(t, dest)
 		g.loseTicket(t, false)
+		g.jumpOnMap(t, dest)
 		g.stopOnMap(t)
 
 		t.player.LuckCards = luckList

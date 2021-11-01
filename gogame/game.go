@@ -551,6 +551,7 @@ func (g *gogame) moveAlongRoute(t *turn, n int) bool {
 func (g *gogame) jumpOnMap(t *turn, destPlace string) {
 	destDot := g.places[destPlace].Dot
 	t.player.OnDot = destDot
+	t.Moved = true
 }
 
 func (g *gogame) stopOnMap(t *turn) {
@@ -559,6 +560,9 @@ func (g *gogame) stopOnMap(t *turn) {
 	t.addEvent("stops moving")
 
 	if t.Moved {
+		t.Can, _ = stringListWithout(t.Can, "dicemove")
+		t.Can, _ = stringListWithout(t.Can, "stop")
+
 		// danger applies only when you land on it
 		onDot := g.dots[t.player.OnDot]
 		if onDot.Danger {
