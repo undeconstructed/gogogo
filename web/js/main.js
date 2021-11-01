@@ -259,6 +259,11 @@ function receiveSouvenirs(souvenirs) {
       for (let bar of div.querySelectorAll('.bar')) {
         bar.style.backgroundColor = currency.colour
       }
+      select(div, 'button').addEventListener('click', e => {
+        e.stopPropagation()
+        declareSouvenir(placeId)
+        closeSouvenirs()
+      })
       stack.append(div)
     }
 
@@ -284,9 +289,12 @@ function receiveMoney(money) {
       if (amount) {
         let currency = state.data.currencies[cId]
         let div = tmpl.cloneNode(true)
-        select(div, '.head').textContent = currency.name
+        select(div, '.head').textContent = cId // currency.name
         select(div, '.body').textContent = '' + money[cId]
         div.style.backgroundColor = currency.colour
+        // if (cId === 'ye') {
+        //   select(div, '.inner').style.backgroundImage = 'url(img/money_ye.svg)'
+        // }
         select(div, 'button').addEventListener('click', e => {
           e.stopPropagation()
           changeMoney(cId)
@@ -311,12 +319,18 @@ function receiveTurn(st) {
 
   document.body.setAttribute('canluck', false)
   document.body.setAttribute('canchangemoney', false)
+  document.body.setAttribute('mustdeclare', false)
 
-  for (let can of state.turn.can) {
-    if (can == 'useluck:*') {
+  for (let cmd of state.turn.can) {
+    if (cmd === 'useluck:*') {
       document.body.setAttribute('canluck', true)
-    } else if (can.startsWith('changemoney:')) {
+    } else if (cmd.startsWith('changemoney:')) {
       document.body.setAttribute('canchangemoney', true)
+    }
+  }
+  for (let cmd of state.turn.must) {
+    if (cmd === 'declare:*') {
+      document.body.setAttribute('mustdeclare', true)
     }
   }
 
@@ -456,7 +470,10 @@ function makePlayButtons(tgt, actions, clazz) {
     } else if (cmd === 'changemoney') {
       // can do this with the notes
       continue
-    } else if (cmd === 'dicemove') {
+    } else if (cmd === 'declare') {
+      // can do this with the cards
+      continue
+    }  else if (cmd === 'dicemove') {
       button.classList.add('dice')
       cb = r => showLogLine('you rolled a ' + r.message)
     } else if (cmd === 'gamble') {
@@ -572,6 +589,14 @@ function changeMoney(from) {
   doRequest('play', { command: `changemoney:${from}:${to}:${options}` }, cb)
 }
 
+function declareSouvenir(placeId) {
+  let cb = (e, r) => {
+    if (e) { alert(e.message); return; }
+  }
+
+  doRequest('play', { command: 'declare:'+placeId }, cb)
+}
+
 // ui manipulation
 
 function makeLuckStack() {
@@ -671,7 +696,7 @@ function openMoney() {
   let howMany = stack.querySelectorAll('.banknote').length
   let totalTurn = howMany * turn
 
-  let n = 0
+  let n = -(totalTurn/2)
   for (let note of stack.querySelectorAll('.banknote')) {
     note.style.rotate = n + 'turn'
     n += turn
@@ -758,8 +783,11 @@ function setupForTakeRisk() {
 }
 
 function setupForObeyRisk(cardId) {
+  // XXX - this will probably interrupt the turn animation
   let div = select(document, '.showrisk')
   div.classList.add('open')
+  div.classList.remove('back')
+  div.classList.remove('middle')
   div.classList.remove('blank')
 
   let card = state.data.risks[cardId]

@@ -15,7 +15,7 @@
   <script type="module" src="js/main.js"></script>
 </head>
 
-<body class="game" connected="false" started="false" ontrack="true" ticket="false" hasluck="false" canluck="false" hassouvenir="false" hasmoney="false" canchangemoney="false">
+<body class="game" connected="false" started="false" ontrack="true" ticket="false" hasluck="false" canluck="false" hassouvenir="false" hasmoney="false" canchangemoney="false" mustdeclare="false">
 
   <div class="notconnected">
     <div>
@@ -132,6 +132,7 @@
         <div class="price">600 MARKS</div>
         <div>(£60 Sterling)</div>
       </div>
+      <div class="foot"><button>[declare]</button></div>
       <div class="bar"></div>
     </div>
   </template>
@@ -141,9 +142,11 @@
 
   <template id="moneytemplate">
     <div class="banknote">
-      <div class="head"></div>
-      <div class="body"></div>
-      <div class="foot"><button>[change]</button></div>
+      <div class="inner">
+        <div class="head"></div>
+        <div class="body"></div>
+        <div class="foot"><button>[change]</button></div>
+      </div>
     </div>
   </template>
 
