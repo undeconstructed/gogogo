@@ -127,6 +127,16 @@ function receiveUpdate(st) {
   for (let pl of st.players || {}) {
     promoteCustom(pl)
 
+    // tidy up data
+    pl.souvenirs = pl.souvenirs || []
+    pl.lucks = pl.lucks || []
+    pl.money = pl.money || {}
+    for (let k in pl.money) {
+      if (pl.money[k] == 0) {
+        delete pl.money[k]
+      }
+    }
+
     let prev = state.players.get(pl.name) || {}
 
     if (pl.name == state.name) {
@@ -185,8 +195,9 @@ function receiveLucks(lucks) {
   let stack = select(document, '.lucks')
   stack.replaceChildren()
 
-  if (!lucks) {
+  if (lucks.length == 0) {
     document.body.setAttribute('hasluck', false)
+    closeLucks()
   } else {
     document.body.setAttribute('hasluck', true)
 
@@ -202,6 +213,10 @@ function receiveLucks(lucks) {
         closeLucks()
       })
       stack.append(div)
+    }
+
+    if (stack.classList.contains('open')) {
+      openlucks()
     }
   }
 }
@@ -226,8 +241,9 @@ function receiveSouvenirs(souvenirs) {
   let stack = select(document, '.souvenirs')
   stack.replaceChildren()
 
-  if (!souvenirs) {
+  if (souvenirs.length == 0) {
     document.body.setAttribute('hassouvenir', false)
+    closeSouvenirs()
   } else {
     document.body.setAttribute('hassouvenir', true)
 
@@ -245,19 +261,44 @@ function receiveSouvenirs(souvenirs) {
       }
       stack.append(div)
     }
+
+    if (stack.classList.contains('open')) {
+      openSouvenirs()
+    }
   }
 }
 
 function receiveMoney(money) {
-  let s = select(document, '.aboutme')
+  let stack = select(document, '.money')
+  stack.replaceChildren()
 
-  let md = select(s, '.money > div')
-  md.replaceChildren()
-  for (let cId in money || {}) {
-    let cName = state.data.currencies[cId].name
-    let div = document.createElement('div')
-    div.textContent = `${money[cId]} ${cName}`
-    md.append(div)
+  if (Object.keys(money).length == 0) {
+    document.body.setAttribute('hasmoney', false)
+    closeMoney()
+  } else {
+    document.body.setAttribute('hasmoney', true)
+    let tmpl = select(document, '#moneytemplate').content.firstElementChild
+
+    for (let cId in money) {
+      let amount = money[cId]
+      if (amount) {
+        let currency = state.data.currencies[cId]
+        let div = tmpl.cloneNode(true)
+        select(div, '.head').textContent = currency.name
+        select(div, '.body').textContent = '' + money[cId]
+        div.style.backgroundColor = currency.colour
+        select(div, 'button').addEventListener('click', e => {
+          e.stopPropagation()
+          changeMoney(cId)
+          closeMoney()
+        })
+        stack.append(div)
+      }
+    }
+
+    if (stack.classList.contains('open')) {
+      openMoney()
+    }
   }
 }
 
@@ -268,8 +309,16 @@ function receiveTurn(st) {
   state.turn.can = state.turn.can || []
   state.turn.must = state.turn.must || []
 
-  let canLuck = st.can ? st.can.includes('useluck:*') : false
-  document.body.setAttribute('canluck', canLuck)
+  document.body.setAttribute('canluck', false)
+  document.body.setAttribute('canchangemoney', false)
+
+  for (let can of state.turn.can) {
+    if (can == 'useluck:*') {
+      document.body.setAttribute('canluck', true)
+    } else if (can.startsWith('changemoney:')) {
+      document.body.setAttribute('canchangemoney', true)
+    }
+  }
 
   let player = state.players.get(st.player)
   document.body.setAttribute('ontrack', !st.onmap)
@@ -404,6 +453,9 @@ function makePlayButtons(tgt, actions, clazz) {
       // let placeId = parts[1]
       // showPrices(placeId)
       continue
+    } else if (cmd === 'changemoney') {
+      // can do this with the notes
+      continue
     } else if (cmd === 'dicemove') {
       button.classList.add('dice')
       cb = r => showLogLine('you rolled a ' + r.message)
@@ -501,6 +553,25 @@ function useLuck(id) {
   doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
 }
 
+function changeMoney(from) {
+  let to = ''
+  // XXX - HORRIBLE!!!
+  for (let can of state.turn.can) {
+    if (can.startsWith('changemoney:')) {
+      to = can.substring(14, 16)
+      break
+    }
+  }
+
+  let options = prompt('how much?')
+
+  let cb = (e, r) => {
+    if (e) { alert(e.message); return; }
+  }
+
+  doRequest('play', { command: `changemoney:${from}:${to}:${options}` }, cb)
+}
+
 // ui manipulation
 
 function makeLuckStack() {
@@ -510,17 +581,6 @@ function makeLuckStack() {
       openLucks()
     } else {
       closeLucks()
-    }
-  })
-}
-
-function makeSouvenirPile() {
-  let stack = select(document, '.souvenirs')
-  stack.addEventListener('click', e => {
-    if (stack.classList.contains('stashed')) {
-      openSouvenirs()
-    } else {
-      closeSouvenirs()
     }
   })
 }
@@ -553,6 +613,17 @@ function closeLucks() {
   }
 }
 
+function makeSouvenirPile() {
+  let stack = select(document, '.souvenirs')
+  stack.addEventListener('click', e => {
+    if (stack.classList.contains('stashed')) {
+      openSouvenirs()
+    } else {
+      closeSouvenirs()
+    }
+  })
+}
+
 function openSouvenirs() {
   let stack = select(document, '.souvenirs')
 
@@ -576,6 +647,45 @@ function closeSouvenirs() {
 
   for (let card of stack.querySelectorAll('.souvenircard')) {
     card.style.left = 0
+  }
+}
+
+function makeMoneyPile() {
+  let stack = select(document, '.money')
+  stack.addEventListener('click', e => {
+    if (stack.classList.contains('stashed')) {
+      openMoney()
+    } else {
+      closeMoney()
+    }
+  })
+}
+
+function openMoney() {
+  let stack = select(document, '.money')
+
+  stack.classList.remove('stashed')
+  stack.classList.add('open')
+
+  let turn = .05
+  let howMany = stack.querySelectorAll('.banknote').length
+  let totalTurn = howMany * turn
+
+  let n = 0
+  for (let note of stack.querySelectorAll('.banknote')) {
+    note.style.rotate = n + 'turn'
+    n += turn
+  }
+}
+
+function closeMoney() {
+  let stack = select(document, '.money')
+
+  stack.classList.remove('open')
+  stack.classList.add('stashed')
+
+  for (let card of stack.querySelectorAll('.banknote')) {
+    card.style.rotate = 'unset'
   }
 }
 
@@ -830,6 +940,7 @@ function setup(inData, gameId, name, colour) {
   makeButtons()
   makeLuckStack()
   makeSouvenirPile()
+  makeMoneyPile()
 
   // select(document, '.showluck').addEventListener('click', hideLuck)
   // select(document, '.showrisk').addEventListener('click', hideRisk)

@@ -15,7 +15,7 @@
   <script type="module" src="js/main.js"></script>
 </head>
 
-<body class="game" connected="false" started="false" ontrack="true" ticket="false" hasluck="false" canluck="false" hassouvenir="false">
+<body class="game" connected="false" started="false" ontrack="true" ticket="false" hasluck="false" canluck="false" hassouvenir="false" hasmoney="false" canchangemoney="false">
 
   <div class="notconnected">
     <div>
@@ -47,7 +47,6 @@
         <span class="colour"></span>
         <span class="name"></span>
       </div>
-      <div class="money dropdown">Money 🠋 <div></div></div>
     </div>
   </div>
 
@@ -138,6 +137,17 @@
   </template>
 
   <div class="souvenirs stashed">
+  </div>
+
+  <template id="moneytemplate">
+    <div class="banknote">
+      <div class="head"></div>
+      <div class="body"></div>
+      <div class="foot"><button>[change]</button></div>
+    </div>
+  </template>
+
+  <div class="money stashed">
   </div>
 
 </body>

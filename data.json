@@ -274,6 +274,7 @@
   "currencies": {
     "tc": {
       "name": "Traveller's Cheque",
+      "colour": "#333",
       "rate": 10,
       "units": [ 200 ]
     },

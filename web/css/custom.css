@@ -360,7 +360,7 @@ body {
 .card .foot button {
   border: 0;
   background: transparent;
-  color: black;
+  color: inherit;
 }
 
 .luckcard {
@@ -562,4 +562,61 @@ body {
 }
 .souvenirs.open .souvenircard:hover {
   z-index: 1000;
+}
+
+.banknote {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  border: .5rem solid white;
+  color: white;
+}
+.banknote .body {
+  font-size: 300%;
+}
+.banknote .foot button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  visibility: hidden;
+}
+
+.money {
+  position: absolute;
+  width: 24rem;
+  height: 11rem;
+  transition: right .5s, rotate .5s, bottom .5s;
+}
+.game[hasmoney=false] .money {
+  display: none;
+}
+.money.stashed {
+  right: -5rem;
+  bottom: -10rem;
+  rotate: .15turn;
+  transform-origin: center;
+  cursor: pointer;
+  box-shadow: 0px 0px 5px 0px #000000;
+}
+.money.stashed:hover {
+  bottom: -8rem;
+}
+.money.open {
+  right: 10rem;
+  bottom: 10rem;
+}
+.money .banknote {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  transition: rotate .5s;
+}
+.money.open .banknote {
+  box-shadow: 0px 0px 5px 0px #000000;
+}
+.money.open .banknote:hover {
+  z-index: 1000;
+}
+.game[canchangemoney=true] .money.open .banknote .foot button {
+  visibility: visible !important;
 }
