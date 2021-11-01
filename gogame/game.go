@@ -518,20 +518,30 @@ func (g *gogame) dotIsFree(dotId string) bool {
 }
 
 func (g *gogame) moveAlongRoute(t *turn, n int) bool {
-	need := len(t.player.Ticket.Route)
+	route := t.player.Ticket.Route
+	atNow := t.player.OnDot
+	toGo := route[:]
+	for i, x := range route {
+		if atNow == x {
+			toGo = route[i+1:]
+			break
+		}
+	}
+
+	need := len(toGo)
 	if n > need {
 		// overshot
 		t.addEventf("tries to move %d, but overshoots", n)
 		return false
 	} else if n == need {
 		// reached
-		t.player.OnDot = t.player.Ticket.Route[need-1]
+		t.player.OnDot = toGo[need-1]
 		t.player.Ticket = nil
 		t.Moved = true
 		t.addEventf("moves %d and arrives", n)
 		return true
 	} else {
-		wouldDot := t.player.Ticket.Route[n-1]
+		wouldDot := toGo[n-1]
 		isFree := g.dotIsFree(wouldDot)
 		if !isFree {
 			t.Moved = true
@@ -540,7 +550,6 @@ func (g *gogame) moveAlongRoute(t *turn, n int) bool {
 		}
 
 		t.player.OnDot = wouldDot
-		t.player.Ticket.Route = t.player.Ticket.Route[n:]
 		t.Moved = true
 
 		t.addEventf("moves %d", n)
@@ -610,8 +619,6 @@ func (g *gogame) makeTicket(from, to, modes string) (ticket, error) {
 	if len(route) < 2 {
 		return ticket{}, fmt.Errorf("no route %s %s %s", from, to, modes)
 	}
-	// should be already at the first dot
-	route = route[1:]
 
 	return ticket{
 		Mode:     modes,
