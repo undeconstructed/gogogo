@@ -233,6 +233,80 @@ body {
   background: transparent url("../img/bedtime.svg") no-repeat center/contain;
 }
 
+.stopbutton {
+  position: absolute;
+  top: 50vh;
+  left: 15rem;
+  width: 11rem;
+  height: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: .7;
+}
+.stopbutton.open {
+  display: flex;
+}
+.stopbutton:hover {
+  opacity: 1;
+}
+.stopbutton .button {
+  border-radius: 0 50% 50% 0;
+  background-color: white;
+  width: 11rem;
+  height: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid black;
+  border-left: 0;
+  cursor: pointer;
+  font-size: 200%;
+  padding-left: 3rem;
+}
+
+.sleepbutton {
+  display: none;
+  position: absolute;
+  bottom: 2rem;
+  left: 16rem;
+  height: 14rem;
+  width: 14rem;
+  opacity: .6;
+  cursor: pointer;
+  background: transparent url("../img/bedtime.svg") no-repeat center/contain;
+}
+.sleepbutton.open {
+  display: block;
+}
+.sleepbutton:hover {
+  opacity: 1;
+}
+
+.dicebutton {
+  display: none;
+  position: absolute;
+  left: 50vw;
+  bottom: 8em;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: .6;
+  cursor: pointer;
+}
+.dicebutton.open {
+  display: flex;
+}
+.dicebutton:hover {
+  opacity: 1;
+}
+.dicebutton .button {
+  flex: 0 0 auto;
+  width: 15rem;
+  height: 15rem;
+  background: transparent url("../img/dice.svg") no-repeat center/contain;
+}
+
 .showmessage {
   z-index: 1000;
   display: none;
@@ -562,6 +636,7 @@ body {
 .souvenirs .souvenircard {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
+  transition: left .5s;
 }
 .souvenirs.open .souvenircard {
   box-shadow: 0px 0px 5px 0px #000000;

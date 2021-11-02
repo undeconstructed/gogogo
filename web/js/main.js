@@ -2,7 +2,12 @@
 // utils
 
 function select(parent, selector) {
-  return parent.querySelector(selector)
+  let e = parent.querySelector(selector)
+  if (e == null) {
+    console.log('null', parent, selector)
+    return
+  }
+  return e
 }
 
 // state
@@ -320,12 +325,21 @@ function receiveTurn(st) {
   document.body.setAttribute('canluck', false)
   document.body.setAttribute('canchangemoney', false)
   document.body.setAttribute('mustdeclare', false)
+  hideDiceButton()
+  hideStopButton()
+  hideSleepButton()
 
   for (let cmd of state.turn.can) {
     if (cmd === 'useluck:*') {
       document.body.setAttribute('canluck', true)
     } else if (cmd.startsWith('changemoney:')) {
       document.body.setAttribute('canchangemoney', true)
+    } else if (cmd === 'dicemove') {
+      showDiceButton()
+    } else if (cmd === 'stop') {
+      showStopButton()
+    } else if (cmd === 'end') {
+      showSleepButton()
     }
   }
   for (let cmd of state.turn.must) {
@@ -473,9 +487,12 @@ function makePlayButtons(tgt, actions, clazz) {
     } else if (cmd === 'declare') {
       // can do this with the cards
       continue
-    }  else if (cmd === 'dicemove') {
-      button.classList.add('dice')
-      cb = r => showLogLine('you rolled a ' + r.message)
+    } else if (cmd === 'dicemove' || cmd === 'stop' || cmd === 'end') {
+      // there's a big button somewhere
+      continue
+    } else if (cmd === 'dicemove') {
+      // button.classList.add('dice')
+      // cb = r => showLogLine('you rolled a ' + r.message)
     } else if (cmd === 'gamble') {
       button.classList.add('dice')
       cb = r => showLogLine('you gambled a ' + r.message)
@@ -596,6 +613,31 @@ function declareSouvenir(placeId) {
   }
 
   doRequest('play', { command: 'declare:'+placeId }, cb)
+}
+
+function doDiceMove() {
+  let cb = (e, r) => {
+    if (e) { alert(e.message); return; }
+    showLogLine('you rolled a ' + r.message)
+  }
+
+  doRequest('play', { command: 'dicemove' }, cb)
+}
+
+function doStop() {
+  let cb = (e, r) => {
+    if (e) { alert(e.message); return; }
+  }
+
+  doRequest('play', { command: 'stop' }, cb)
+}
+
+function doEnd() {
+  let cb = (e, r) => {
+    if (e) { alert(e.message); return; }
+  }
+
+  doRequest('play', { command: 'end' }, cb)
 }
 
 // ui manipulation
@@ -931,6 +973,59 @@ function hidePrices() {
   ele.classList.remove('open')
 }
 
+function makeStopButton() {
+  let div = select(document, '.stopbutton')
+  div.addEventListener('click', e => {
+    doStop()
+    hideStopButton()
+  })
+}
+
+function showStopButton() {
+  let div = select(document, '.stopbutton')
+  div.classList.add('open')
+}
+
+function hideStopButton() {
+  let div = select(document, '.stopbutton')
+  div.classList.remove('open')
+}
+
+function makeSleepButton() {
+  let div = select(document, '.sleepbutton')
+  div.addEventListener('click', e => {
+    doEnd()
+    hideSleepButton()
+  })
+}
+
+function showSleepButton() {
+  let div = select(document, '.sleepbutton')
+  div.classList.add('open')
+}
+
+function hideSleepButton() {
+  let div = select(document, '.sleepbutton')
+  div.classList.remove('open')
+}
+
+function makeDiceButton() {
+  let div = select(document, '.dicebutton')
+  div.addEventListener('click', e => {
+    doDiceMove()
+    hideDiceButton()
+  })
+}
+
+function showDiceButton() {
+  let div = select(document, '.dicebutton')
+  div.classList.add('open')
+}
+
+function hideDiceButton() {
+  let div = select(document, '.dicebutton')
+  div.classList.remove('open')
+}
 // game setup
 
 function fixupData(indata) {
@@ -965,10 +1060,15 @@ function setup(inData, gameId, name, colour) {
 
   makeSquares(state.data)
   plot(state.data)
+  scrollingMap()
   makeButtons()
   makeLuckStack()
   makeSouvenirPile()
   makeMoneyPile()
+
+  makeStopButton()
+  makeSleepButton()
+  makeDiceButton()
 
   // select(document, '.showluck').addEventListener('click', hideLuck)
   // select(document, '.showrisk').addEventListener('click', hideRisk)
@@ -1070,6 +1170,31 @@ function plot(data) {
   for (let pointId in data.dots) {
     drawPoint(pointId, data.dots[pointId])
   }
+}
+
+function scrollingMap() {
+  let pos = { top: 0, left: 0, x: 0, y: 0 }
+  let map = select(document, '.map')
+  map.addEventListener('mousedown', e => {
+    pos.top = map.scrollTop
+    pos.left = map.scrollLeft
+    pos.x = e.clientX
+    pos.y = e.clientY
+
+    let end = new AbortController()
+
+    document.addEventListener('mousemove', e => {
+      e.stopPropagation()
+      let dx = e.clientX - pos.x
+      let dy = e.clientY - pos.y
+      map.scrollLeft = pos.left - dx
+      map.scrollTop = pos.top - dy
+    }, { signal: end.signal, capture: true  })
+    document.addEventListener('mouseup', e => {
+      e.stopPropagation()
+      end.abort()
+    }, { once: true, capture: true })
+  })
 }
 
 // showing messages
