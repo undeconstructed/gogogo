@@ -216,7 +216,7 @@ function receiveLucks(lucks) {
     }
 
     if (stack.classList.contains('open')) {
-      openlucks()
+      openLucks()
     }
   }
 }
@@ -491,6 +491,7 @@ function makePlayButtons(tgt, actions, clazz) {
       continue
     } else if (cmd === 'ignorerisk') {
       // only happens when obey is also enabled
+      continue
     } else if (cmd === 'buysouvenir') {
       button.classList.add('buysouvenir')
       // we know this command is complete, so no prompt
@@ -812,8 +813,7 @@ function setupForObeyRisk(cardId) {
       }
       doRequest('play', { command: 'ignorerisk:'+cardId }, cb)
     }, { once: true })
-
-    buttons.push(obeyButton)
+    buttons.push(ignoreButton)
   }
 
   if (state.turn.must.includes('obeyrisk:'+cardId)) {
@@ -1158,6 +1158,6 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 
   window.cheat = function(cmd) {
-    doRequest('play', { command: cmd }, console.log)
+    doRequest('play', { command: 'cheat', options: cmd }, console.log)
   }
 })

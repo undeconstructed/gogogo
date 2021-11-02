@@ -285,6 +285,9 @@ func (t *trackSquare) ParseOptions() []OptionI {
 	for _, option := range t.Options {
 		ss := strings.SplitN(option, ":", 2)
 		switch ss[0] {
+		case "auto":
+			cmd := ss[1]
+			out = append(out, OptionAuto{ctxt, game.CommandPattern(cmd)})
 		case "can":
 			cmd := ss[1]
 			out = append(out, OptionCan{ctxt, game.CommandPattern(cmd)})
@@ -318,15 +321,20 @@ type optionS struct{}
 
 func (optionS) x() {}
 
-type OptionGo struct {
+type OptionAuto struct {
 	optionS
-	Dest     string
-	Forwards bool
+	Cmd game.CommandPattern
 }
 
 type OptionCan struct {
 	optionS
 	Cmd game.CommandPattern
+}
+
+type OptionGo struct {
+	optionS
+	Dest     string
+	Forwards bool
 }
 
 type OptionMust struct {

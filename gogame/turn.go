@@ -166,18 +166,6 @@ func (g *gogame) turn_dicemove(t *turn, c game.CommandPattern, args []string) (i
 	return roll, nil
 }
 
-func (g *gogame) turn_gainlocal10(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
-	currencyId := g.places[g.dots[t.player.OnDot].Place].Currency
-	currency := g.currencies[currencyId]
-	amount := 10 * currency.Rate
-	g.moveMoney(g.bank.Money, t.player.Money, currencyId, amount)
-
-	t.Can, _ = stringListWithout(t.Can, string(c))
-
-	t.addEventf("just finds %d %s", amount, currency.Name)
-	return nil, nil
-}
-
 func (g *gogame) turn_gamble(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	currency := args[0]
 	amount, _ := strconv.Atoi(args[1])
@@ -202,11 +190,28 @@ func (g *gogame) turn_gamble(t *turn, c game.CommandPattern, args []string) (int
 	}
 }
 
+func (g *gogame) turn_getmoney(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	currencyId := args[0]
+	currency := g.currencies[currencyId]
+	baseAmount, _ := strconv.Atoi(args[1])
+	amount := baseAmount * currency.Rate
+
+	g.moveMoney(g.bank.Money, t.player.Money, currencyId, amount)
+
+	t.Can, _ = stringListWithout(t.Can, string(c))
+
+	t.addEventf("just finds %d %s", amount, currency.Name)
+	return nil, nil
+}
+
 func (g *gogame) turn_insurance(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	// TODO - someone needs to pay for this
 
 	t.player.Insurance = true
 
+	t.Can, _ = stringListWithout(t.Can, string(c))
+
+	t.addEventf("acquires an insurance policy")
 	return nil, nil
 }
 
@@ -266,7 +271,7 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	case RiskMiss:
 		t.player.MissTurns += code.N
 	case RiskMust:
-		cmd := code.Cmd.Sub(g.makeSubs())
+		cmd := code.Cmd.Sub(g.makeSubs(t))
 		t.Must = append(t.Must, string(cmd))
 	case RiskStart:
 		dest := t.player.Ticket.From
@@ -290,6 +295,24 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	return nil, nil
+}
+
+func (g *gogame) turn_moven(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	n, _ := strconv.Atoi(args[0])
+
+	if t.OnMap {
+		g.moveOnMap(t, n)
+		if t.Stopped {
+			t.Can, _ = stringListWithout(t.Can, "stop")
+		} else {
+			t.Can, _ = stringListWith(t.Can, "stop")
+		}
+	} else {
+		g.moveOnTrack(t, n)
+		t.Can, _ = stringListWith(t.Can, "stop")
+	}
+
+	return n, nil
 }
 
 func (g *gogame) turn_pay(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
@@ -345,7 +368,7 @@ func (g *gogame) turn_takeluck(t *turn, c game.CommandPattern, args []string) (i
 
 	switch code := card.ParseCode().(type) {
 	case LuckCan:
-		can := code.Can.Sub(g.makeSubs())
+		can := code.Can.Sub(g.makeSubs(t))
 		t.Can = append(t.Can, string(can))
 	case LuckGo:
 		g.jumpOnTrack(t, code.Dest, true)
@@ -403,7 +426,7 @@ func (g *gogame) turn_takerisk(t *turn, c game.CommandPattern, args []string) (i
 
 	t.Must = append(t.Must, fmt.Sprintf("obeyrisk:%d", cardId))
 	if t.player.Insurance {
-		t.Must = append(t.Must, fmt.Sprintf("ignorerisk:%d", cardId))
+		t.Can = append(t.Can, fmt.Sprintf("ignorerisk:%d", cardId))
 	}
 
 	return cardId, nil
@@ -531,5 +554,17 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		panic("bad luck card " + card.Code)
 	}
 
+	return nil, nil
+}
+
+func (g *gogame) turn_end(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	if !t.Stopped {
+		return nil, game.ErrNotStopped
+	}
+	if len(t.Must) > 0 {
+		return nil, game.ErrMustDo
+	}
+	g.toNextPlayer()
+	t.addEvent("goes to sleep")
 	return nil, nil
 }

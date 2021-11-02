@@ -25,7 +25,9 @@
       "help": "<place> | none"
     },
     "dicemove": {},
-    "gainlocal10": {},
+    "getmoney": {
+      "help": "<currency> <amount>"
+    },
     "gamble": {
       "help": "<currency> <amount>"
     },
@@ -57,7 +59,7 @@
       "type": "curspec",
       "name": "Currency speculation - receive £100 from the bank in the currency of the country you are visiting",
       "options": [
-        "can:gainlocal10"
+        "auto:getmoney:<lc>:10"
       ]
     },
     {

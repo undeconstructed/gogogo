@@ -14,6 +14,14 @@ func (c CommandString) First() string {
 // CommandPattern defines something that is allowed
 type CommandPattern string
 
+func (c CommandPattern) First() string {
+	return strings.SplitN(string(c), ":", 2)[0]
+}
+
+func (c CommandPattern) Parts() []string {
+	return strings.Split(string(c), ":")
+}
+
 func (p CommandPattern) Sub(subs map[string]string) CommandPattern {
 	s := string(p)
 	for f, t := range subs {
@@ -46,7 +54,7 @@ func (p CommandPattern) Match(c CommandString) []string {
 // Command is what the client sends?
 type Command struct {
 	Command CommandString `json:"command"`
-	// Options string        `json:"options"`
+	Options string        `json:"options"`
 }
 
 type CommandResult struct {

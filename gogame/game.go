@@ -45,8 +45,8 @@ func NewGame(data GameData) game.Game {
 	g.cmds["changemoney"] = g.turn_changemoney
 	g.cmds["declare"] = g.turn_declare
 	g.cmds["dicemove"] = g.turn_dicemove
-	g.cmds["gainlocal10"] = g.turn_gainlocal10
 	g.cmds["gamble"] = g.turn_gamble
+	g.cmds["getmoney"] = g.turn_getmoney
 	g.cmds["ignorerisk"] = g.turn_ignorerisk
 	g.cmds["insurance"] = g.turn_insurance
 	g.cmds["obeyrisk"] = g.turn_obeyrisk
@@ -56,7 +56,9 @@ func NewGame(data GameData) game.Game {
 	g.cmds["takeluck"] = g.turn_takeluck
 	g.cmds["takerisk"] = g.turn_takerisk
 	g.cmds["useluck"] = g.turn_useluck
-	g.cmds["end"] = g.doEnd
+	g.cmds["end"] = g.turn_end
+	// never allowed without cheating:
+	g.cmds["moven"] = g.turn_moven
 
 	// import data
 
@@ -269,7 +271,13 @@ func (g *gogame) Play(player string, c game.Command) (game.PlayResult, error) {
 }
 
 func (g *gogame) doPlay(t *turn, c game.Command) (interface{}, error) {
-	handler, ok := g.cmds[c.Command.First()]
+	cmd := c.Command.First()
+	if cmd == "cheat" {
+		cmd1 := game.CommandPattern(c.Options)
+		return g.doAutoCommand(t, cmd1)
+	}
+
+	handler, ok := g.cmds[cmd]
 	if !ok {
 		return nil, errors.New("bad command: " + string(c.Command))
 	}
@@ -296,16 +304,15 @@ func (g *gogame) doPlay(t *turn, c game.Command) (interface{}, error) {
 	return handler(t, pattern, args[1:])
 }
 
-func (g *gogame) doEnd(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
-	if !t.Stopped {
-		return nil, game.ErrNotStopped
+// if a command pattern is complete, it can be run as a command
+func (g *gogame) doAutoCommand(t *turn, cmd game.CommandPattern) (interface{}, error) {
+	handler, ok := g.cmds[cmd.First()]
+	if !ok {
+		return nil, errors.New("bad command: " + string(cmd))
 	}
-	if len(t.Must) > 0 {
-		return nil, game.ErrMustDo
-	}
-	g.toNextPlayer()
-	t.addEvent("goes to sleep")
-	return nil, nil
+
+	args := cmd.Parts()
+	return handler(t, cmd, args[1:])
 }
 
 func (g *gogame) GetTurnState() game.TurnState {
@@ -429,13 +436,24 @@ func (g *gogame) passGo(t *turn) {
 	t.addEvent("passes go")
 }
 
-func (g *gogame) makeSubs() map[string]string {
+func (g *gogame) makeSubs(t *turn) map[string]string {
 	subs := map[string]string{}
-	do := g.dots[g.turn.player.OnDot]
-	pl, ok := g.places[do.Place]
+
+	dot := g.dots[t.player.OnDot]
+	placeId := dot.Place
+	place, ok := g.places[placeId]
 	if ok {
-		subs["<lp>"] = do.Place
-		subs["<lc>"] = pl.Currency
+		subs["<lp>"] = placeId
+		// if in a place, currency is of the place
+		subs["<lc>"] = place.Currency
+	} else {
+		// if moving, then currency is ticket's start point? what if lost ticket?
+		placeId = t.player.Ticket.From
+		place, ok = g.places[placeId]
+		if ok {
+			subs["<lp>"] = placeId
+			subs["<lc>"] = place.Currency
+		}
 	}
 	return subs
 }
@@ -448,20 +466,26 @@ func (g *gogame) stopOnTrack(t *turn) {
 
 	for _, o := range square.ParseOptions() {
 		switch option := o.(type) {
-		case OptionMust:
-			cmd := option.Cmd.Sub(g.makeSubs())
-			t.Must = append(t.Must, string(cmd))
+		case OptionAuto:
+			cmd := option.Cmd.Sub(g.makeSubs(t))
+			_, err := g.doAutoCommand(t, cmd)
+			if err != nil {
+				log.Error().Err(err).Msgf("auto command error: %s", cmd)
+			}
 		case OptionCan:
-			cmd := option.Cmd.Sub(g.makeSubs())
+			cmd := option.Cmd.Sub(g.makeSubs(t))
 			t.Can = append(t.Can, string(cmd))
-		case OptionMiss:
-			t.player.MissTurns += option.N
-			t.addEventf("will miss %d turns", option.N)
 		case OptionGo:
 			g.jumpOnTrack(t, option.Dest, option.Forwards)
 			// recurse, to get effects of the new location
 			t.addEventf("jumps to %s", option.Dest)
 			g.stopOnTrack(t)
+		case OptionMiss:
+			t.player.MissTurns += option.N
+			t.addEventf("will miss %d turns", option.N)
+		case OptionMust:
+			cmd := option.Cmd.Sub(g.makeSubs(t))
+			t.Must = append(t.Must, string(cmd))
 		case OptionCode:
 			panic("unhandled option " + option.Code)
 		}
@@ -584,6 +608,8 @@ func (g *gogame) stopOnMap(t *turn) {
 
 			// new city, can buy souvenir again
 			t.player.HasBought = false
+			// but insurance has expired
+			t.player.Insurance = false
 
 			if g.settings.Home == placeId && len(t.player.Souvenirs) >= g.settings.Goal {
 				t.addEvent("wins the game!")
@@ -635,7 +661,6 @@ func (g *gogame) loseTicket(t *turn, badly bool) {
 		t.LostTicket = t.player.Ticket
 	}
 
-	t.player.Insurance = false
 	t.player.Ticket = nil
 }
 
