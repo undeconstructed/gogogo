@@ -155,7 +155,7 @@
       "type": "customs1",
       "name": "Customs - pay £100 duty (in any currency)",
       "options": [
-        "must:pay:*:10"
+        "must:paycustoms"
       ]
     },
     {
@@ -2442,7 +2442,7 @@
     },
     {
       "name": "Customs - One souvenir confiscated.",
-      "code": "must:declare"
+      "code": "must:declare:*"
     }
   ]
 }

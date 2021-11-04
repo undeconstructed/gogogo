@@ -51,6 +51,7 @@ func NewGame(data GameData) game.Game {
 	g.cmds["insurance"] = g.turn_insurance
 	g.cmds["obeyrisk"] = g.turn_obeyrisk
 	g.cmds["pay"] = g.turn_pay
+	g.cmds["paycustoms"] = g.turn_paycustoms
 	g.cmds["quarantine"] = g.turn_quarantine
 	g.cmds["stop"] = g.turn_stop
 	g.cmds["takeluck"] = g.turn_takeluck

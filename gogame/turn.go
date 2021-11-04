@@ -323,6 +323,14 @@ func (g *gogame) turn_pay(t *turn, c game.CommandPattern, args []string) (interf
 	return nil, nil
 }
 
+func (g *gogame) turn_paycustoms(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	// TODO - this just removes the must
+	t.Must, _ = stringListWithout(t.Must, string(c))
+
+	t.addEvent("customs is a problem")
+	return nil, nil
+}
+
 func (g *gogame) turn_quarantine(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	t.player.MissTurns++
 

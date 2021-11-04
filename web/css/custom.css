@@ -52,7 +52,7 @@ body {
   align-items: center;
   background: #ffffffaa;
 }
-.game[started=true] .nostate {
+.nostate.hide {
   display: none;
 }
 .nostate button {
@@ -91,9 +91,7 @@ body {
   align-items: center;
   gap: .5em;
   cursor: default;
-}
-.game[started=false] .state {
-  display: none;
+  /* z-index: 100; */
 }
 .state > div {
   padding: 1rem;
@@ -125,7 +123,7 @@ body {
   background-color: black;
   box-shadow: 0px 0px 5px 0px #000000;
 }
-.game[ontrack=true] .squares {
+.squares.focus {
   opacity: 1;
 }
 .squares:hover {
@@ -293,6 +291,7 @@ body {
   justify-content: center;
   opacity: .6;
   cursor: pointer;
+  transition: opacity .5s;
 }
 .dicebutton.open {
   display: flex;
@@ -305,6 +304,33 @@ body {
   width: 15rem;
   height: 15rem;
   background: transparent url("../img/dice.svg") no-repeat center/contain;
+}
+
+.gamblebutton {
+  display: none;
+  position: absolute;
+  left: 50vw;
+  bottom: 50vh;
+  width: 0;
+  height: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: .6;
+  cursor: pointer;
+  transition: opacity .5s;
+}
+.gamblebutton.open {
+  display: flex;
+}
+.gamblebutton:hover {
+  opacity: 1;
+}
+.gamblebutton .button {
+  flex: 0 0 auto;
+  width: 40rem;
+  height: 40rem;
+  background: center / 10rem no-repeat url("../img/dice.svg"), center / contain no-repeat url("../img/roulette-wheel.svg");
 }
 
 .showmessage {
@@ -352,9 +378,6 @@ body {
   bottom: 4rem;
   width: 9rem;
 }
-.game[candice=false] .showdice {
-  display: none;
-}
 .showdice.open {
   display: block;
 }
@@ -392,7 +415,7 @@ body {
   padding: 1em;
   box-shadow: 0px 0px 5px 0px #000000;
 }
-.game[ticket=false] .ticket {
+.ticket.empty {
   display: none;
 }
 .ticket:hover {
@@ -455,7 +478,7 @@ body {
   height: 12rem;
   transition: right .5s, rotate .5s, bottom .5s;
 }
-.game[hasluck=false] .lucks {
+.lucks.empty {
   display: none;
 }
 .lucks.stashed {
@@ -485,7 +508,7 @@ body {
 .lucks.open .luckcard:hover {
   z-index: 1000;
 }
-.game[canluck=true] .lucks.open .luckcard .foot button {
+.lucks.open.canluck .luckcard .foot button {
   visibility: visible !important;
 }
 
@@ -511,7 +534,10 @@ body {
 }
 .showcard .card {
   box-shadow: 0px 0px 5px 0px #000000;
-  transition: rotate .5s;
+  transition: rotate 1s;
+}
+.showcard .card > div {
+  transition: visibility 0s steps(1, jump-both) .5s;
 }
 .showcard.back .button {
   display: flex;
@@ -522,28 +548,80 @@ body {
 .showcard.back .card {
   rotate: x .5turn;
 }
-.showcard.middle .card {
-  rotate: x .25turn;
-}
 .showcard.blank .card > div {
   visibility: hidden;
 }
 
+.rates {
+  position: absolute;
+  left: 20rem;
+  top: -16rem;
+  background-color: #fdf3d7;
+  width: 50em;
+  height: 20em;
+  rotate: -.01turn;
+  transition: top .5s;
+  font-family: serif;
+  display: flex;
+  flex-flow: column;
+  row-gap: .5rem;
+  padding: 1rem;
+}
+.rates:hover {
+  top: -1rem;
+}
+.rates .head {
+  text-align: center;
+  text-decoration: underline;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.rates .body {
+  flex: 1;
+}
+.rates .body table {
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  text-align: center;
+  table-layout: fixed;
+}
+.rates .body thead {
+  border-bottom: 1px solid black;
+}
+.rates .body th {
+  font-weight: normal;
+  padding: .5em;
+  width: calc(100%/7);
+}
+.rates .body td+td, .rates .body th+th {
+  border-left: 1px solid black;
+}
+.rates .foot {
+  text-align: center;
+  font-weight: bold;
+  font-size: smaller;
+}
+
 .prices {
   position: absolute;
-  left: 0;
-  width: 0;
+  left: -25rem;
+  width: 25rem;
   top: 10rem;
   height: 35rem;
-  rotate: -.05turn;
   transition: left .5s, width .5s, rotate .5s;
   background-color: #fdf3d7;
-  overflow: auto;
+  display: flex;
+  flex-flow: column;
+  overflow: hidden;
+  font-size: smaller;
+}
+.prices.canbuy {
+  rotate: -.01turn;
+  left: -15rem;
 }
 .prices.open {
-  /* rotate: unset; */
+  rotate: -.05turn;
   left: 20rem;
-  width: 25rem;
 }
 .prices > * {
   width: 25rem;
@@ -556,6 +634,11 @@ body {
 }
 .prices .body {
   padding: 1em;
+  overflow: auto;
+  flex: 1;
+}
+.prices .sep {
+  height: 1rem;
 }
 .prices table {
   width: 100%;
@@ -604,7 +687,7 @@ body {
 .souvenircard .foot button {
   visibility: hidden;
 }
-.game[mustdeclare=true] .souvenirs.open .souvenircard .foot button {
+.souvenirs.open.mustdeclare .souvenircard .foot button {
   visibility: visible !important;
 }
 
@@ -614,7 +697,7 @@ body {
   height: 18rem;
   transition: right .5s, rotate .5s, bottom .5s;
 }
-.game[hassouvenir=false] .souvenirs {
+.souvenirs.empty {
   display: none;
 }
 .souvenirs.stashed {
@@ -683,13 +766,16 @@ body {
   visibility: hidden;
 }
 
+.banknote.tc {
+}
+
 .money {
   position: absolute;
   width: 24rem;
   height: 11rem;
   transition: right .5s, rotate .5s, bottom .5s;
 }
-.game[hasmoney=false] .money {
+.money.empty {
   display: none;
 }
 .money.stashed {
@@ -718,6 +804,12 @@ body {
 .money.open .banknote:hover {
   z-index: 1000;
 }
-.game[canchangemoney=true] .money.open .banknote .foot button {
+.money.open.canchange .banknote .foot button.change {
+  visibility: visible !important;
+}
+.money.open.cangamble .banknote .foot button.gamble {
+  visibility: visible !important;
+}
+.money.open.canpay .banknote .foot button.pay {
   visibility: visible !important;
 }

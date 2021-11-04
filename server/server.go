@@ -73,6 +73,7 @@ type oneGame struct {
 	name    string
 	game    game.Game
 	turn    *game.TurnState
+	dirty   bool
 	clients map[string]*clientBundle
 	log     zerolog.Logger
 }
@@ -95,9 +96,12 @@ func (s *server) Run() error {
 
 		g, news := s.processMessage(in)
 
-		if len(news) > 0 {
+		if g != nil && g.dirty {
 			s.saveGame(g)
+			g.dirty = false
+		}
 
+		if g != nil && len(news) > 0 {
 			state := g.game.GetGameState()
 			update := game.GameUpdate{News: news, Status: state.Status, Playing: state.Playing, Players: state.Players}
 			msg, err := comms.Encode("update", update)
@@ -143,17 +147,20 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 			msg.Rep <- err
 			return nil, nil
 		}
-		s.games[msg.Name] = &oneGame{
+
+		gameholder := &oneGame{
 			name:    msg.Name,
 			game:    game,
 			clients: map[string]*clientBundle{},
 			log:     log,
 		}
 
+		s.games[msg.Name] = gameholder
+
 		log.Info().Msg("created")
 
 		msg.Rep <- nil
-		return nil, nil
+		return gameholder, nil
 	case connectMsg:
 		g, ok := s.games[msg.Game]
 		if !ok {
@@ -191,6 +198,8 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 			g.clients[msg.Name] = &msg.Client
 			msg.Rep <- nil
 
+			g.dirty = true
+
 			return g, []game.Change{{
 				Who:  msg.Name,
 				What: "joins",
@@ -222,6 +231,7 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 		if turn != nil {
 			// XXX - could this become nil intentionally at the end?
 			g.turn = turn
+			g.dirty = false
 		}
 
 		return g, news
