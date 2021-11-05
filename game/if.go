@@ -26,6 +26,7 @@ type TurnState struct {
 type GameState struct {
 	Status  GameStatus    `json:"status"`
 	Playing string        `json:"playing"`
+	Winner  string        `json:"winner"`
 	Players []PlayerState `json:"players"`
 
 	Custom interface{} `json:"custom"`

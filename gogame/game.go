@@ -32,6 +32,7 @@ type gogame struct {
 	players []player
 	turnNo  int
 	turn    *turn
+	winner  string
 }
 
 func NewGame(data GameData) game.Game {
@@ -177,6 +178,7 @@ func NewFromSaved(data GameData, r io.Reader) (game.Game, error) {
 	for _, pl0 := range save.Players {
 		g.players = append(g.players, pl0)
 	}
+	g.winner = save.Winner
 	// replace bank balance with saved
 	g.bank = save.Bank
 	// replace card piles with saved
@@ -349,7 +351,9 @@ func (g *gogame) GetGameState() game.GameState {
 		}
 	}
 
-	if playing == "" {
+	if g.winner != "" {
+		status = game.StatusWon
+	} else if playing == "" {
 		status = game.StatusUnstarted
 	}
 
@@ -390,6 +394,7 @@ func (g *gogame) GetGameState() game.GameState {
 	return game.GameState{
 		Status:  status,
 		Playing: playing,
+		Winner:  g.winner,
 		Players: players,
 	}
 }
@@ -398,6 +403,7 @@ func (g *gogame) WriteOut(w io.Writer) error {
 
 	out := gameSave{
 		Players: g.players,
+		Winner:  g.winner,
 		Bank:    g.bank,
 		Lucks:   []int(g.luckPile),
 		Risks:   []int(g.riskPile),
@@ -623,6 +629,7 @@ func (g *gogame) stopOnMap(t *turn) {
 
 			if g.settings.Home == placeId && len(t.player.Souvenirs) >= g.settings.Goal {
 				t.addEvent("wins the game!")
+				g.winner = t.player.Name
 			}
 		}
 	}

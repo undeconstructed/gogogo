@@ -59,6 +59,7 @@ type action struct {
 // gameSave is container for saving all changing
 type gameSave struct {
 	Players []player `json:"players"`
+	Winner  string   `json:"winner"`
 	Bank    bank     `json:"bank"`
 	Lucks   []int    `json:"lucks"`
 	Risks   []int    `json:"risks"`

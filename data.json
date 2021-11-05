@@ -16,34 +16,34 @@
       "help": "<place>"
     },
     "buyticket": {
-      "help": "<from> <to> <modes>"
+      "help": "<from>:<to>:<modes>"
     },
     "changemoney": {
-      "help": "<from> <to> <amount(from)>"
+      "help": "<from>:<to>:<amount(from)>"
     },
     "declare": {
-      "help": "<place> | none"
+      "help": "<place>|none"
     },
     "dicemove": {},
     "getmoney": {
-      "help": "<currency> <amount>"
+      "help": "<currency>:<amount>"
     },
     "gamble": {
-      "help": "<currency> <amount>"
+      "help": "<currency>:<amount>"
     },
     "insurance": {},
     "obeyrisk": {
       "help": "<cardId>"
     },
     "pay": {
-      "help": "<currency> <amount>"
+      "help": "<currency>:<amount>"
     },
     "quarantine": {},
     "stop": {},
     "takeluck": {},
     "takerisk": {},
     "useluck": {
-      "help": "<cardId> <args>"
+      "help": "<cardId>:<args> <cmd>"
     },
     "end": {}
   },

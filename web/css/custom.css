@@ -835,3 +835,25 @@ body {
 .debt.show {
   display: block;
 }
+
+.win {
+  position: absolute;
+  top: 6rem;
+  left: 50vw;
+  width: 0;
+  justify-content: center;
+  display: none;
+}
+.win.show {
+  display: flex;
+}
+.win .inner {
+  font-size: 3rem;
+  color: white;
+  text-align: center;
+  overflow-wrap: normal;
+  background: #fff3;
+  border-radius: .5em;
+  padding: 1rem;
+  min-width: 20rem;
+}

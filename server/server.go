@@ -103,7 +103,7 @@ func (s *server) Run() error {
 
 		if g != nil && len(news) > 0 {
 			state := g.game.GetGameState()
-			update := game.GameUpdate{News: news, Status: state.Status, Playing: state.Playing, Players: state.Players}
+			update := game.GameUpdate{News: news, Status: state.Status, Playing: state.Playing, Winner: state.Winner, Players: state.Players}
 			msg, err := comms.Encode("update", update)
 			if err != nil {
 				g.log.Error().Err(err).Msg("failed to encode update")

@@ -81,5 +81,6 @@ type GameUpdate struct {
 	News    []Change      `json:"news"`
 	Status  GameStatus    `json:"status"`
 	Playing string        `json:"playing"`
+	Winner  string        `json:"winner"`
 	Players []PlayerState `json:"players"`
 }

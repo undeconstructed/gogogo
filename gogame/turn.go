@@ -587,8 +587,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 
 		t.addEventf("luckily gets a ticket to %s by %s", to, modes)
 	case LuckImmunity:
-		// XXX - this is not the only type of customs
-		must, changed := stringListWithout(t.Must, "declare")
+		must, changed := stringListWithout(t.Must, "declare:*")
 		if !changed {
 			must, changed = stringListWithout(t.Must, "paycustoms")
 			if !changed {

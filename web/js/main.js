@@ -1051,7 +1051,7 @@ function makeAutoButtons(data, up) {
       options = prompt(`${cmd} ${action.help}`, opts)
       if (options === null) {
         setTimeout(() => {
-          cb({ message: 'cancelled' })
+          cb('cancelled')
         }, 0)
         return
       }
@@ -1061,7 +1061,9 @@ function makeAutoButtons(data, up) {
       cmd += ':' + options
     }
 
-    netState.doRequest('play', { command: cmd }, cb)
+    let [cmd1, options1] = cmd.split(' ')
+
+    netState.doRequest('play', { command: cmd1, options: options1 }, cb)
   }
 
   let doOpen = () => {
@@ -1111,7 +1113,7 @@ function makeAutoButtons(data, up) {
 
       let cb1 = (e, r) => {
         if (e) {
-          alert(e.message)
+          if (e !== 'cancelled') { alert(e.message); }
           doOpen()
           return
         }
@@ -1321,6 +1323,22 @@ function makeDebt() {
   return { onUpdate }
 }
 
+function makeWindicator() {
+  let ele = document.querySelector('.win')
+
+  let doReceive = (status, winner) => {
+    let won = status === 'won'
+    ele.querySelector('.inner').textContent = `${winner} wins!`
+    ele.classList.toggle('show', won)
+  }
+
+  let onUpdate = s => {
+    doReceive(s.status, s.winner)
+  }
+
+  return { onUpdate }
+}
+
 // game setup
 
 function newUI(data, gameId, name, colour) {
@@ -1398,6 +1416,7 @@ function newUI(data, gameId, name, colour) {
 
   let onUpdate = u => {
     state.status = u.status
+    state.winner = u.winner
     state.playing = u.playing
     for (let pl of u.players) {
       state.players[pl.name] = pl
@@ -1467,6 +1486,7 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeSleepButton)
   ui.addComponent(makeGambleButton)
   ui.addComponent(makeDebt)
+  ui.addComponent(makeWindicator)
 
   connect(ui, {gameId, name, colour})
 }
