@@ -1,14 +1,5 @@
 
-// utils
-
-function select(parent, selector) {
-  let e = parent.querySelector(selector)
-  if (e == null) {
-    console.log('null', parent, selector)
-    return
-  }
-  return e
-}
+import { newUI } from './game.js'
 
 // net stuff
 
@@ -178,19 +169,19 @@ function makeStartButton() {
 }
 
 function makeStatusBar() {
-  let aboutMe = select(document, '.aboutme')
-  let aboutGame = select(document, '.aboutgame')
+  let aboutMe = document.querySelector('.aboutme')
+  let aboutGame = document.querySelector('.aboutgame')
 
   let doUpdatePlayers = (players, playing) => {
-    let playersDiv = select(aboutGame, '.players > div')
+    let playersDiv = aboutGame.querySelector('.players > div')
     playersDiv.replaceChildren()
     for (let name in players) {
       let pl = players[name]
 
       if (pl.name == playing) {
-        let sc = select(aboutGame, '.aplayer .colour')
+        let sc = aboutGame.querySelector('.aplayer .colour')
         sc.style.backgroundColor = pl.colour
-        let sn = select(aboutGame, '.aplayer .name')
+        let sn = aboutGame.querySelector('.aplayer .name')
         sn.textContent = pl.name
       }
 
@@ -212,9 +203,9 @@ function makeStatusBar() {
     doUpdatePlayers(s.players, s.playing)
 
     // XXX - this can't change
-    let sc = select(aboutMe, '.colour')
+    let sc = aboutMe.querySelector('.colour')
     sc.style.backgroundColor = s.me.colour
-    let sn = select(aboutMe, '.name')
+    let sn = aboutMe.querySelector('.name')
     sn.textContent = s.me.name
   }
 
@@ -224,8 +215,8 @@ function makeStatusBar() {
 function makeMap(data, up) {
   let marks = {}
 
-  let svg = select(document, '.map > object').contentDocument
-  let layer = select(svg, '#dotslayer')
+  let svg = document.querySelector('.map > object').contentDocument
+  let layer = svg.querySelector('#dotslayer')
 
   let splitDotId = s => {
     let ss = s.split(',')
@@ -233,15 +224,15 @@ function makeMap(data, up) {
   }
 
   ;(() => {
-    let normaldot = select(svg, '#traveldot-normal')
-    let terminaldot = select(svg, '#traveldot-place')
-    let dangerdot = select(svg, '#traveldot-danger')
+    let normaldot = svg.querySelector('#traveldot-normal')
+    let terminaldot = svg.querySelector('#traveldot-place')
+    let dangerdot = svg.querySelector('#traveldot-danger')
 
     let drawPoint = (pointId, point) => {
       if (point.city) {
         // let place = data.places[point.place]
         // city marks are already in the SVG
-        let star = select(svg, '#'+point.place)
+        let star = svg.querySelector('#'+point.place)
         console.assert(star, point.place)
         star.style.cursor = 'pointer'
         star.addEventListener('click', _e => {
@@ -294,7 +285,7 @@ function makeMap(data, up) {
 
     let [x, y] = splitDotId(dot)
 
-    let marker = select(svg, '#playerring')
+    let marker = svg.querySelector('#playerring')
     let nmarker = marker.cloneNode()
     nmarker.id = 'player-' + colour
     nmarker.setAttributeNS(null, 'cx', x);
@@ -318,7 +309,7 @@ function makeMap(data, up) {
   let scrollTo = (dot) => {
     let [x, y] = splitDotId(dot)
 
-    let scroller = select(document, '.map')
+    let scroller = document.querySelector('.map')
     let scrollee = scroller.firstElementChild
     let sLeft = (x/1000)*scrollee.offsetWidth-scroller.offsetWidth/2+scrollee.offsetLeft
     let sTop = (y/700)*scrollee.offsetHeight-scroller.offsetHeight/2+scrollee.offsetTop
@@ -335,7 +326,7 @@ function makeMap(data, up) {
 }
 
 function makeSquares(data) {
-  let div = select(document, '.squares')
+  let div = document.querySelector('.squares')
   let squares = []
   let marks = {}
 
@@ -395,7 +386,7 @@ function makeSquares(data) {
     let squareDiv = squares[square]
 
     marks[colour] = mark
-    select(squareDiv, '.sitting').append(mark)
+    squareDiv.querySelector('.sitting').append(mark)
   }
 
   let makeMarks = (players, playing) => {
@@ -425,10 +416,10 @@ function makeSquares(data) {
 }
 
 function makePriceList(data) {
-  let ele = select(document, '.prices')
+  let ele = document.querySelector('.prices')
 
   ;(() => {
-    let tbody = select(ele, 'tbody')
+    let tbody = ele.querySelector('tbody')
     tbody.replaceChildren()
 
     let makePlacePrices = (placeId) => {
@@ -500,7 +491,7 @@ function makePriceList(data) {
 
   let doOpen = (placeId) => {
     ele.classList.add('open')
-    let p = select(ele, `.${placeId}`)
+    let p = ele.querySelector(`.${placeId}`)
     p.scrollIntoView({ behavior: 'smooth' })
   }
 
@@ -530,14 +521,14 @@ function makePriceList(data) {
 }
 
 function makeLuckView(data) {
-  let div = select(document, '.showluck')
+  let div = document.querySelector('.showluck')
 
   let doTakeSetup = () => {
     div.classList.add('blank')
     div.classList.add('back')
     div.classList.add('open')
 
-    let button = select(div, '.button')
+    let button = div.querySelector('.button')
     button.addEventListener('click', _e => {
       let cb = (e, r) => {
         if (e) {
@@ -561,7 +552,7 @@ function makeLuckView(data) {
 
     div.classList.remove('back')
     div.classList.remove('blank')
-    select(div, '.card .body').textContent = card.name
+    div.querySelector('.card .body').textContent = card.name
 
     div.addEventListener('click', _e => {
       doClose()
@@ -582,14 +573,14 @@ function makeLuckView(data) {
 }
 
 function makeRiskView(data) {
-  let div = select(document, '.showrisk')
+  let div = document.querySelector('.showrisk')
 
   let doTakeSetup = () => {
     div.classList.add('blank')
     div.classList.add('back')
     div.classList.add('open')
 
-    let button = select(div, '.button')
+    let button = div.querySelector('.button')
     button.addEventListener('click', _e => {
       let cb = (e, r) => {
         if (e) {
@@ -606,13 +597,13 @@ function makeRiskView(data) {
   let doShow = cardId => {
     let card = data.risks[cardId]
 
-    let div = select(document, '.showrisk')
-    let foot = select(div, '.foot')
+    let div = document.querySelector('.showrisk')
+    let foot = div.querySelector('.foot')
     foot.replaceChildren()
 
     div.classList.remove('back')
     div.classList.remove('blank')
-    select(div, '.card .body').textContent = card.name
+    div.querySelector('.card .body').textContent = card.name
 
     // not closeable until turn arrives to say whether we must obey
   }
@@ -624,9 +615,9 @@ function makeRiskView(data) {
     div.classList.remove('blank')
 
     let card = data.risks[cardId]
-    select(div, '.card .body').textContent = card.name
+    div.querySelector('.card .body').textContent = card.name
 
-    let foot = select(div, '.foot')
+    let foot = div.querySelector('.foot')
     foot.replaceChildren()
 
     let buttons = []
@@ -700,7 +691,7 @@ function makeRiskView(data) {
 }
 
 function makeLuckStack(data) {
-  let stack = select(document, '.lucks')
+  let stack = document.querySelector('.lucks')
 
   let doOpen = () => {
     stack.classList.remove('stashed')
@@ -735,13 +726,13 @@ function makeLuckStack(data) {
     } else {
       stack.classList.remove('empty')
 
-      let tmpl = select(document, '#lucktemplate').content.firstElementChild
+      let tmpl = document.querySelector('#lucktemplate').content.firstElementChild
 
       for (let luckId of lucks) {
         let luckData = data.lucks[luckId]
         let div = tmpl.cloneNode(true)
-        select(div, '.body').textContent = luckData.name
-        select(div, 'button').addEventListener('click', e => {
+        div.querySelector('.body').textContent = luckData.name
+        div.querySelector('button').addEventListener('click', e => {
           e.stopPropagation()
           let options = prompt('options (or none)')
           if (options == null) {
@@ -780,8 +771,8 @@ function makeLuckStack(data) {
 }
 
 function makeMoneyPile(data, up) {
-  let stack = select(document, '.money')
-  let tmpl = select(document, '#moneytemplate').content.firstElementChild
+  let stack = document.querySelector('.money')
+  let tmpl = document.querySelector('#moneytemplate').content.firstElementChild
 
   let changeTo = null
 
@@ -823,13 +814,13 @@ function makeMoneyPile(data, up) {
           let currency = data.currencies[cId]
           let div = tmpl.cloneNode(true)
           div.classList.add(cId)
-          select(div, '.head').textContent = cId // currency.name
-          select(div, '.body').textContent = '' + money[cId]
+          div.querySelector('.head').textContent = cId // currency.name
+          div.querySelector('.body').textContent = '' + money[cId]
           div.style.backgroundColor = currency.colour
           // if (cId === 'ye') {
-          //   select(div, '.inner').style.backgroundImage = 'url(img/money_ye.svg)'
+          //   div.querySelector('.inner').style.backgroundImage = 'url(img/money_ye.svg)'
           // }
-          select(div, 'button.change').addEventListener('click', e => {
+          div.querySelector('button.change').addEventListener('click', e => {
             e.stopPropagation()
             let ns = prompt('how much?')
             if (!ns) { return; }
@@ -845,7 +836,7 @@ function makeMoneyPile(data, up) {
           })
           if (cId !== 'tc') {
             // traveller's cheques can only be changed
-            select(div, 'button.pay').addEventListener('click', e => {
+            div.querySelector('button.pay').addEventListener('click', e => {
               e.stopPropagation()
               let ns = prompt('how much?')
               if (!ns) { return; }
@@ -858,7 +849,7 @@ function makeMoneyPile(data, up) {
 
               doClose()
             })
-            select(div, 'button.gamble').addEventListener('click', e => {
+            div.querySelector('button.gamble').addEventListener('click', e => {
               e.stopPropagation()
               let ns = prompt('how much?')
               if (!ns) { return; }
@@ -927,13 +918,13 @@ function makeTicketView(data) {
       div.classList.add('empty')
     } else {
       div.classList.remove('empty')
-      select(div, '.by > span').textContent = makeByLine(data, ticket.by)
+      div.querySelector('.by > span').textContent = makeByLine(data, ticket.by)
       let from = data.places[ticket.from].name
-      select(div, '.from > span').textContent = from
+      div.querySelector('.from > span').textContent = from
       let to = data.places[ticket.to].name
-      select(div, '.to > span').textContent = to
+      div.querySelector('.to > span').textContent = to
       let currency = data.currencies[ticket.currency].name
-      select(div, '.fare > span').textContent = `${ticket.fare} ${currency}`
+      div.querySelector('.fare > span').textContent = `${ticket.fare} ${currency}`
     }
   }
 
@@ -945,8 +936,8 @@ function makeTicketView(data) {
 }
 
 function makeSouvenirPile(data) {
-  let stack = select(document, '.souvenirs')
-  let tmpl = select(document, '#souvenirtemplate').content.firstElementChild
+  let stack = document.querySelector('.souvenirs')
+  let tmpl = document.querySelector('#souvenirtemplate').content.firstElementChild
 
   let doOpen = () => {
     stack.classList.remove('stashed')
@@ -983,13 +974,13 @@ function makeSouvenirPile(data) {
         let place = data.places[placeId]
         let currency = data.currencies[place.currency]
         let div = tmpl.cloneNode(true)
-        select(div, '.where').textContent = 'Souvenir from ' + place.name
+        div.querySelector('.where').textContent = 'Souvenir from ' + place.name
         let price = data.settings.souvenirPrice * currency.rate
-        select(div, '.price').textContent = '' + price + ' ' + currency.name
+        div.querySelector('.price').textContent = '' + price + ' ' + currency.name
         for (let bar of div.querySelectorAll('.bar')) {
           bar.style.backgroundColor = currency.colour
         }
-        select(div, 'button').addEventListener('click', e => {
+        div.querySelector('button').addEventListener('click', e => {
           e.stopPropagation()
           let cb = (e, _r) => { if (e) { alert(e.message); return; } }
           netState.doRequest('play', { command: 'declare:'+placeId }, cb)
@@ -1026,7 +1017,7 @@ function makeSouvenirPile(data) {
 }
 
 function makeAutoButtons(data, up) {
-  let buttonBox = select(document, '.actions')
+  let buttonBox = document.querySelector('.actions')
 
   let skip = [
     'useluck',
@@ -1043,7 +1034,7 @@ function makeAutoButtons(data, up) {
     'obeyrisk',
     'ignorerisk'
   ]
-  // skip = []
+  skip = []
 
   let doPromptPlay = (cmd, opts, action, cb) => {
     let options = null
@@ -1137,7 +1128,7 @@ function makeAutoButtons(data, up) {
 }
 
 function makeStopButton() {
-  let div = select(document, '.stopbutton')
+  let div = document.querySelector('.stopbutton')
 
   ;(() => {
     div.addEventListener('click', _e => {
@@ -1155,7 +1146,7 @@ function makeStopButton() {
 }
 
 function makeDiceButton(_data, up) {
-  let div = select(document, '.dicebutton')
+  let div = document.querySelector('.dicebutton')
 
   ;(() => {
     div.addEventListener('click', _e => {
@@ -1209,7 +1200,7 @@ function makeGambleButton(_data, up) {
 }
 
 function makeSleepButton() {
-  let div = select(document, '.sleepbutton')
+  let div = document.querySelector('.sleepbutton')
 
   ;(() => {
     div.addEventListener('click', _e => {
@@ -1227,7 +1218,7 @@ function makeSleepButton() {
 }
 
 function makeLog(_data, up) {
-  let div = select(document, '.messages')
+  let div = document.querySelector('.messages')
   let state = {}
 
   let doAddLine = msg => {
@@ -1272,7 +1263,7 @@ function makeLog(_data, up) {
 }
 
 function makeNotifier() {
-  let div = select(document, '.showmessage')
+  let div = document.querySelector('.showmessage')
   let closeTimeout = null
 
   let doShowLine = line => {
@@ -1282,7 +1273,7 @@ function makeNotifier() {
     }
 
     div.classList.add('open')
-    let ine = select(div, '.message')
+    let ine = div.querySelector('.message')
     ine.append(line)
 
     setTimeout(() => {
@@ -1341,126 +1332,6 @@ function makeWindicator() {
 
 // game setup
 
-function newUI(data, gameId, name, colour) {
-  let state = {
-    data: data,
-    gameId: gameId,
-    status: null,
-    me: {
-      name: name,
-      colour: colour,
-    },
-    playing: null,
-    players: {}
-  }
-
-  let hasCommand = (list, pattern) => {
-    for (let can of list) {
-      if (can === pattern) {
-        return true
-      }
-    }
-    return false
-  }
-
-  let newTurn = t => {
-    t.can = t.can || []
-    t.must = t.must || []
-    t.hasCan = pattern => {
-      return hasCommand(t.can, pattern)
-    }
-    t.hasMust = pattern => {
-      return hasCommand(t.must, pattern)
-    }
-    return t
-  }
-
-  let turn = newTurn({})
-
-  let upStream = {
-    send(cmd) {
-      sendCommand(cmd)
-    },
-    play(cmd, options, cb) {
-      if (options) {
-        cmd += ':' + options
-      }
-      netState.doRequest('play', { command: cmd }, cb)
-    }
-  }
-
-  let components = []
-
-  let addComponent = (f) => {
-    components.push(f(data, upStream))
-  }
-
-  let sendCommand = (cmd) => {
-    console.log('command', cmd)
-    for (let c of components) {
-      c.onCommand && c.onCommand(cmd)
-    }
-  }
-
-  let dumpState = () => {
-    console.log(state)
-  }
-
-  let onConnect = () => {
-    document.body.setAttribute('connected', true)
-  }
-
-  let onDisconnect = () => {
-    document.body.setAttribute('connected', false)
-  }
-
-  let onUpdate = u => {
-    state.status = u.status
-    state.winner = u.winner
-    state.playing = u.playing
-    for (let pl of u.players) {
-      state.players[pl.name] = pl
-      if (pl.name == state.me.name) {
-        state.me = pl
-      }
-    }
-    if (state.playing != state.me.name) {
-      turn = newTurn({})
-      for (let c of components) {
-        c.onTurn && c.onTurn(turn)
-      }
-    }
-    for (let c of components) {
-      c.onUpdate && c.onUpdate(state)
-    }
-    for (let n of u.news) {
-      sendCommand({ do: 'log', msg: n })
-    }
-  }
-
-  let onTurn = t => {
-    turn = newTurn(t)
-    for (let c of components) {
-      c.onTurn && c.onTurn(turn)
-    }
-  }
-
-  let onText = t => {
-    sendCommand({ do: 'log', msg: t })
-  }
-
-  return {
-    addComponent,
-    sendCommand,
-    dumpState,
-    onConnect,
-    onDisconnect,
-    onUpdate,
-    onTurn,
-    onText
-  }
-}
-
 function setup(inData, gameId, name, colour) {
   let data = fixupData(inData)
 
@@ -1511,7 +1382,7 @@ function main() {
   let mapObject = document.createElement('object')
   mapObject.type = 'image/svg+xml'
   mapObject.data = 'map.svg'
-  select(document, '.map').append(mapObject)
+  document.querySelector('.map').append(mapObject)
 
   mapObject.addEventListener('load', _e => {
     fetch('data.json').
@@ -1537,9 +1408,9 @@ function doSay() {
 }
 
 function scrollingMap() {
-  let map = select(document, '.map')
+  let map = document.querySelector('.map')
   setupScrolling(map, map)
-  // let svg = select(map, 'object').contentDocument.rootElement
+  // let svg = map.querySelector('object').contentDocument.rootElement
   // setupScrolling(svg, map)
 }
 
