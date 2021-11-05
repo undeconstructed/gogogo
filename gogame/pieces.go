@@ -32,6 +32,10 @@ type Ticket struct {
 	Currency string `json:"currency"`
 }
 
+type Debt struct {
+	Amount int `json:"amount"`
+}
+
 type LuckCard struct {
 	Name   string `json:"name"`
 	Code   string `json:"code"`
@@ -184,6 +188,9 @@ func (rc RiskCard) ParseCode() RiskI {
 
 	ss = strings.SplitN(code, ":", 2)
 	switch ss[0] {
+	case "auto":
+		cmd := ss[1]
+		return RiskAuto{ctxt, game.CommandPattern(cmd)}
 	case "customshalf":
 		return RiskCustomsHalf{ctxt}
 	case "dest":
@@ -220,6 +227,11 @@ type riskS struct {
 
 func (r riskS) GetModes() string {
 	return r.Modes
+}
+
+type RiskAuto struct {
+	riskS
+	Cmd game.CommandPattern
 }
 
 type RiskFog struct {

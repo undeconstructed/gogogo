@@ -204,7 +204,7 @@
       "type": "hotel",
       "name": "Hotel bill - £100 - Payable in local currency",
       "options": [
-        "must:pay:<lc>:10"
+        "debt:<lc>:10"
       ]
     },
     {
@@ -1248,7 +1248,7 @@
         "r:862,550"
       ]
     },
-    "861,526": {
+    "861,527": {
       "links": [
         "a:899,528"
       ]
@@ -1261,7 +1261,7 @@
     "808,524": {
       "danger": true,
       "links": [
-        "a:861,526"
+        "a:861,527"
       ]
     },
     "807,471": {
@@ -1331,7 +1331,7 @@
     },
     "625,421": {
       "links": [
-        "s:623,391"
+        "s:622,391"
       ]
     },
     "611,455": {
@@ -2032,7 +2032,7 @@
         "a:91,279"
       ]
     },
-    "623,391": {
+    "622,391": {
       "danger": true,
       "links": [
         "s:633,352"
@@ -2338,7 +2338,7 @@
     },
     {
       "name": "All transport - Excess baggage. - 100 kilos overweight. - Pay £40 (or equivalent in local currency)",
-      "code": "must:pay:*:4"
+      "code": "auto:debt:*:4"
     },
     {
       "name": "Ships and planes only - Hurricane. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave.",

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+
 	"github.com/undeconstructed/gogogo/game"
 )
 
@@ -43,6 +44,7 @@ func NewGame(data GameData) game.Game {
 	g.cmds["buysouvenir"] = g.turn_buysouvenir
 	g.cmds["buyticket"] = g.turn_buyticket
 	g.cmds["changemoney"] = g.turn_changemoney
+	g.cmds["debt"] = g.turn_debt
 	g.cmds["declare"] = g.turn_declare
 	g.cmds["dicemove"] = g.turn_dicemove
 	g.cmds["gamble"] = g.turn_gamble
@@ -363,6 +365,12 @@ func (g *gogame) GetGameState() game.GameState {
 				Currency: pl.Ticket.Currency,
 			}
 		}
+		var debt0 *Debt
+		if pl.Debt != nil {
+			debt0 = &Debt{
+				Amount: pl.Debt.Amount,
+			}
+		}
 		// XXX - is this always serialized in-process? money is a live map
 		players = append(players, game.PlayerState{
 			Name:   pl.Name,
@@ -374,6 +382,7 @@ func (g *gogame) GetGameState() game.GameState {
 				Souvenirs: pl.Souvenirs,
 				Lucks:     pl.LuckCards,
 				Ticket:    ticket,
+				Debt:      debt0,
 			},
 		})
 	}
@@ -681,8 +690,14 @@ func (g *gogame) toNextPlayer() {
 			continue
 		}
 
-		onMap := p1.Ticket != nil
+		hasTicket := p1.Ticket != nil
+		hasDebt := p1.Debt != nil
+		onMap := hasTicket && !hasDebt
+
 		can := []string{"dicemove", "useluck:*"}
+		if hasDebt {
+			can = append(can, "pay:*:*")
+		}
 
 		// the rules aren't clear about when exactly you can buy a souvenir.
 		if !onMap && !p1.HasBought {
@@ -797,9 +812,6 @@ type turn struct {
 	// miscellaneous things collected for some reason
 	LostTicket *ticket `json:"lostTicket"`
 
-	// anything to be paid, in neutral currency unit
-	Debt int `json:"debt"`
-
 	// things that happened in this execution
 	news []game.Change
 }
@@ -818,6 +830,10 @@ type bank struct {
 	Souvenirs map[string]int `json:"souvenirs"`
 }
 
+type debt struct {
+	Amount int `json:"amount"`
+}
+
 type player struct {
 	Name   string `json:"name"`
 	Colour string `json:"colour"`
@@ -832,6 +848,9 @@ type player struct {
 	OnSquare  int    `json:"onSquare"`
 	OnDot     string `json:"onDot"`
 	HasBought bool   `json:"hasBought"`
+
+	// anything to be paid, in neutral currency unit
+	Debt *debt `json:"debt"`
 }
 
 type ticket struct {

@@ -231,7 +231,7 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 		if turn != nil {
 			// XXX - could this become nil intentionally at the end?
 			g.turn = turn
-			g.dirty = false
+			g.dirty = true
 		}
 
 		return g, news

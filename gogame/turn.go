@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/undeconstructed/gogogo/game"
 )
 
@@ -116,6 +118,26 @@ func (g *gogame) turn_changemoney(t *turn, c game.CommandPattern, args []string)
 	g.moveMoney(g.bank.Money, t.player.Money, to, toAmount)
 
 	t.addEventf("changes %d %s into %d %s", amount, fromCurrency.Name, toAmount, toCurrency.Name)
+	return nil, nil
+}
+
+func (g *gogame) turn_debt(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	currency := args[0]
+	amount, _ := strconv.Atoi(args[1])
+
+	// TODO - currencies
+	debt0 := t.player.Debt
+	if debt0 == nil {
+		debt0 = &debt{amount}
+	} else {
+		debt0.Amount += amount
+	}
+	t.player.Debt = debt0
+
+	t.Can = append(t.Can, "pay:*:*")
+
+	t.addEventf("now owes %s %d", currency, amount)
+
 	return nil, nil
 }
 
@@ -234,6 +256,12 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	card := g.risks[cardId]
 
 	switch code := card.ParseCode().(type) {
+	case RiskAuto:
+		cmd := code.Cmd.Sub(g.makeSubs(t))
+		_, err := g.doAutoCommand(t, cmd)
+		if err != nil {
+			log.Error().Err(err).Msgf("auto command error: %s", cmd)
+		}
 	case RiskCustomsHalf:
 		t.addEvent("finds out customs is not very efficient")
 	case RiskDest:
@@ -316,10 +344,31 @@ func (g *gogame) turn_moven(t *turn, c game.CommandPattern, args []string) (inte
 }
 
 func (g *gogame) turn_pay(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
-	// TODO - this just removes the must
-	t.Must, _ = stringListWithout(t.Must, string(c))
+	currencyId := args[0]
+	amount, _ := strconv.Atoi(args[1])
 
-	t.addEvent("abuses the fact that fines aren't implemented")
+	haveMoney := t.player.Money[currencyId]
+	if haveMoney < amount {
+		return nil, errors.New("not enough money")
+	}
+
+	currency := g.currencies[currencyId]
+	nAmount := amount / currency.Rate
+
+	// TODO - error check
+	// TODO - change?
+	_ = g.moveMoney(t.player.Money, g.bank.Money, currencyId, amount)
+
+	// TODO - currencies
+	t.player.Debt.Amount -= nAmount
+	if t.player.Debt.Amount <= 0 {
+		t.player.Debt = nil
+		t.Can, _ = stringListWithout(t.Can, string(c))
+		t.addEvent("clears his debt")
+	} else {
+		t.addEvent("pays some of his debt")
+	}
+
 	return nil, nil
 }
 
@@ -327,7 +376,14 @@ func (g *gogame) turn_paycustoms(t *turn, c game.CommandPattern, args []string) 
 	// TODO - this just removes the must
 	t.Must, _ = stringListWithout(t.Must, string(c))
 
-	t.addEvent("customs is a problem")
+	cmd := "debt:*:10"
+	_, err := g.doAutoCommand(t, game.CommandPattern(cmd))
+	if err != nil {
+		log.Error().Err(err).Msgf("auto command error: %s", cmd)
+	}
+
+	t.addEvent("agrees to pay his customs duty")
+
 	return nil, nil
 }
 
@@ -534,7 +590,10 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		// XXX - this is not the only type of customs
 		must, changed := stringListWithout(t.Must, "declare")
 		if !changed {
-			return nil, game.ErrNotNow
+			must, changed = stringListWithout(t.Must, "paycustoms")
+			if !changed {
+				return nil, game.ErrNotNow
+			}
 		}
 
 		t.Must = must

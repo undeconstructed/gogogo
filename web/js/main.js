@@ -744,8 +744,11 @@ function makeLuckStack(data) {
         select(div, 'button').addEventListener('click', e => {
           e.stopPropagation()
           let options = prompt('options (or none)')
+          if (options == null) {
+            return
+          }
           let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-          netState.doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
+          netState.doRequest('play', { command: 'useluck:'+luckId+':'+options }, cb)
           doClose()
         })
         stack.append(div)
@@ -899,6 +902,8 @@ function makeMoneyPile(data, up) {
         changeTo = to
       } else if (cmd.startsWith('gamble:')) {
         gamble = true
+      } else if (cmd.startsWith('pay:')) {
+        pay = true
       }
     }
     for (let cmd of t.must) {
@@ -1023,13 +1028,30 @@ function makeSouvenirPile(data) {
 function makeAutoButtons(data, up) {
   let buttonBox = select(document, '.actions')
 
-  let doPromptPlay = (cmd, action, cb) => {
+  let skip = [
+    'useluck',
+    'buyticket',
+    'changemoney',
+    // 'declare',
+    'pay',
+    'dicemove',
+    'stop',
+    'end',
+    'gamble',
+    'takeluck',
+    'takerisk',
+    'obeyrisk',
+    'ignorerisk'
+  ]
+  // skip = []
+
+  let doPromptPlay = (cmd, opts, action, cb) => {
     let options = null
     if (action && action.help) {
-      options = prompt(`${cmd} ${action.help}`)
+      options = prompt(`${cmd} ${action.help}`, opts)
       if (options === null) {
         setTimeout(() => {
-          cb({ e: { message: 'cancelled' } })
+          cb({ message: 'cancelled' })
         }, 0)
         return
       }
@@ -1072,42 +1094,20 @@ function makeAutoButtons(data, up) {
 
       let cb = null
 
-      if (cmd === 'useluck') {
-        // can do this with the cards
+      if (skip.includes(cmd)) {
         continue
-      } else if (cmd === 'buyticket') {
-        // use the price list
-        continue
-      } else if (cmd === 'changemoney' || cmd === 'pay') {
-        // can do this with the notes
-        continue
-      } else if (cmd === 'declare') {
-        // continue
-        // can declare with the cards, but declare:none is harder
-        button.classList.add('text')
-        button.append(cmd)
-      } else if (cmd === 'dicemove' || cmd === 'stop' || cmd === 'end') {
-        // there's a big button somewhere
-        continue
-      } else if (cmd === 'gamble') {
-        // money + big button
-        continue
-      } else if (cmd === 'takeluck') {
-        // luckview component does this automatically
-        continue
-      } else if (cmd === 'takerisk' || cmd === 'obeyrisk' || cmd === 'ignorerisk') {
-        // riskview component does this automatically
-        continue
-      } else if (cmd === 'buysouvenir') {
-        button.classList.add('buysouvenir')
-        // we know this command is complete, so no prompt
-        cmd = a
-        action = null
-        cb = r => up.send({ do: 'notify', msg: 'you have bought a ' + r.message })
-      } else {
-        button.classList.add('text')
-        button.append(cmd)
       }
+
+      // if (cmd === 'buysouvenir') {
+      //   button.classList.add('buysouvenir')
+      //   // we know this command is complete, so no prompt
+      //   cmd = a
+      //   action = null
+      //   cb = r => up.send({ do: 'notify', msg: 'you have bought a ' + r.message })
+      // } else {
+        button.classList.add('text')
+        button.append(cmd)
+      // }
 
       let cb1 = (e, r) => {
         if (e) {
@@ -1115,12 +1115,13 @@ function makeAutoButtons(data, up) {
           doOpen()
           return
         }
-        cb(r)
+        cb && cb(r)
       }
 
       button.addEventListener('click', _e => {
         doClose()
-        doPromptPlay(cmd, action, cb1)
+        let opts = parts.slice(1).join(':')
+        doPromptPlay(cmd, opts, action, cb1)
       })
       tgt.append(button)
     }
@@ -1172,7 +1173,7 @@ function makeDiceButton(_data, up) {
   return { onTurn }
 }
 
-function makeGambleButton() {
+function makeGambleButton(_data, up) {
   let div = document.querySelector('.gamblebutton')
 
   let currency = null, amount = -1
@@ -1304,6 +1305,20 @@ function makeNotifier() {
   }
 
   return { onCommand }
+}
+
+function makeDebt() {
+  let div = document.querySelector('.debt')
+
+  let onUpdate = s => {
+    let hasDebt = s.me.debt != null
+    if (hasDebt) {
+      div.textContent = "DEBT: " + s.me.debt.amount
+    }
+    div.classList.toggle('show', hasDebt)
+  }
+
+  return { onUpdate }
 }
 
 // game setup
@@ -1451,6 +1466,7 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeStopButton)
   ui.addComponent(makeSleepButton)
   ui.addComponent(makeGambleButton)
+  ui.addComponent(makeDebt)
 
   connect(ui, {gameId, name, colour})
 }

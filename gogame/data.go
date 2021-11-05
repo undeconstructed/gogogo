@@ -13,6 +13,7 @@ type PlayerState struct {
 	Souvenirs []string       `json:"souvenirs"`
 	Lucks     []int          `json:"lucks"`
 	Ticket    *Ticket        `json:"ticket"`
+	Debt      *Debt          `json:"debt"`
 }
 
 // TurnState is just for the player whose turn is happening
