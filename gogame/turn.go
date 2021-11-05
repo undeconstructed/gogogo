@@ -182,11 +182,11 @@ func (g *gogame) turn_gamble(t *turn, c game.CommandPattern, args []string) (int
 	if roll >= 4 {
 		g.moveMoney(g.bank.Money, t.player.Money, currency, amount)
 		t.addEventf("gambles, rolls %d, and wins!", roll)
-		return roll, nil
+		return "won", nil
 	} else {
 		g.moveMoney(t.player.Money, g.bank.Money, currency, amount)
 		t.addEventf("gambles, rolls %d, and loses!", roll)
-		return roll, nil
+		return "lost", nil
 	}
 }
 

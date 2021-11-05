@@ -101,12 +101,22 @@ function makeByLine(data, modes) {
   return ms.join('/')
 }
 
-function splitDotId(s) {
-  let ss = s.split(',')
-  return [parseInt(ss[0]), parseInt(ss[1])]
-}
-
 // receiving data
+
+function fixupData(indata) {
+  for (let dotId in indata.dots) {
+    let dot = indata.dots[dotId]
+    if (dot.place) {
+      let place = indata.places[dot.place]
+      dot.terminal = true
+      if (place.city) {
+        dot.city = true
+      }
+    }
+  }
+
+  return indata
+}
 
 function promoteCustom(o) {
   for (let x in o.custom) {
@@ -147,102 +157,16 @@ function processTurn(t) {
   return t
 }
 
-// actions
-
-function doSay() {
-  let msg = prompt('Say what?')
-  if (!msg) return
-  netState.send('text', msg)
-}
-
-function doStart() {
-  let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-
-  netState.doRequest('start', null, cb)
-}
-
-function doPlay(cmd, action, cb) {
-  let options = null
-  if (action && action.help) {
-    options = prompt(`${cmd} ${action.help}`)
-    if (options === null) {
-      setTimeout(() => {
-        cb({ e: { message: 'cancelled' } })
-      }, 0)
-      return
-    }
-  }
-
-  if (options) {
-    cmd += ':' + options
-  }
-
-  netState.doRequest('play', { command: cmd }, cb)
-}
-
-function useLuck(id) {
-  let options = prompt('options (or none)')
-
-  let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-
-  netState.doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
-}
-
-function doChangeMoney(from, to, n) {
-  let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-
-  netState.doRequest('play', { command: `changemoney:${from}:${to}:${n}` }, cb)
-}
-
-function doDeclareSouvenir(placeId) {
-  let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-
-  netState.doRequest('play', { command: 'declare:'+placeId }, cb)
-}
-
-function doDiceMove() {
-  let cb = (e, r) => {
-    if (e) { alert(e.message); return; }
-    showLogLine('you rolled a ' + r.message)
-  }
-
-  netState.doRequest('play', { command: 'dicemove' }, cb)
-}
-
-function doStop() {
-  let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-
-  netState.doRequest('play', { command: 'stop' }, cb)
-}
-
-function doEnd() {
-  let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-
-  netState.doRequest('play', { command: 'end' }, cb)
-}
-
-function doGamble(currency, amount) {
-  let cb = (e, r) => {
-    if (e) { alert(e.message); return; }
-    showLogLine('you gambled a ' + r.message)
-  }
-
-  netState.doRequest('play', { command: `gamble:${currency}:${amount}` }, cb)
-}
-
-function doPay(currency, amount) {
-  let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-
-  netState.doRequest('play', { command: `pay:${currency}:${amount}` }, cb)
-}
-
 // ui components
 
 function makeStartButton() {
   let shield = document.querySelector('.nostate')
   let startButton = shield.querySelector('#startbutton')
 
-  startButton.addEventListener('click', doStart)
+  startButton.addEventListener('click', _e => {
+    let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+    netState.doRequest('start', null, cb)
+  })
 
   let onUpdate = s => {
     // TODO - the other statesa aren't handled
@@ -302,6 +226,11 @@ function makeMap(data, up) {
 
   let svg = select(document, '.map > object').contentDocument
   let layer = select(svg, '#dotslayer')
+
+  let splitDotId = s => {
+    let ss = s.split(',')
+    return [parseInt(ss[0]), parseInt(ss[1])]
+  }
 
   ;(() => {
     let normaldot = select(svg, '#traveldot-normal')
@@ -551,10 +480,9 @@ function makePriceList(data) {
         tr.addEventListener('click', _e => {
           let cb = (e, _r) => {
             if (e) { alert(e.message); return; }
-            showLogLine('you have bought a ticket')
+            up.send({ do: 'notify', msg: 'you have bought a ticket' })
           }
-
-          doPlay(`buyticket:${placeId}:${destId}:${modeId}`, null, cb)
+          netState.doRequest('play', { command: `buyticket:${placeId}:${destId}:${modeId}` }, cb)
         })
 
         tbody.append(tr)
@@ -815,7 +743,9 @@ function makeLuckStack(data) {
         select(div, '.body').textContent = luckData.name
         select(div, 'button').addEventListener('click', e => {
           e.stopPropagation()
-          useLuck(luckId)
+          let options = prompt('options (or none)')
+          let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+          netState.doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
           doClose()
         })
         stack.append(div)
@@ -900,8 +830,14 @@ function makeMoneyPile(data, up) {
             e.stopPropagation()
             let ns = prompt('how much?')
             if (!ns) { return; }
-            let n = parseInt(ns)
-            doChangeMoney(cId, changeTo, n) // TODO - callback
+
+            let from = cId
+            let to = changeTo
+            let amount = parseInt(ns)
+
+            let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+            netState.doRequest('play', { command: `changemoney:${from}:${to}:${amount}` }, cb)
+
             doClose()
           })
           if (cId !== 'tc') {
@@ -910,17 +846,25 @@ function makeMoneyPile(data, up) {
               e.stopPropagation()
               let ns = prompt('how much?')
               if (!ns) { return; }
-              let n = parseInt(ns)
-              doPay(cId, n) // TODO - callback
+
+              let currency = cId
+              let amount = parseInt(ns)
+
+              let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+              netState.doRequest('play', { command: `pay:${currency}:${amount}` }, cb)
+
               doClose()
             })
             select(div, 'button.gamble').addEventListener('click', e => {
               e.stopPropagation()
               let ns = prompt('how much?')
               if (!ns) { return; }
-              let n = parseInt(ns)
-              // doGamble(cId, n) // TODO - callback
-              up.send({ do: 'gamble', currency: cId, amount: n })
+
+              let currency = cId
+              let amount = parseInt(ns)
+
+              up.send({ do: 'gamble', currency: currency, amount: amount })
+
               doClose()
             })
           }
@@ -1042,7 +986,8 @@ function makeSouvenirPile(data) {
         }
         select(div, 'button').addEventListener('click', e => {
           e.stopPropagation()
-          doDeclareSouvenir(placeId)
+          let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+          netState.doRequest('play', { command: 'declare:'+placeId }, cb)
           doClose()
         })
         stack.append(div)
@@ -1075,8 +1020,27 @@ function makeSouvenirPile(data) {
   return { onUpdate, onTurn }
 }
 
-function makeAutoButtons(data) {
+function makeAutoButtons(data, up) {
   let buttonBox = select(document, '.actions')
+
+  let doPromptPlay = (cmd, action, cb) => {
+    let options = null
+    if (action && action.help) {
+      options = prompt(`${cmd} ${action.help}`)
+      if (options === null) {
+        setTimeout(() => {
+          cb({ e: { message: 'cancelled' } })
+        }, 0)
+        return
+      }
+    }
+
+    if (options) {
+      cmd += ':' + options
+    }
+
+    netState.doRequest('play', { command: cmd }, cb)
+  }
 
   let doOpen = () => {
     buttonBox.classList.add('open')
@@ -1139,7 +1103,7 @@ function makeAutoButtons(data) {
         // we know this command is complete, so no prompt
         cmd = a
         action = null
-        cb = r => showLogLine('you have bought a ' + r.message)
+        cb = r => up.send({ do: 'notify', msg: 'you have bought a ' + r.message })
       } else {
         button.classList.add('text')
         button.append(cmd)
@@ -1156,7 +1120,7 @@ function makeAutoButtons(data) {
 
       button.addEventListener('click', _e => {
         doClose()
-        doPlay(cmd, action, cb1)
+        doPromptPlay(cmd, action, cb1)
       })
       tgt.append(button)
     }
@@ -1174,7 +1138,8 @@ function makeStopButton() {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      doStop()
+      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      netState.doRequest('play', { command: 'stop' }, cb)
       div.classList.remove('open')
     })
   })()
@@ -1186,12 +1151,16 @@ function makeStopButton() {
   return { onTurn }
 }
 
-function makeDiceButton() {
+function makeDiceButton(_data, up) {
   let div = select(document, '.dicebutton')
 
   ;(() => {
     div.addEventListener('click', _e => {
-      doDiceMove()
+      let cb = (e, r) => {
+        if (e) { alert(e.message); return; }
+        up.send({ do: 'notify', msg: 'you rolled a ' + r.message})
+      }
+      netState.doRequest('play', { command: 'dicemove' }, cb)
       div.classList.remove('open')
     })
   })()
@@ -1210,7 +1179,11 @@ function makeGambleButton() {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      doGamble(currency, amount)
+      let cb = (e, r) => {
+        if (e) { alert(e.message); return; }
+        up.send({ do: 'notify', msg: 'you gambled and ' + r.message})
+      }
+      netState.doRequest('play', { command: `gamble:${currency}:${amount}` }, cb)
       div.classList.remove('open')
     })
   })()
@@ -1237,7 +1210,8 @@ function makeSleepButton() {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      doEnd()
+      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      netState.doRequest('play', { command: 'end' }, cb)
       div.classList.remove('open')
     })
   })()
@@ -1249,22 +1223,90 @@ function makeSleepButton() {
   return { onTurn }
 }
 
-// game setup
+function makeLog(_data, up) {
+  let div = select(document, '.messages')
+  let state = {}
 
-function fixupData(indata) {
-  for (let dotId in indata.dots) {
-    let dot = indata.dots[dotId]
-    if (dot.place) {
-      let place = indata.places[dot.place]
-      dot.terminal = true
-      if (place.city) {
-        dot.city = true
+  let doAddLine = msg => {
+    let d = document.createElement('div')
+    if (msg.who) {
+      let player = state.players[msg.who]
+      let where = ""
+      if (msg.where) {
+        let dotId = msg.where
+        let dot = state.data.dots[dotId]
+        let place = state.data.places[dot.place]
+        if (place) {
+          where = "in " + place.name
+        } else {
+          where = "at " + dotId
+        }
       }
+      d.innerHTML = `<span style="color: ${player.colour}; font-weight: bold;">${player.name}</span> ${msg.what} ${where}`
+      if (msg.who != state.me.name) {
+        up.send({ do: 'notify', msg: d.cloneNode(true) })
+      }
+    } else if (msg.what) {
+      d.textContent = msg.what
+    } else {
+      let text = typeof msg === 'string' ? msg : JSON.stringify(msg)
+      d.textContent = text
+    }
+    div.prepend(d)
+  }
+
+  let onUpdate = s => {
+    state = s
+  }
+
+  let onCommand = c => {
+    if (c.do === 'log') {
+      doAddLine(c.msg)
     }
   }
 
-  return indata
+  return { onUpdate, onCommand }
 }
+
+function makeNotifier() {
+  let div = select(document, '.showmessage')
+  let closeTimeout = null
+
+  let doShowLine = line => {
+    if (closeTimeout) {
+      // cancel closeTimeout, to extend the time
+      clearTimeout(closeTimeout)
+    }
+
+    div.classList.add('open')
+    let ine = select(div, '.message')
+    ine.append(line)
+
+    setTimeout(() => {
+      line.remove()
+    }, 3000)
+
+    closeTimeout = setTimeout(() => {
+      div.classList.remove('open')
+    }, 3000)
+  }
+
+  let onCommand = c => {
+    if (c.do === 'notify') {
+      let e = c.msg
+      if (!(e instanceof Element)) {
+        let d = document.createElement('div')
+        d.textContent = e
+        e = d
+      }
+      doShowLine(e)
+    }
+  }
+
+  return { onCommand }
+}
+
+// game setup
 
 function newUI(data, gameId, name, colour) {
   let state = {
@@ -1348,9 +1390,6 @@ function newUI(data, gameId, name, colour) {
         state.me = pl
       }
     }
-    for (let n of u.news) {
-      doLog(state, n)
-    }
     if (state.playing != state.me.name) {
       turn = newTurn({})
       for (let c of components) {
@@ -1359,6 +1398,9 @@ function newUI(data, gameId, name, colour) {
     }
     for (let c of components) {
       c.onUpdate && c.onUpdate(state)
+    }
+    for (let n of u.news) {
+      sendCommand({ do: 'log', msg: n })
     }
   }
 
@@ -1370,7 +1412,7 @@ function newUI(data, gameId, name, colour) {
   }
 
   let onText = t => {
-    doLog(state, t)
+    sendCommand({ do: 'log', msg: t })
   }
 
   return {
@@ -1391,6 +1433,8 @@ function setup(inData, gameId, name, colour) {
   let ui = newUI(data, gameId, name, colour)
   window.ui = ui
 
+  ui.addComponent(makeLog)
+  ui.addComponent(makeNotifier)
   ui.addComponent(makeStartButton)
   ui.addComponent(makeStatusBar)
   ui.addComponent(makeMap)
@@ -1408,10 +1452,52 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeSleepButton)
   ui.addComponent(makeGambleButton)
 
-  // select(document, '.showluck').addEventListener('click', hideLuck)
-  // select(document, '.showrisk').addEventListener('click', hideRisk)
-
   connect(ui, {gameId, name, colour})
+}
+
+// main()
+
+function main() {
+  let urlParams = new URLSearchParams(window.location.search)
+  let gameId = urlParams.get('gameId')
+  let name = urlParams.get('name')
+  let colour = urlParams.get('colour')
+
+  if (!gameId || !name) {
+    alert('missing params')
+    return
+  }
+  if (!colour) {
+    // if colour is null, then just observe
+    colour = ""
+  }
+
+  let mapObject = document.createElement('object')
+  mapObject.type = 'image/svg+xml'
+  mapObject.data = 'map.svg'
+  select(document, '.map').append(mapObject)
+
+  mapObject.addEventListener('load', _e => {
+    fetch('data.json').
+      then(rez => rez.json()).
+      then(data => {
+        setup(data, gameId, name, colour)
+      })
+    })
+
+  window.cheat = function(cmd) {
+    netState.doRequest('play', { command: 'cheat', options: cmd }, console.log)
+  }
+}
+
+document.addEventListener('DOMContentLoaded', main)
+
+// unused
+
+function doSay() {
+  let msg = prompt('Say what?')
+  if (!msg) return
+  netState.send('text', msg)
 }
 
 function scrollingMap() {
@@ -1461,95 +1547,3 @@ function setupScrolling(elem, tgt) {
 
   elem.addEventListener('mousedown', ondown)
 }
-
-// showing messages
-
-function doLog(state, msg) {
-  let s = select(document, '.messages')
-  let d = document.createElement('div')
-  if (msg.who) {
-    let player = state.players[msg.who]
-    let where = ""
-    if (msg.where) {
-      let dotId = msg.where
-      let dot = state.data.dots[dotId]
-      let place = state.data.places[dot.place]
-      if (place) {
-        where = "in " + place.name
-      } else {
-        where = "at " + dotId
-      }
-    }
-    d.innerHTML = `<span style="color: ${player.colour}; font-weight: bold;">${player.name}</span> ${msg.what} ${where}`
-    if (msg.who != state.me.name) {
-      showLogLine(d.cloneNode(true))
-    }
-  } else if (msg.what) {
-    d.textContent = msg.what
-  } else {
-    let text = typeof msg === 'string' ? msg : JSON.stringify(msg)
-    d.textContent = text
-  }
-  s.prepend(d)
-}
-
-let messages = null
-function showLogLine(line) {
-  if (!messages) {
-    messages = [line]
-    showOneLogLine()
-  } else {
-    messages.push(line)
-  }
-}
-
-function showOneLogLine() {
-  let ele = select(document, '.showmessage')
-  let line = messages.pop()
-  if (line) {
-    ele.classList.add('open')
-    let ine = select(ele, '.message')
-    ine.replaceChildren(line)
-    setTimeout(showOneLogLine, 2000)
-  } else {
-    ele.classList.remove('open')
-    messages = null
-  }
-}
-
-// main()
-
-function main() {
-  let urlParams = new URLSearchParams(window.location.search)
-  let gameId = urlParams.get('gameId')
-  let name = urlParams.get('name')
-  let colour = urlParams.get('colour')
-
-  if (!gameId || !name) {
-    alert('missing params')
-    return
-  }
-  if (!colour) {
-    // if colour is null, then just observe
-    colour = ""
-  }
-
-  let mapObject = document.createElement('object')
-  mapObject.type = 'image/svg+xml'
-  mapObject.data = 'map.svg'
-  select(document, '.map').append(mapObject)
-
-  mapObject.addEventListener('load', _e => {
-    fetch('data.json').
-      then(rez => rez.json()).
-      then(data => {
-        setup(data, gameId, name, colour)
-      })
-    })
-
-  window.cheat = function(cmd) {
-    netState.doRequest('play', { command: 'cheat', options: cmd }, console.log)
-  }
-}
-
-document.addEventListener('DOMContentLoaded', main)

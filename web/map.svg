@@ -11,6 +11,7 @@
    inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
@@ -22,13 +23,13 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      showgrid="false"
-     inkscape:zoom="2.8163377"
-     inkscape:cx="441.53086"
-     inkscape:cy="231.68387"
+     inkscape:zoom="1.4081689"
+     inkscape:cx="387.02745"
+     inkscape:cy="259.20187"
      inkscape:window-width="1920"
-     inkscape:window-height="1016"
+     inkscape:window-height="1011"
      inkscape:window-x="0"
-     inkscape:window-y="1077"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1"
      inkscape:snap-nodes="false"
@@ -100,6 +101,14 @@
        style="display:inline;fill:none;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 550.92363,441.21755 -2.07117,-15.84233 7.82471,-4.0744 0.72705,9.04007 z"
        id="path43860" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       id="text20239"><textPath
+         xlink:href="#path26919"
+         id="textPath26921"><tspan
+           id="tspan20237"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.33333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke:none">TO SAN FRANCISCO</tspan></textPath></text>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -259,6 +268,28 @@
        style="fill:#373eea;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 40.209598,202.96669 -2.350689,9.32575 c 0,0 -1.885337,0.78435 -1.955792,0.19258 -0.07046,-0.59178 -0.01423,-10.71778 -0.01423,-10.71778 z m -10.299799,-9.01301 3.858011,-1.95163 2.923861,6.93634 -2.184274,2.44234 z m -5.375814,-11.22939 5.845346,-1.27077 3.024458,8.8488 -4.141744,1.41138 z m 117.631135,-59.16908 12.56726,6.59092 4.39582,-10.82976 10.34308,-2.32421 -6.95135,-3.92627 2.32134,-3.05171 -5.37377,-3.13315 -5.4811,-5.47312 -5.15988,5.29909 z m 101.76922,103.56655 3.15034,-11.98586 5.99738,-7.12925 2.18744,-0.246 -1.23083,9.06711 5.57905,2.52815 2.90073,-3.48668 3.78953,2.17206 -1.58226,2.93404 4.76937,0.34671 -0.43778,3.46754 -3.70308,1.43891 4.64163,3.7823 -3.93441,5.32817 -1.92208,-3.50444 -3.84385,3.10707 -2.86634,-1.79545 2.45629,-5.54494 -11.83928,2.19226 z M -0.53314445,173.76222 15.660465,171.64373 l 7.062423,8.42002 11.46174,-2.4964 13.704118,35.56706 11.495096,12.51874 -6.169376,4.27687 -6.752339,-8.78952 -1.756405,25.31415 -3.37847,20.7883 6.978877,34.59168 21.099795,-2.29283 10.974014,3.17505 12.800008,0.99289 6.496085,10.50903 15.357419,-0.25206 7.87134,15.23974 2.11228,-17.67522 11.67198,-7.1342 36.80863,2.75683 1.84482,15.13892 7.04735,6.34495 4.41281,-10.22632 -7.6036,-15.43265 13.88513,-12.49514 -1.03755,-30.20224 18.24856,-13.05655 -2.45177,-8.87274 5.97688,3.92071 6.66945,-0.18812 -3.94963,7.759 19.35644,-12.8178 -0.49486,-3.34472 -12.41097,1.88946 -4.40232,-7.00814 5.69486,-4.37571 -1.83361,-2.30135 -16.55361,5.37416 7.03585,-10.93364 30.54673,-1.92081 2.5298,-5.31627 9.56784,-4.65191 -3.14996,-5.85291 -6.34549,0.96088 2.27227,-4.18661 -7.02571,-2.78842 -14.58342,-24.91258 -1.66856,-11.45026 -5.52951,4.13561 0.88261,8.97969 -6.51718,4.20362 -7.08717,-4.75347 8.07488,-14.02287 -16.07282,-8.88895 -14.15542,2.84321 -3.58839,10.82071 6.64641,-0.30574 -4.92412,13.35392 -0.32644,43.99924 -9.52434,-6.20008 1.49132,-17.73928 -29.01513,-5.01276 -4.72926,-9.93691 -6.57888,0.4847 -1.02244,-11.76908 -10.61077,3.55387 11.5148,-44.97137 5.80498,-0.30625 0.48767,-8.06869 -14.57617,-0.24235 0.96513,-4.83804 14.30511,2.77792 -3.16081,-12.04543 16.71316,-17.293065 26.4349,1.626813 10.90314,4.864849 0.70041,17.977303 -8.87734,5.35272 -1.56963,15.57545 9.06072,-1.3005 4.28155,13.57621 21.31147,5.77189 -8.0878,-10.22809 10.26962,1.9267 -6.03481,-9.48563 -2.37225,-9.70455 -3.21078,-12.8468 11.03924,11.16372 15.328,-9.66867 -20.24098,-14.139311 -13.29166,-30.123822 -12.13556,-5.15906 -15.66929,7.064937 1.83038,-12.259468 -6.03069,-5.204116 -5.27997,14.468816 0.13292,-16.420193 -56.09039,13.745551 -85.848392,40.008276 -21.42593712,-8.777162 z"
        sodipodi:nodetypes="ccsccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       id="text6622"><textPath
+         xlink:href="#path27380"
+         id="textPath27462"><tspan
+           id="tspan6620"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.33333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">TO LOS ANGELES</tspan></textPath></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.33333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       x="1.4819567"
+       y="263.90726"
+       id="text31254"><tspan
+         sodipodi:role="line"
+         id="tspan31252"
+         x="1.4819567"
+         y="263.90726">TO</tspan><tspan
+         sodipodi:role="line"
+         x="1.4819567"
+         y="270.57391"
+         id="tspan31256">TOKYO</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -464,8 +495,9 @@
        id="path958" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 899.87585,528.92828 862.40463,288.56635 1000.9839,282.37903"
-       id="path960" />
+       d="M 899.87585,528.92828 862.40463,288.56635"
+       id="path960"
+       sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 48.623962,285.14386 0.57113647,285.75928"
@@ -545,11 +577,27 @@
        d="m 754.62276,541.77961 c 25.99592,47.82833 33.88566,28.32528 73.9213,29.44718"
        id="path88847"
        sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 862.40463,288.56635 138.57927,-6.18732"
+       id="path26360"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:6, 6;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 915.62265,298.48611 c 23.37887,2.71441 49.8005,44.09201 70.88623,30.00645"
+       id="path26919"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 907.67688,282.38252 50.67908,-2.18514"
+       id="path27380"
+       sodipodi:nodetypes="cc" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="Cities">
+     inkscape:label="Cities"
+     style="display:inline">
     <g
        id="london">
       <circle
@@ -565,8 +613,8 @@
          id="path1984"
          inkscape:flatsided="false"
          sodipodi:sides="5"
-         sodipodi:cx="373.91117"
-         sodipodi:cy="61.909572"
+         sodipodi:cx="373.91116"
+         sodipodi:cy="61.909573"
          sodipodi:r1="13.326529"
          sodipodi:r2="4.7485089"
          sodipodi:arg1="0.77046869"

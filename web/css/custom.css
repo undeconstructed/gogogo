@@ -352,6 +352,10 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-flow: column nowrap;
+}
+.showmessage .message {
+  text-align: center;
 }
 
 .messages {
