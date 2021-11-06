@@ -216,7 +216,7 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 		}
 		if err != nil {
 			log.Info().Err(err).Msgf("client read error: %v", addr)
-			server.coreCh <- disconnectMsg{Name: name}
+			server.coreCh <- disconnectMsg{gameId, name}
 			return
 		}
 		log.Info().Msgf("received from: %s %s", msg.Head, string(msg.Data))
