@@ -139,8 +139,20 @@ func (s *server) Run() error {
 
 func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 	switch msg := in.(type) {
+	case listGamesMsg:
+		list := []string{}
+		for gameId := range s.games {
+			list = append(list, gameId)
+		}
+		msg.Rep <- list
+		return nil, nil
 	case createGameMsg:
 		log := log.With().Str("game", msg.Name).Logger()
+
+		if _, exists := s.games[msg.Name]; exists {
+			msg.Rep <- errors.New("name conflict")
+			return nil, nil
+		}
 
 		game, err := s.makeGame()
 		if err != nil {
@@ -150,6 +162,7 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 
 		gameholder := &oneGame{
 			name:    msg.Name,
+			dirty:   true,
 			game:    game,
 			clients: map[string]*clientBundle{},
 			log:     log,
@@ -161,6 +174,31 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 
 		msg.Rep <- nil
 		return gameholder, nil
+	case queryGameMsg:
+		game, exists := s.games[msg.Name]
+		if !exists {
+			msg.Rep <- nil
+			return nil, nil
+		}
+
+		s := game.game.GetGameState()
+		msg.Rep <- s
+		return nil, nil
+	case deleteGameMsg:
+		game, exists := s.games[msg.Name]
+		if !exists {
+			msg.Rep <- nil
+			return nil, nil
+		}
+
+		// XXX - doesn't disconnect anyone
+		delete(s.games, msg.Name)
+		s.wipeGame(game)
+
+		log.Info().Msg("deleted")
+
+		msg.Rep <- nil
+		return nil, nil
 	case connectMsg:
 		g, ok := s.games[msg.Game]
 		if !ok {
@@ -247,14 +285,36 @@ func (s *server) Connect(game, name, colour string, client clientBundle) error {
 	return <-resCh
 }
 
+func (s *server) ListGames() []string {
+	resCh := make(chan []string)
+	s.coreCh <- listGamesMsg{resCh}
+	return <-resCh
+}
+
 func (s *server) CreateGame(name string) error {
 	resCh := make(chan error)
 	s.coreCh <- createGameMsg{name, resCh}
 	return <-resCh
 }
 
+func (s *server) QueryGame(name string) interface{} {
+	resCh := make(chan interface{})
+	s.coreCh <- queryGameMsg{name, resCh}
+	return <-resCh
+}
+
+func (s *server) DeleteGame(name string) error {
+	resCh := make(chan error)
+	s.coreCh <- deleteGameMsg{name, resCh}
+	return <-resCh
+}
+
+func (s *server) saveFileName(g *oneGame) string {
+	return fmt.Sprintf("state-%s.json", g.name)
+}
+
 func (s *server) saveGame(g *oneGame) {
-	outFile, err := os.Create(fmt.Sprintf("state-%s.json", g.name))
+	outFile, err := os.Create(s.saveFileName(g))
 	if err != nil {
 		g.log.Error().Err(err).Msg("can't save")
 		return
@@ -262,6 +322,14 @@ func (s *server) saveGame(g *oneGame) {
 	defer outFile.Close()
 
 	g.game.WriteOut(outFile)
+}
+
+func (s *server) wipeGame(g *oneGame) {
+	err := os.Remove(s.saveFileName(g))
+	if err != nil {
+		g.log.Error().Err(err).Msg("can't delete")
+		return
+	}
 }
 
 func (s *server) handleText(in textFromUser) {

@@ -5,7 +5,21 @@ type toSend struct {
 	data  interface{}
 }
 
+type listGamesMsg struct {
+	Rep chan []string
+}
+
 type createGameMsg struct {
+	Name string
+	Rep  chan error
+}
+
+type queryGameMsg struct {
+	Name string
+	Rep  chan interface{}
+}
+
+type deleteGameMsg struct {
 	Name string
 	Rep  chan error
 }
