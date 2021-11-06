@@ -1533,6 +1533,10 @@
      inkscape:label="Dots" />
   <g
      inkscape:groupmode="layer"
+     id="playerslayer"
+     inkscape:label="Players" />
+  <g
+     inkscape:groupmode="layer"
      id="layer7"
      inkscape:label="Pieces"
      style="display:none">
@@ -1579,6 +1583,21 @@
          cy="10"
          r="1.6309166"
          id="circle186871" />
+    </svg>
+    <svg
+       id="playerwedge"
+       y="0"
+       x="0"
+       style="display:inline"
+       version="1.1"
+       viewbox="0 0 40 40"
+       width="100%"
+       height="100%">
+      <path
+         style="fill:#ff0000;stroke-width:17.0944;stroke-linecap:square"
+         d="m 31.516991,3.6552646 c -5.84695,-4.31601747 -13.05069,-4.31601747 -18.897639,1.3e-6 0,0 2.379325,9.9767171 5.596155,12.3926691 2.195813,1.64913 5.424071,1.753574 7.639025,0.14683 3.283317,-2.381745 5.662459,-12.5395004 5.662459,-12.5395004 z"
+         sodipodi:nodetypes="ccssc"
+         id="path4349" />
     </svg>
   </g>
 </svg>

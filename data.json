@@ -204,7 +204,7 @@
       "type": "hotel",
       "name": "Hotel bill - £100 - Payable in local currency",
       "options": [
-        "debt:<lc>:10"
+        "auto:debt:<lc>:10"
       ]
     },
     {

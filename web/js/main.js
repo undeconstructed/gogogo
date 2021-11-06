@@ -6,13 +6,7 @@ import { newUI, connect, promoteCustom } from './game.js'
 let netState = null
 
 function processUpdate(u) {
-  promoteCustom(u)
-
-  u.players = u.players || {}
-
   for (let pl of u.players) {
-    promoteCustom(pl)
-
     pl.souvenirs = pl.souvenirs || []
     pl.lucks = pl.lucks || []
     pl.money = pl.money || {}
@@ -25,15 +19,6 @@ function processUpdate(u) {
   }
 
   return u
-}
-
-function processTurn(t) {
-  promoteCustom(t)
-
-  t.can = t.can  || []
-  t.must = t.must || []
-
-  return t
 }
 
 // game utils
@@ -114,7 +99,8 @@ function makeMap(data, up) {
   let marks = {}
 
   let svg = document.querySelector('.map > object').contentDocument
-  let layer = svg.querySelector('#dotslayer')
+  let dotsLayer = svg.querySelector('#dotslayer')
+  let playersLayer = svg.querySelector('#playerslayer')
 
   let splitDotId = s => {
     let ss = s.split(',')
@@ -150,7 +136,7 @@ function makeMap(data, up) {
         ndot.addEventListener('click', _e => {
           up.send({ do: 'showprices', at: point.place })
         })
-        layer.append(ndot)
+        dotsLayer.append(ndot)
       } else {
         let ndot = null
         if (point.danger) {
@@ -162,7 +148,7 @@ function makeMap(data, up) {
         ndot.setAttributeNS(null, 'cx', x);
         ndot.setAttributeNS(null, 'cy', y);
         ndot.addEventListener('click', _e => { alert(pointId) })
-        layer.append(ndot)
+        dotsLayer.append(ndot)
       }
     }
 
@@ -171,7 +157,7 @@ function makeMap(data, up) {
     }
   })()
 
-  let makeMark = (colour, dot) => {
+  let makeMark = (number, colour, dot) => {
     if (!colour) {
       return
     }
@@ -181,23 +167,37 @@ function makeMap(data, up) {
       prev.remove()
     }
 
+    let point = data.dots[dot]
     let [x, y] = splitDotId(dot)
 
-    let marker = svg.querySelector('#playerring')
-    let nmarker = marker.cloneNode()
-    nmarker.id = 'player-' + colour
-    nmarker.setAttributeNS(null, 'cx', x);
-    nmarker.setAttributeNS(null, 'cy', y);
-    nmarker.style.stroke = colour
+    let nmarker = null
+
+    if (point.terminal) {
+      let rotate = 60*number
+      let marker = svg.querySelector('#playerwedge')
+      nmarker = marker.cloneNode(true)
+      nmarker.id = 'player-' + colour
+      nmarker.setAttributeNS(null, 'x', x-22)
+      nmarker.setAttributeNS(null, 'y', y-22)
+      nmarker.firstElementChild.setAttributeNS(null, 'transform', `rotate(${rotate},22,22)`)
+      nmarker.firstElementChild.style.fill = colour
+    } else {
+      let marker = svg.querySelector('#playerring')
+      nmarker = marker.cloneNode(true)
+      nmarker.id = 'player-' + colour
+      nmarker.setAttributeNS(null, 'cx', x)
+      nmarker.setAttributeNS(null, 'cy', y)
+      nmarker.style.stroke = colour
+    }
 
     marks[colour] = nmarker
-    layer.append(nmarker)
+    playersLayer.append(nmarker)
   }
 
   let makeMarks = (players, playing) => {
     for (let name in players) {
       let pl = players[name]
-      makeMark(pl.colour, pl.dot)
+      makeMark(pl.number, pl.colour, pl.dot)
       if (pl.name == playing) {
         scrollTo(pl.dot)
       }
@@ -1248,7 +1248,7 @@ function fixupData(indata) {
 function setup(inData, gameId, name, colour) {
   let data = fixupData(inData)
 
-  let ui = newUI(data, gameId, name, colour, processUpdate, processTurn)
+  let ui = newUI(data, gameId, name, colour, processUpdate)
   window.ui = ui
 
   ui.addComponent(makeLog)

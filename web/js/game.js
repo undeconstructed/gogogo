@@ -7,20 +7,24 @@ export function promoteCustom(o) {
   return o
 }
 
-export function defaultProcessUpdate(u) {
+function defaultProcessUpdate(u) {
   promoteCustom(u)
 
-  u.players = u.players || {}
+  u.players = u.players || []
 
-  for (let pl of u.players) {
+  for (let pln in u.players) {
+    let pl = u.players[pln]
+    pl.number = pln
     promoteCustom(pl)
   }
 
   return u
 }
 
-export function defaultProcessTurn(t) {
+function defaultProcessTurn(t) {
   promoteCustom(t)
+  t.can = t.can  || []
+  t.must = t.must || []
   return t
 }
 
@@ -107,8 +111,8 @@ export function connect(listener, args) {
 }
 
 export function newUI(data, gameId, name, colour, processUpdate, processTurn) {
-  processTurn = processTurn || defaultProcessTurn
-  processUpdate = processUpdate || defaultProcessUpdate
+  processTurn = processTurn || (e => e)
+  processUpdate = processUpdate || (e => e)
   let state = {
     data: data,
     gameId: gameId,
@@ -182,7 +186,7 @@ export function newUI(data, gameId, name, colour, processUpdate, processTurn) {
   }
 
   let onUpdate = u => {
-    u = processUpdate(u)
+    u = processUpdate(defaultProcessUpdate(u))
 
     state.status = u.status
     state.winner = u.winner
@@ -208,7 +212,7 @@ export function newUI(data, gameId, name, colour, processUpdate, processTurn) {
   }
 
   let onTurn = t => {
-    t = processTurn(t)
+    t = processTurn(defaultProcessTurn(t))
     turn = newTurn(t)
     for (let c of components) {
       c.onTurn && c.onTurn(turn)
