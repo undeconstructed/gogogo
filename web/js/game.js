@@ -1,5 +1,114 @@
 
-export function newUI(data, gameId, name, colour) {
+export function promoteCustom(o) {
+  for (let x in o.custom) {
+    o[x] = o.custom[x]
+  }
+  delete o.custom
+  return o
+}
+
+export function defaultProcessUpdate(u) {
+  promoteCustom(u)
+
+  u.players = u.players || {}
+
+  for (let pl of u.players) {
+    promoteCustom(pl)
+  }
+
+  return u
+}
+
+export function defaultProcessTurn(t) {
+  promoteCustom(t)
+  return t
+}
+
+export function connect(listener, args) {
+  let netState = {
+    ws: null,
+
+    reqNo: 0,
+    reqs: new Map(),
+
+    send() {},
+    doRequest() {},
+  }
+
+  let q = ''
+  for (let k in args) {
+    q += k + '=' + args[k] + '&'
+  }
+
+  const conn = new WebSocket(`ws://${location.host}/ws?${q}`, 'comms')
+
+  conn.onclose = e => {
+    console.log(`WebSocket Disconnected code: ${e.code}, reason: ${e.reason}`)
+    netState.ws = null
+    listener.onDisconnect()
+    if (e.code !== 1001) {
+      setTimeout(() => {
+        connect(listener, args)
+      }, 5000)
+    }
+  }
+
+  conn.onopen = _e => {
+    netState.ws = conn
+    listener.onConnect()
+
+    let send = (type, data) => {
+      let msg = {
+        Head: type,
+        Data: data
+      }
+
+      console.log('tx', msg)
+      let jtext = JSON.stringify(msg)
+      conn.send(jtext)
+    }
+
+    let request = (rtype, body, then) => {
+      let rn = '' + netState.reqNo++
+      let mtype = 'request:' + rn + ':' + rtype
+      netState.reqs.set(rn, then)
+      send(mtype, body)
+    }
+
+    netState.send = send
+    netState.doRequest = request
+  }
+
+  conn.onmessage = e => {
+    if (typeof e.data !== "string") {
+      console.error("unexpected message type", typeof e.data)
+      return
+    }
+    let msg = JSON.parse(e.data)
+    console.log('rx', msg)
+    if (msg.head === 'update') {
+      setTimeout(() => listener.onUpdate(msg.data), 0)
+    } else if (msg.head === 'turn') {
+      setTimeout(() => listener.onTurn(msg.data), 0)
+    } else if (msg.head === 'text') {
+      setTimeout(() => listener.onText(msg.data), 0)
+    } else if (msg.head.startsWith('response:')) {
+      let rn = msg.head.substring(9)
+      let then = netState.reqs.get(rn)
+      netState.reqs.delete(rn)
+
+      let res = msg.data
+      // XXX - nothing says these fields must exist
+      setTimeout(() => then(res.error, res), 0)
+    }
+  }
+
+  return netState
+}
+
+export function newUI(data, gameId, name, colour, processUpdate, processTurn) {
+  processTurn = processTurn || defaultProcessTurn
+  processUpdate = processUpdate || defaultProcessUpdate
   let state = {
     data: data,
     gameId: gameId,
@@ -73,6 +182,8 @@ export function newUI(data, gameId, name, colour) {
   }
 
   let onUpdate = u => {
+    u = processUpdate(u)
+
     state.status = u.status
     state.winner = u.winner
     state.playing = u.playing
@@ -97,6 +208,7 @@ export function newUI(data, gameId, name, colour) {
   }
 
   let onTurn = t => {
+    t = processTurn(t)
     turn = newTurn(t)
     for (let c of components) {
       c.onTurn && c.onTurn(turn)

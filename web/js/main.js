@@ -1,121 +1,9 @@
 
-import { newUI } from './game.js'
+import { newUI, connect, promoteCustom } from './game.js'
 
 // net stuff
 
-let netState = {
-  ws: null,
-
-  reqNo: 0,
-  reqs: new Map(),
-
-  send() {},
-  doRequest() {},
-}
-
-function connect(listener, args) {
-  if (netState.ws) return
-
-  const conn = new WebSocket(`ws://${location.host}/ws?game=${args.gameId}&name=${args.name}&colour=${args.colour}`, 'comms')
-
-  conn.onclose = e => {
-    console.log(`WebSocket Disconnected code: ${e.code}, reason: ${e.reason}`)
-    netState.ws = null
-    listener.onDisconnect()
-    if (e.code !== 1001) {
-      setTimeout(() => {
-        connect(listener, args)
-      }, 5000)
-    }
-  }
-
-  conn.onopen = _e => {
-    netState.ws = conn
-    listener.onConnect()
-
-    let send = (type, data) => {
-      let msg = {
-        Head: type,
-        Data: data
-      }
-
-      console.log('tx', msg)
-      let jtext = JSON.stringify(msg)
-      conn.send(jtext)
-    }
-
-    let request = (rtype, body, then) => {
-      let rn = '' + netState.reqNo++
-      let mtype = 'request:' + rn + ':' + rtype
-      netState.reqs.set(rn, then)
-      send(mtype, body)
-    }
-
-    netState.send = send
-    netState.doRequest = request
-  }
-
-  conn.onmessage = e => {
-    if (typeof e.data !== "string") {
-      console.error("unexpected message type", typeof e.data)
-      return
-    }
-    let msg = JSON.parse(e.data)
-    console.log('rx', msg)
-    if (msg.head === 'update') {
-      let u = processUpdate(msg.data)
-      listener.onUpdate(u)
-    } else if (msg.head === 'turn') {
-      let t = processTurn(msg.data)
-      listener.onTurn(t)
-    } else if (msg.head === 'text') {
-      listener.onText(msg.data)
-    } else if (msg.head.startsWith('response:')) {
-      let rn = msg.head.substring(9)
-      let then = netState.reqs.get(rn)
-      netState.reqs.delete(rn)
-
-      let res = msg.data
-      // XXX - nothing says these fields must exist
-      then(res.error, res)
-    }
-  }
-}
-
-// game utils
-
-function makeByLine(data, modes) {
-  let ms = []
-  for (let m of modes) {
-    ms.push(data.modes[m])
-  }
-  return ms.join('/')
-}
-
-// receiving data
-
-function fixupData(indata) {
-  for (let dotId in indata.dots) {
-    let dot = indata.dots[dotId]
-    if (dot.place) {
-      let place = indata.places[dot.place]
-      dot.terminal = true
-      if (place.city) {
-        dot.city = true
-      }
-    }
-  }
-
-  return indata
-}
-
-function promoteCustom(o) {
-  for (let x in o.custom) {
-    o[x] = o.custom[x]
-  }
-  delete o.custom
-  return o
-}
+let netState = null
 
 function processUpdate(u) {
   promoteCustom(u)
@@ -146,6 +34,16 @@ function processTurn(t) {
   t.must = t.must || []
 
   return t
+}
+
+// game utils
+
+function makeByLine(data, modes) {
+  let ms = []
+  for (let m of modes) {
+    ms.push(data.modes[m])
+  }
+  return ms.join('/')
 }
 
 // ui components
@@ -415,7 +313,7 @@ function makeSquares(data) {
   return { onUpdate, onTurn }
 }
 
-function makePriceList(data) {
+function makePriceList(data, up) {
   let ele = document.querySelector('.prices')
 
   ;(() => {
@@ -1332,10 +1230,25 @@ function makeWindicator() {
 
 // game setup
 
+function fixupData(indata) {
+  for (let dotId in indata.dots) {
+    let dot = indata.dots[dotId]
+    if (dot.place) {
+      let place = indata.places[dot.place]
+      dot.terminal = true
+      if (place.city) {
+        dot.city = true
+      }
+    }
+  }
+
+  return indata
+}
+
 function setup(inData, gameId, name, colour) {
   let data = fixupData(inData)
 
-  let ui = newUI(data, gameId, name, colour)
+  let ui = newUI(data, gameId, name, colour, processUpdate, processTurn)
   window.ui = ui
 
   ui.addComponent(makeLog)
@@ -1359,7 +1272,7 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeDebt)
   ui.addComponent(makeWindicator)
 
-  connect(ui, {gameId, name, colour})
+  netState = connect(ui, { game: gameId, name, colour })
 }
 
 // main()
