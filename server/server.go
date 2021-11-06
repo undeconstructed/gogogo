@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type MakeGameFunc func() (game.Game, error)
+type MakeGameFunc func(GameOptions) (game.Game, error)
 
 type LoadGameFunc func(io.Reader) (game.Game, error)
 
@@ -154,7 +154,7 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 			return nil, nil
 		}
 
-		game, err := s.makeGame()
+		game, err := s.makeGame(msg.Options)
 		if err != nil {
 			msg.Rep <- err
 			return nil, nil
@@ -291,9 +291,9 @@ func (s *server) ListGames() []string {
 	return <-resCh
 }
 
-func (s *server) CreateGame(name string) error {
+func (s *server) CreateGame(name string, options GameOptions) error {
 	resCh := make(chan error)
-	s.coreCh <- createGameMsg{name, resCh}
+	s.coreCh <- createGameMsg{name, options, resCh}
 	return <-resCh
 }
 

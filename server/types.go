@@ -1,5 +1,7 @@
 package server
 
+type GameOptions map[string]string
+
 type toSend struct {
 	mtype string
 	data  interface{}
@@ -10,8 +12,9 @@ type listGamesMsg struct {
 }
 
 type createGameMsg struct {
-	Name string
-	Rep  chan error
+	Name    string
+	Options GameOptions
+	Rep     chan error
 }
 
 type queryGameMsg struct {

@@ -92,7 +92,9 @@ func (rh *restHandler) makeGame(c *gin.Context) {
 		return
 	}
 
-	err := rh.server.CreateGame(id)
+	options := c.QueryMap("options")
+
+	err := rh.server.CreateGame(id, options)
 	if err != nil {
 		rh.log.Error().Err(err).Msg("create game error")
 		c.String(http.StatusInternalServerError, "error: %v", err)

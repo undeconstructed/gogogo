@@ -4,6 +4,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/undeconstructed/gogogo/client"
@@ -34,8 +35,13 @@ func serverMain() {
 	rand.Seed(time.Now().Unix())
 	data := gogame.LoadJson()
 
-	server := server.NewServer(func() (game.Game, error) {
-		return gogame.NewGame(data), nil
+	server := server.NewServer(func(options server.GameOptions) (game.Game, error) {
+		goal, _ := strconv.Atoi(options["goal"])
+		if goal < 1 {
+			goal = 1
+		}
+
+		return gogame.NewGame(data, goal), nil
 	}, func(in io.Reader) (game.Game, error) {
 		return gogame.NewFromSaved(data, in)
 	})

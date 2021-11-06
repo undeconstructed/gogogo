@@ -35,7 +35,7 @@ type gogame struct {
 	winner  string
 }
 
-func NewGame(data GameData) game.Game {
+func NewGame(data GameData, goal int) game.Game {
 	g := &gogame{}
 
 	// static stuff
@@ -64,10 +64,12 @@ func NewGame(data GameData) game.Game {
 	// never allowed without cheating:
 	g.cmds["moven"] = g.turn_moven
 
-	// import data
-
+	// default settings
 	g.settings = data.Settings
+	// overrides
+	g.settings.Goal = goal
 
+	// import data
 	g.squares = data.Squares
 	g.currencies = data.Currencies
 	g.places = data.Places
@@ -165,7 +167,7 @@ func NewGame(data GameData) game.Game {
 
 func NewFromSaved(data GameData, r io.Reader) (game.Game, error) {
 	// do default setup
-	g := NewGame(data).(*gogame)
+	g := NewGame(data, 5).(*gogame)
 
 	injson := json.NewDecoder(r)
 	save := gameSave{}
@@ -174,6 +176,8 @@ func NewFromSaved(data GameData, r io.Reader) (game.Game, error) {
 		return nil, err
 	}
 
+	// reload settings
+	g.settings = save.Settings
 	// add players
 	for _, pl0 := range save.Players {
 		g.players = append(g.players, pl0)
@@ -402,12 +406,13 @@ func (g *gogame) GetGameState() game.GameState {
 func (g *gogame) WriteOut(w io.Writer) error {
 
 	out := gameSave{
-		Players: g.players,
-		Winner:  g.winner,
-		Bank:    g.bank,
-		Lucks:   []int(g.luckPile),
-		Risks:   []int(g.riskPile),
-		Turn:    g.turn,
+		Settings: g.settings,
+		Players:  g.players,
+		Winner:   g.winner,
+		Bank:     g.bank,
+		Lucks:    []int(g.luckPile),
+		Risks:    []int(g.riskPile),
+		Turn:     g.turn,
 	}
 
 	jdata, err := json.MarshalIndent(out, "", "  ")
