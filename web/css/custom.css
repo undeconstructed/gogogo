@@ -165,6 +165,7 @@ body {
   height: 3rem;
   width: 3rem;
   border-radius: 1.5em;
+  border: 2px solid black;
 }
 
 .actions {
@@ -279,7 +280,7 @@ body {
   position: absolute;
   bottom: 2rem;
   left: 16rem;
-  height: 14rem;
+  height: 11rem;
   width: 14rem;
   opacity: .6;
   cursor: pointer;
@@ -466,30 +467,6 @@ body {
 }
 .messages:hover {
   height: 8rem;
-  opacity: 1;
-}
-
-.showdice {
-  display: none;
-  position: absolute;
-  height: 9rem;
-  right: 10rem;
-  bottom: 4rem;
-  width: 9rem;
-}
-.showdice.open {
-  display: block;
-}
-.showdice .dice {
-  width: 100%;
-  height: 100%;
-  background-image: url('../img/dice.svg');
-  background-size: contain;
-  opacity: 0.6;
-  cursor: pointer;
-  transition: opacity .5s;
-}
-.showdice .dice:hover {
   opacity: 1;
 }
 
@@ -783,10 +760,16 @@ body {
   margin: .5rem 0;
 }
 .souvenircard .foot button {
-  visibility: hidden;
+  display: none;
 }
-.souvenirs.open.mustdeclare .souvenircard .foot button {
-  visibility: visible !important;
+.souvenirs.open.mustdeclare .souvenircard .foot button.declare {
+  display: unset;
+}
+.souvenirs.open.cansell .souvenircard .foot button.sell {
+  display: unset;
+}
+.souvenirs.open.canpawn .souvenircard .foot button.pawn {
+  display: unset;
 }
 
 .souvenirs {
@@ -860,9 +843,6 @@ body {
   position: absolute;
   bottom: 2rem; right: 2rem;
 }
-.banknote .foot button {
-  visibility: hidden;
-}
 
 .banknote.tc {
 }
@@ -902,14 +882,17 @@ body {
 .money.open .banknote:hover {
   z-index: 1000;
 }
+.money .foot button {
+  display: none;
+}
 .money.open.canchange .banknote .foot button.change {
-  visibility: visible !important;
+  display: unset;
 }
 .money.open.cangamble .banknote .foot button.gamble {
-  visibility: visible !important;
+  display: unset;
 }
 .money.open.canpay .banknote .foot button.pay {
-  visibility: visible !important;
+  display: unset;
 }
 
 .debt {

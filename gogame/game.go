@@ -53,9 +53,12 @@ func NewGame(data GameData, goal int) game.Game {
 	g.cmds["ignorerisk"] = g.turn_ignorerisk
 	g.cmds["insurance"] = g.turn_insurance
 	g.cmds["obeyrisk"] = g.turn_obeyrisk
+	g.cmds["pawnsouvenir"] = g.turn_pawnsouvenir
 	g.cmds["pay"] = g.turn_pay
 	g.cmds["paycustoms"] = g.turn_paycustoms
 	g.cmds["quarantine"] = g.turn_quarantine
+	g.cmds["redeemsouvenir"] = g.turn_redeemsouvenir
+	g.cmds["sellsouvenir"] = g.turn_sellsouvenir
 	g.cmds["stop"] = g.turn_stop
 	g.cmds["takeluck"] = g.turn_takeluck
 	g.cmds["takerisk"] = g.turn_takerisk
@@ -706,7 +709,7 @@ func (g *gogame) toNextPlayer() {
 		hasDebt := p1.Debt != nil
 		onMap := hasTicket && !hasDebt
 
-		can := []string{"dicemove", "useluck:*"}
+		can := []string{"dicemove", "useluck:*", "pawnsouvenir:*", "sellsouvenir:*", "redeemsouvenir:*"}
 		if hasDebt {
 			can = append(can, "pay:*:*")
 		}

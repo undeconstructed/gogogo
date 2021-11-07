@@ -921,10 +921,22 @@ function makeSouvenirPile(data) {
         for (let bar of div.querySelectorAll('.bar')) {
           bar.style.backgroundColor = currency.colour
         }
-        div.querySelector('button').addEventListener('click', e => {
+        div.querySelector('button.declare').addEventListener('click', e => {
           e.stopPropagation()
           let cb = (e, _r) => { if (e) { alert(e.message); return; } }
           netState.doRequest('play', { command: 'declare:'+placeId }, cb)
+          doClose()
+        })
+        div.querySelector('button.pawn').addEventListener('click', e => {
+          e.stopPropagation()
+          let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+          netState.doRequest('play', { command: 'pawnsouvenir:'+placeId }, cb)
+          doClose()
+        })
+        div.querySelector('button.sell').addEventListener('click', e => {
+          e.stopPropagation()
+          let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+          netState.doRequest('play', { command: 'sellsouvenir:'+placeId }, cb)
           doClose()
         })
         stack.append(div)
@@ -952,6 +964,8 @@ function makeSouvenirPile(data) {
 
   let onTurn = t => {
     stack.classList.toggle('mustdeclare', t.hasMust('declare:*'))
+    stack.classList.toggle('canpawn', t.hasCan('pawnsouvenir:*'))
+    stack.classList.toggle('cansell', t.hasCan('sellsouvenir:*'))
   }
 
   return { onUpdate, onTurn }
@@ -970,9 +984,12 @@ function makeAutoButtons(data, up) {
     'gamble',
     'ignorerisk',
     'obeyrisk',
+    'pawnsouvenir',
     'pay',
     'paycustoms',
     `quarantine`,
+    'redeemsouvenir',
+    'sellsouvenir',
     'stop',
     'takeluck',
     'takerisk',

@@ -279,8 +279,9 @@ type RiskCode struct {
 }
 
 type currency struct {
-	Name string `json:"name"`
-	Rate int    `json:"rate"`
+	Name  string `json:"name"`
+	Rate  int    `json:"rate"`
+	Units []int  `json:"units"`
 }
 
 type trackSquare struct {

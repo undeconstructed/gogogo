@@ -96,18 +96,24 @@ func (g *gogame) turn_changemoney(t *turn, c game.CommandPattern, args []string)
 	to := args[1]
 	amount, _ := strconv.Atoi(args[2])
 
-	atNow := g.places[g.dots[t.player.OnDot].Place].Currency
-	if to != atNow {
-		return nil, game.ErrNotNow
+	// the command pattern will block this
+	// atNow := g.places[g.dots[t.player.OnDot].Place].Currency
+	// if to != atNow {
+	// 	return nil, game.ErrNotNow
+	// }
+
+	fromCurrency := g.currencies[from]
+	toCurrency := g.currencies[to]
+
+	smallestUnit := fromCurrency.Units[0]
+	if amount%smallestUnit != 0 {
+		return nil, fmt.Errorf("%s must be in unit of %d", fromCurrency.Name, smallestUnit)
 	}
 
 	haveMoney := t.player.Money[from]
 	if haveMoney < amount {
 		return nil, errors.New("not enough money")
 	}
-
-	fromCurrency := g.currencies[from]
-	toCurrency := g.currencies[to]
 
 	fromRate := fromCurrency.Rate
 	toRate := toCurrency.Rate
@@ -189,10 +195,16 @@ func (g *gogame) turn_dicemove(t *turn, c game.CommandPattern, args []string) (i
 }
 
 func (g *gogame) turn_gamble(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
-	currency := args[0]
+	currencyId := args[0]
 	amount, _ := strconv.Atoi(args[1])
 
-	haveMoney := t.player.Money[currency]
+	currency := g.currencies[currencyId]
+	smallestUnit := currency.Units[0]
+	if amount%smallestUnit != 0 {
+		return nil, fmt.Errorf("%s must be in unit of %d", currency.Name, smallestUnit)
+	}
+
+	haveMoney := t.player.Money[currencyId]
 	if haveMoney < amount {
 		return nil, errors.New("not enough money")
 	}
@@ -202,11 +214,11 @@ func (g *gogame) turn_gamble(t *turn, c game.CommandPattern, args []string) (int
 	t.Can, _ = stringListWithout(t.Can, string(c))
 
 	if roll >= 4 {
-		g.moveMoney(g.bank.Money, t.player.Money, currency, amount)
+		g.moveMoney(g.bank.Money, t.player.Money, currencyId, amount)
 		t.addEventf("gambles, rolls %d, and wins!", roll)
 		return "won", nil
 	} else {
-		g.moveMoney(t.player.Money, g.bank.Money, currency, amount)
+		g.moveMoney(t.player.Money, g.bank.Money, currencyId, amount)
 		t.addEventf("gambles, rolls %d, and loses!", roll)
 		return "lost", nil
 	}
@@ -325,6 +337,18 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	return nil, nil
 }
 
+func (g *gogame) turn_pawnsouvenir(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	place := args[0]
+
+	if !stringListContains(t.player.Souvenirs, place) {
+		return nil, errors.New("souvenir not found")
+	}
+
+	t.addEventf("tries to pawn a souvenir from %s", place)
+
+	return "not implemented", nil
+}
+
 func (g *gogame) turn_moven(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	n, _ := strconv.Atoi(args[0])
 
@@ -347,16 +371,21 @@ func (g *gogame) turn_pay(t *turn, c game.CommandPattern, args []string) (interf
 	currencyId := args[0]
 	amount, _ := strconv.Atoi(args[1])
 
+	currency := g.currencies[currencyId]
+	smallestUnit := currency.Units[0]
+	if amount%smallestUnit != 0 {
+		return nil, fmt.Errorf("%s must be in unit of %d", currency.Name, smallestUnit)
+	}
+
 	haveMoney := t.player.Money[currencyId]
 	if haveMoney < amount {
 		return nil, errors.New("not enough money")
 	}
 
-	currency := g.currencies[currencyId]
 	nAmount := amount / currency.Rate
 
 	// TODO - error check
-	// TODO - change?
+	// TODO - conversion?
 	_ = g.moveMoney(t.player.Money, g.bank.Money, currencyId, amount)
 
 	// TODO - currencies
@@ -395,6 +424,22 @@ func (g *gogame) turn_quarantine(t *turn, c game.CommandPattern, args []string) 
 	t.addEvent("enters quarantine")
 
 	return g.doAutoCommand(t, game.CommandPattern("end"))
+}
+
+func (g *gogame) turn_redeemsouvenir(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	return "not implemented", nil
+}
+
+func (g *gogame) turn_sellsouvenir(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
+	place := args[0]
+
+	if !stringListContains(t.player.Souvenirs, place) {
+		return nil, errors.New("souvenir not found")
+	}
+
+	t.addEventf("tries to sell a souvenir from %s", place)
+
+	return "not implemented", nil
 }
 
 func (g *gogame) turn_stop(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
