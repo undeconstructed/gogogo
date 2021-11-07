@@ -146,7 +146,7 @@ func (g *gogame) turn_declare(t *turn, c game.CommandPattern, args []string) (in
 
 	if place == "none" {
 		if len(t.player.Souvenirs) > 0 {
-			return nil, errors.New("nice try")
+			return nil, errors.New("you have a souvenir")
 		}
 		t.Must, _ = stringListWithout(t.Must, string(c))
 		t.addEvent("declares no souvenirs")
@@ -393,7 +393,8 @@ func (g *gogame) turn_quarantine(t *turn, c game.CommandPattern, args []string) 
 	t.Must, _ = stringListWithout(t.Must, string(c))
 
 	t.addEvent("enters quarantine")
-	return nil, nil
+
+	return g.doAutoCommand(t, game.CommandPattern("end"))
 }
 
 func (g *gogame) turn_stop(t *turn, c game.CommandPattern, args []string) (interface{}, error) {

@@ -265,6 +265,15 @@ body {
   padding-left: 3rem;
 }
 
+.stopbutton.onmap {
+  left: calc(50vw - 15rem);
+}
+.stopbutton.onmap .button {
+  border-radius: 50%;
+  width: 10rem;
+  border: 3px solid black;
+}
+
 .sleepbutton {
   display: none;
   position: absolute;
@@ -281,6 +290,10 @@ body {
 }
 .sleepbutton:hover {
   opacity: 1;
+}
+
+.sleepbutton.sick {
+  background-image: url("../img/sickbedtime.svg");
 }
 
 .dicebutton {
@@ -333,6 +346,85 @@ body {
   width: 40rem;
   height: 40rem;
   background: center / 10rem no-repeat url("../img/dice.svg"), center / contain no-repeat url("../img/roulette-wheel.svg");
+}
+
+.airliftbutton {
+  display: none;
+  position: absolute;
+  left: 50vw;
+  bottom: 50vh;
+  width: 0;
+  height: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: .6;
+  cursor: pointer;
+  transition: opacity .5s;
+}
+.airliftbutton.open {
+  display: flex;
+}
+.airliftbutton:hover {
+  opacity: 1;
+}
+.airliftbutton .button {
+  flex: 0 0 auto;
+  width: 30rem;
+  height: 20rem;
+  background: center / contain no-repeat url("../img/helicopter.svg");
+}
+
+.customsbutton {
+  display: none;
+  position: absolute;
+  left: 50vw;
+  bottom: 50vh;
+  width: 0;
+  height: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: .6;
+  cursor: pointer;
+  transition: opacity .5s;
+}
+.customsbutton.open {
+  display: flex;
+}
+.customsbutton:hover {
+  opacity: 1;
+}
+.customsbutton .button {
+  flex: 0 0 auto;
+  width: 30rem;
+  height: 20rem;
+  background: center / contain no-repeat url("../img/mustcustoms.svg");
+}
+
+.buysouvenirbutton {
+  display: none;
+  position: absolute;
+  right: 4rem;
+  bottom: 12em;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: .6;
+  cursor: pointer;
+  transition: opacity .5s;
+}
+.buysouvenirbutton.open {
+  display: flex;
+}
+.buysouvenirbutton:hover {
+  opacity: 1;
+}
+.buysouvenirbutton .button {
+  flex: 0 0 auto;
+  width: 5rem;
+  height: 10rem;
+  background: white;
 }
 
 .showmessage {
@@ -562,16 +654,16 @@ body {
 .rates {
   position: absolute;
   left: 20rem;
-  top: -16rem;
+  top: -21rem;
   background-color: #fdf3d7;
   width: 50em;
-  height: 20em;
+  height: 25em;
   rotate: -.01turn;
   transition: top .5s;
   font-family: serif;
   display: flex;
   flex-flow: column;
-  row-gap: .5rem;
+  justify-content: space-between;
   padding: 1rem;
 }
 .rates:hover {
@@ -584,7 +676,6 @@ body {
   font-weight: bold;
 }
 .rates .body {
-  flex: 1;
 }
 .rates .body table {
   border-top: 1px solid black;

@@ -418,6 +418,49 @@ function makePriceList(data, up) {
   return { onCommand, onTurn }
 }
 
+function makeRateList(data) {
+  let div = document.querySelector('.rates')
+
+  ;(() => {
+    let denoms = [ 1, 2, 5, 10, 20, 50 ]
+    let groups = {}
+
+    for (let cId in data.currencies) {
+      let c = data.currencies[cId]
+      let g = groups[c.rate] || []
+      g.push(c.name)
+      groups[c.rate] = g
+    }
+
+    let thead = div.querySelector('thead')
+    thead.replaceChildren()
+    {
+      let tr = document.createElement('tr')
+      for (let gId in groups) {
+        let g = groups[gId]
+        let th = document.createElement('th')
+        th.append(g.join(' '))
+        tr.append(th)
+      }
+      thead.append(tr)
+    }
+
+    let tbody = div.querySelector('tbody')
+    tbody.replaceChildren()
+    for (let d of denoms) {
+      let tr = document.createElement('tr')
+      for (let g in groups) {
+        let td = document.createElement('td')
+        td.textContent = d * g
+        tr.append(td)
+      }
+      tbody.append(tr)
+    }
+  })()
+
+  return {}
+}
+
 function makeLuckView(data) {
   let div = document.querySelector('.showluck')
 
@@ -918,21 +961,24 @@ function makeAutoButtons(data, up) {
   let buttonBox = document.querySelector('.actions')
 
   let skip = [
-    'useluck',
+    'buysouvenir',
     'buyticket',
     'changemoney',
-    // 'declare',
-    'pay',
+    'declare',
     'dicemove',
-    'stop',
     'end',
     'gamble',
+    'ignorerisk',
+    'obeyrisk',
+    'pay',
+    'paycustoms',
+    `quarantine`,
+    'stop',
     'takeluck',
     'takerisk',
-    'obeyrisk',
-    'ignorerisk'
+    'useluck'
   ]
-  skip = []
+  // skip = []
 
   let doPromptPlay = (cmd, opts, action, cb) => {
     let options = null
@@ -989,16 +1035,8 @@ function makeAutoButtons(data, up) {
         continue
       }
 
-      // if (cmd === 'buysouvenir') {
-      //   button.classList.add('buysouvenir')
-      //   // we know this command is complete, so no prompt
-      //   cmd = a
-      //   action = null
-      //   cb = r => up.send({ do: 'notify', msg: 'you have bought a ' + r.message })
-      // } else {
-        button.classList.add('text')
-        button.append(cmd)
-      // }
+      button.classList.add('text')
+      button.append(cmd)
 
       let cb1 = (e, r) => {
         if (e) {
@@ -1037,7 +1075,10 @@ function makeStopButton() {
   })()
 
   let onTurn = t => {
-    div.classList.toggle('open', t.hasCan('stop'))
+    let canStop = t.hasCan('stop')
+    let onMap = t.onmap
+    div.classList.toggle('onmap', onMap)
+    div.classList.toggle('open', canStop)
   }
 
   return { onTurn }
@@ -1097,19 +1138,117 @@ function makeGambleButton(_data, up) {
   return { onTurn, onCommand }
 }
 
-function makeSleepButton() {
-  let div = document.querySelector('.sleepbutton')
+function makeCustomsButton(_data, up) {
+  let div = document.querySelector('.customsbutton')
+  let cmd = ''
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-      netState.doRequest('play', { command: 'end' }, cb)
+      let cb = (e, r) => {
+        if (e) {
+          alert(e.message)
+          div.classList.add('open')
+          return
+        }
+      }
+      netState.doRequest('play', { command: cmd }, cb)
       div.classList.remove('open')
     })
   })()
 
   let onTurn = t => {
-    div.classList.toggle('open', t.hasCan('end'))
+    cmd = ''
+    let mustDeclare = t.hasMust('declare:*')
+    let mustPay = t.hasMust('paycustoms')
+    if (mustDeclare) {
+      cmd = 'declare:none'
+    } else if (mustPay) {
+      cmd = 'paycustoms'
+    }
+    div.classList.toggle('open', cmd !== '')
+  }
+
+  return { onTurn }
+}
+
+function makeBuySouvenirButton(_data, up) {
+  let div = document.querySelector('.buysouvenirbutton')
+  let cmd = ''
+
+  ;(() => {
+    div.addEventListener('click', _e => {
+      let cb = (e, r) => {
+        if (e) { alert(e.message); return; }
+        up.send({ do: 'notify', msg: 'you have bought a sort of ' + r.message })
+      }
+      netState.doRequest('play', { command: cmd }, cb)
+      div.classList.remove('open')
+    })
+  })()
+
+  let onTurn = t => {
+    cmd = ''
+    for (let c of t.can) {
+      if (c.startsWith('buysouvenir:')) {
+        cmd = c
+      }
+    }
+    div.classList.toggle('open', cmd !== '')
+  }
+
+  return { onTurn }
+}
+
+function makeAirliftButton(_data, up) {
+  let div = document.querySelector('.airliftbutton')
+  let cmd = ''
+
+  ;(() => {
+    div.addEventListener('click', _e => {
+      let cb = (e, r) => {
+        if (e) { alert(e.message); return; }
+      }
+      netState.doRequest('play', { command: cmd }, cb)
+      div.classList.remove('open')
+    })
+  })()
+
+  let onTurn = t => {
+    cmd = ''
+    for (let c of t.can) {
+      if (c.startsWith('airlift:')) {
+        cmd = c
+      }
+    }
+    div.classList.toggle('open', cmd !== '')
+  }
+
+  return { onTurn }
+}
+
+function makeSleepButton() {
+  let div = document.querySelector('.sleepbutton')
+  let cmd = 'end'
+
+  ;(() => {
+    div.addEventListener('click', _e => {
+      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      netState.doRequest('play', { command: cmd }, cb)
+      div.classList.remove('open')
+    })
+  })()
+
+  let onTurn = t => {
+    let canEnd = t.hasCan('end')
+    let canQuarantine = t.hasMust('quarantine')
+    if (canQuarantine) {
+      cmd = 'quarantine'
+    } else {
+      cmd = 'end'
+    }
+    canEnd = canEnd || canQuarantine
+    div.classList.toggle('sick', canQuarantine)
+    div.classList.toggle('open', canEnd)
   }
 
   return { onTurn }
@@ -1258,6 +1397,7 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeMap)
   ui.addComponent(makeSquares)
   ui.addComponent(makePriceList)
+  ui.addComponent(makeRateList)
   ui.addComponent(makeLuckView)
   ui.addComponent(makeRiskView)
   ui.addComponent(makeLuckStack)
@@ -1269,6 +1409,9 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeStopButton)
   ui.addComponent(makeSleepButton)
   ui.addComponent(makeGambleButton)
+  ui.addComponent(makeCustomsButton)
+  ui.addComponent(makeBuySouvenirButton)
+  ui.addComponent(makeAirliftButton)
   ui.addComponent(makeDebt)
   ui.addComponent(makeWindicator)
 

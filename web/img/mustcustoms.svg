@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="173.93317mm"
+   height="91.810349mm"
+   viewBox="0 0 173.93317 91.810349"
+   version="1.1"
+   id="svg861"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="mustcustoms.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview863"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.2810466"
+     inkscape:cx="302.09674"
+     inkscape:cy="202.95905"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs858">
+    <pattern
+       inkscape:collect="always"
+       xlink:href="#Strips1_1"
+       id="pattern34010"
+       patternTransform="matrix(10.485976,2.6795402,-10.631465,19.90667,-51.708669,-62.682232)" />
+    <pattern
+       inkscape:collect="always"
+       patternUnits="userSpaceOnUse"
+       width="2"
+       height="1"
+       patternTransform="translate(0,0) scale(10,10)"
+       id="Strips1_1"
+       inkscape:stockid="Stripes 1:1">
+      <rect
+         style="fill:black;stroke:none"
+         x="0"
+         y="-0.5"
+         width="1"
+         height="2"
+         id="rect32973" />
+    </pattern>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-14.570387,-1.760469)">
+    <rect
+       style="fill:#ddb700;stroke:#000000;stroke-width:4.90808;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
+       id="rect2056"
+       width="169.02509"
+       height="86.902267"
+       x="17.024427"
+       y="4.214509" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.127249;stroke-linecap:square"
+       id="rect31989-6"
+       width="151.93022"
+       height="40.609108"
+       x="25.625204"
+       y="42.514343" />
+    <rect
+       style="fill:url(#pattern34010);fill-opacity:1;stroke:none;stroke-width:5;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect31989"
+       width="151.92999"
+       height="40.609108"
+       x="25.625204"
+       y="42.514343" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.4438px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#983327;fill-opacity:1;stroke:none;stroke-width:0.711097;stroke-opacity:1"
+       x="40.888168"
+       y="30.781391"
+       id="text20289"
+       transform="scale(0.84399248,1.1848447)"><tspan
+         sodipodi:role="line"
+         id="tspan20287"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.4438px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#983327;fill-opacity:1;stroke:none;stroke-width:0.711097;stroke-opacity:1"
+         x="40.888168"
+         y="30.781391">CUSTOMS</tspan></text>
+  </g>
+</svg>
