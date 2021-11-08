@@ -70,28 +70,25 @@ body {
   display: flex;
   flex-flow: row;
   align-items: center;
-}
-.aplayer .colour {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  border-radius: .5em;
-  margin-right: .5em;
+  border: 2px solid black;
+  border-radius: .5rem;
+  padding: 0 .5rem;
 }
 .aplayer .name {
 }
 
 .state {
   position: absolute;
-  top: 0; right: 0; left: 0;
+  top: 0;
   height: 3em;
+  left: 50vw;
+  width: 0;
   display: flex;
   justify-content: center;
   flex-flow: row nowrap;
-  align-items: center;
-  gap: .5em;
+  align-items: start;
   cursor: default;
-  /* z-index: 100; */
+  z-index: 100;
 }
 .state > div {
   padding: 1rem;
@@ -100,6 +97,10 @@ body {
   flex-flow: row;
   align-items: center;
   column-gap: .5em;
+  border-radius: 0 0 .5em .5em;
+}
+.state:hover > div {
+  background: white;
 }
 .state > div > * {
   display: block;
@@ -109,10 +110,11 @@ body {
   position: absolute;
   display: none;
   padding: .5em;
+  border-radius: 0 0 .5em .5em;
 }
 .dropdown:hover > div {
   display: block;
-  background: rgba(255,255,255,.6);
+  background: white;
 }
 
 .squares {
@@ -642,6 +644,7 @@ body {
   flex-flow: column;
   justify-content: space-between;
   padding: 1rem;
+  z-index: 101;
 }
 .rates:hover {
   top: -1rem;

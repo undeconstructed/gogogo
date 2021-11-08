@@ -52,7 +52,6 @@ function makeStartButton() {
 }
 
 function makeStatusBar() {
-  let aboutMe = document.querySelector('.aboutme')
   let aboutGame = document.querySelector('.aboutgame')
 
   let doUpdatePlayers = (players, playing) => {
@@ -62,22 +61,20 @@ function makeStatusBar() {
       let pl = players[name]
 
       if (pl.name == playing) {
-        let sc = aboutGame.querySelector('.aplayer .colour')
-        sc.style.backgroundColor = pl.colour
-        let sn = aboutGame.querySelector('.aplayer .name')
+        let sp = aboutGame.querySelector('.now')
+        sp.style.borderColor = pl.colour
+        let sn = sp.querySelector('.name')
         sn.textContent = pl.name
       }
 
       let div = document.createElement('div')
       div.classList.add('aplayer')
-      let colSpan = document.createElement('span')
-      colSpan.classList.add('colour')
-      colSpan.style.backgroundColor = pl.colour || 'transparent'
-      div.append(colSpan)
+      div.style.borderColor = pl.colour || 'transparent'
       let nameSpan = document.createElement('span')
       nameSpan.classList.add('name')
       nameSpan.append(pl.name)
       div.append(nameSpan)
+
       playersDiv.append(div)
     }
   }
@@ -86,9 +83,9 @@ function makeStatusBar() {
     doUpdatePlayers(s.players, s.playing)
 
     // XXX - this can't change
-    let sc = aboutMe.querySelector('.colour')
-    sc.style.backgroundColor = s.me.colour
-    let sn = aboutMe.querySelector('.name')
+    let me = aboutGame.querySelector('.me')
+    me.style.borderColor = s.me.colour
+    let sn = me.querySelector('.name')
     sn.textContent = s.me.name
   }
 
@@ -451,7 +448,7 @@ function makeRateList(data) {
       let tr = document.createElement('tr')
       for (let g in groups) {
         let td = document.createElement('td')
-        td.textContent = d * g
+        td.textContent = (d * g).toLocaleString()
         tr.append(td)
       }
       tbody.append(tr)
