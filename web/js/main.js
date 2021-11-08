@@ -51,8 +51,14 @@ function makeStartButton() {
   return { onUpdate }
 }
 
-function makeStatusBar() {
+function makeStatusBar(_data, up) {
   let aboutGame = document.querySelector('.aboutgame')
+
+  ;(() => {
+    aboutGame.querySelector('.msg').addEventListener('click', _e => {
+      up.send({ do: 'chat' })
+    })
+  })()
 
   let doUpdatePlayers = (players, playing) => {
     let playersDiv = aboutGame.querySelector('.players > div')
@@ -1381,6 +1387,20 @@ function makeWindicator() {
   return { onUpdate }
 }
 
+function makeChatter() {
+  let onCommand = c => {
+    if (c.do === 'chat') {
+      let m = prompt('send?')
+      if (!m) {
+        return
+      }
+      netState.send('text', m)
+    }
+  }
+
+  return { onCommand }
+}
+
 // game setup
 
 function fixupData(indata) {
@@ -1428,6 +1448,7 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeAirliftButton)
   ui.addComponent(makeDebt)
   ui.addComponent(makeWindicator)
+  ui.addComponent(makeChatter)
 
   netState = connect(ui, { game: gameId, name, colour })
 }
@@ -1470,12 +1491,6 @@ function main() {
 document.addEventListener('DOMContentLoaded', main)
 
 // unused
-
-function doSay() {
-  let msg = prompt('Say what?')
-  if (!msg) return
-  netState.send('text', msg)
-}
 
 function scrollingMap() {
   let map = document.querySelector('.map')

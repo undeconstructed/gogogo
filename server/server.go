@@ -257,8 +257,7 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 			What: "disconnects",
 		}}
 	case textFromUser:
-		s.handleText(msg)
-		return nil, nil
+		return s.handleText(msg)
 	case requestFromUser:
 		g, ok := s.games[msg.Game]
 		if !ok {
@@ -332,15 +331,17 @@ func (s *server) wipeGame(g *oneGame) {
 	}
 }
 
-func (s *server) handleText(in textFromUser) {
+func (s *server) handleText(in textFromUser) (*oneGame, []game.Change) {
 	g, ok := s.games[in.Game]
 	if !ok {
-		return
+		return nil, nil
 	}
 
-	outText := in.Who + " says " + in.Text
-	out, _ := comms.Encode("text", outText)
-	s.broadcast(g, out, "")
+	news := []game.Change{
+		{Who: in.Who, What: "says " + in.Text},
+	}
+
+	return g, news
 }
 
 func (s *server) handleRequest(in requestFromUser) ([]game.Change, *game.TurnState) {
