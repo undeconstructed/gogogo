@@ -6,7 +6,21 @@ The original game is maybe still under copyright, so there's no board here. Over
 
 ```
 make server.run
-make creategameone
-xdg-open 'http://localhost:1235/?gameId=one&name=me&colour=blue'
+xdg-open 'http://localhost:1235/'
 ```
+
 ## TODO
+
+Per-game settings / half
+buysouvenir button / half
+freeticket etc interface
+select payment interface
+debt UI / half
+debt currency
+declare no souvenir UI
+risk customs
+stop+command?
+chat?
+trade!
+pawn/sell souvenirs
+quit

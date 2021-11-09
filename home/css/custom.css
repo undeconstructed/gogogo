@@ -1,0 +1,104 @@
+
+:root {
+  --sea: #0d8db0;
+}
+
+body {
+  background-color: var(--sea);
+  color: var(--grey);
+  background: radial-gradient(circle at 100% 100%, rgba(253,187,45,1) 0%, rgba(253,187,45,1) 5%, rgba(13,141,176,1) 100%) 100% fixed;
+}
+
+body {
+  height: 100vh;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.makegame {
+  background-color: rgba(255,255,255,0.5);
+  color: rgba(13,141,176,1);
+  width: 30em;
+  padding: 2em 1em 0 1em;
+  border-radius: 0 25%;
+  /* box-shadow: 0 0 5px 5px rgba(255,255,255,0.5); */
+}
+
+.input {
+  /* display: none; */
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 7em 1fr;
+}
+
+.form-group {
+  margin-bottom: .5em;
+}
+.players .player {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2em;
+  column-gap: .5em;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+
+select,input {
+  border-radius: 1em / 50%;
+  background: transparent;
+  padding: .5em;
+  box-shadow: inset -3px -3px 3px 0px rgba(13,141,176,.2), inset 3px 3px 3px 0px rgba(253,187,45,.5);
+  border-width: 0;
+  color: inherit;
+  height: 2em;
+}
+
+button {
+  border-radius: 1em / 50%;
+  background: transparent;
+  padding: .5em;
+  /* box-shadow: -3px -3px 3px 0px rgba(13,141,176,.5), 3px 3px 3px 0px rgba(253,187,45,.5); */
+  box-shadow: inset -1px -1px 1px 0px rgba(253,187,45,.5), inset 1px 1px 1px 0px rgba(13,141,176,.5), -2px -2px 2px 0px rgba(13,141,176,.5), 2px 2px 2px 0px rgba(253,187,45,.5);
+  border-width: 0;
+  color: inherit;
+  transition: background-color .5s;
+}
+button:hover {
+  /* background: rgba(253,187,45,1); */
+  background: radial-gradient(circle at center, rgba(253,187,45,1) 0%, rgba(13,141,176,0) 100%);
+}
+button:active {
+  box-shadow: inset -3px -3px 3px 0px rgba(13,141,176,.2), inset 3px 3px 3px 0px rgba(253,187,45,.5);
+}
+button.small {
+  display: block;
+  width: 2em; height: 2em; border-radius: 50%;
+  line-height: 0;
+}
+button.addplayer {
+  margin: .5em auto;
+}
+button[type=submit] {
+  margin: 1em auto;
+  display: block;
+  width: 5em; height: 5em; border-radius: 50%;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.output {
+  display: none;
+  margin-bottom: 3em;
+}
+
+.output table {
+  margin: 0 auto;
+}

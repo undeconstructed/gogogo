@@ -78,9 +78,6 @@ type PlayResult struct {
 
 // GameUpdate is a giant state object, until I do some sort of selective updating.
 type GameUpdate struct {
-	News    []Change      `json:"news"`
-	Status  GameStatus    `json:"status"`
-	Playing string        `json:"playing"`
-	Winner  string        `json:"winner"`
-	Players []PlayerState `json:"players"`
+	News []Change `json:"news"`
+	GameState
 }

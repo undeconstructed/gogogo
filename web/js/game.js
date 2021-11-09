@@ -28,7 +28,7 @@ function defaultProcessTurn(t) {
   return t
 }
 
-export function connect(listener, args) {
+export function connect(listener, ccode) {
   let netState = {
     ws: null,
 
@@ -39,12 +39,7 @@ export function connect(listener, args) {
     doRequest() {},
   }
 
-  let q = ''
-  for (let k in args) {
-    q += k + '=' + args[k] + '&'
-  }
-
-  const conn = new WebSocket(`ws://${location.host}/ws?${q}`, 'comms')
+  const conn = new WebSocket(`ws://${location.host}/ws?c=${ccode}`, 'comms')
 
   conn.onclose = e => {
     console.log(`WebSocket Disconnected code: ${e.code}, reason: ${e.reason}`)
@@ -52,16 +47,15 @@ export function connect(listener, args) {
     listener.onDisconnect()
     if (e.code !== 1001) {
       setTimeout(() => {
-        connect(listener, args)
+        connect(listener, ccode)
       }, 5000)
     }
   }
 
-  conn.onopen = _e => {
-    netState.ws = conn
-    listener.onConnect()
+  conn.onopen = _e => {}
 
-    let send = (type, data) => {
+  let onFullConnect = (gameId, playerId, colour) => {
+    netState.send = (type, data) => {
       let msg = {
         Head: type,
         Data: data
@@ -72,24 +66,34 @@ export function connect(listener, args) {
       conn.send(jtext)
     }
 
-    let request = (rtype, body, then) => {
+    netState.doRequest = (rtype, body, then) => {
       let rn = '' + netState.reqNo++
       let mtype = 'request:' + rn + ':' + rtype
       netState.reqs.set(rn, then)
-      send(mtype, body)
+      netState.send(mtype, body)
     }
 
-    netState.send = send
-    netState.doRequest = request
+    listener.onConnect(gameId, playerId, colour)
   }
 
+  let firstMessage = true
   conn.onmessage = e => {
     if (typeof e.data !== "string") {
       console.error("unexpected message type", typeof e.data)
       return
     }
+
     let msg = JSON.parse(e.data)
     console.log('rx', msg)
+
+    if (firstMessage) {
+      if (msg.head === 'connected') {
+        onFullConnect(msg.data.game, msg.data.player, msg.data.colour)
+        firstMessage = false
+      }
+      return
+    }
+
     if (msg.head === 'update') {
       setTimeout(() => listener.onUpdate(msg.data), 0)
     } else if (msg.head === 'turn') {
@@ -110,16 +114,16 @@ export function connect(listener, args) {
   return netState
 }
 
-export function newUI(data, gameId, name, colour, processUpdate, processTurn) {
+export function newUI(data, processUpdate, processTurn) {
   processTurn = processTurn || (e => e)
   processUpdate = processUpdate || (e => e)
   let state = {
     data: data,
-    gameId: gameId,
+    gameId: null,
     status: null,
     me: {
-      name: name,
-      colour: colour,
+      name: null,
+      colour: null,
     },
     playing: null,
     players: {}
@@ -177,7 +181,10 @@ export function newUI(data, gameId, name, colour, processUpdate, processTurn) {
     console.log(state)
   }
 
-  let onConnect = () => {
+  let onConnect = (gameId, playerId, colour) => {
+    state.gameId = gameId
+    state.me.name = playerId
+    state.me.colour = colour
     document.body.setAttribute('connected', true)
   }
 

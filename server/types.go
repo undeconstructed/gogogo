@@ -1,6 +1,23 @@
 package server
 
-type GameOptions map[string]string
+type MakeGameInput struct {
+	Players []GamePlayerInput `json:"players"`
+	Options GameOptions       `json:"options"`
+}
+
+type GamePlayerInput struct {
+	Name    string      `json:"name"`
+	Colour  string      `json:"colour"`
+	Options GameOptions `json:"options"`
+}
+
+type GameOptions map[string]interface{}
+
+type MakeGameOutput struct {
+	ID      string            `json:"id"`
+	Players map[string]string `json:"players"`
+	Err     error             `json:"error"`
+}
 
 type toSend struct {
 	mtype string
@@ -12,9 +29,8 @@ type listGamesMsg struct {
 }
 
 type createGameMsg struct {
-	Name    string
-	Options GameOptions
-	Rep     chan error
+	Req MakeGameInput
+	Rep chan MakeGameOutput
 }
 
 type queryGameMsg struct {
@@ -28,11 +44,10 @@ type deleteGameMsg struct {
 }
 
 type connectMsg struct {
-	Game   string
-	Name   string
-	Colour string
-	Client clientBundle
-	Rep    chan error
+	GameId   string
+	PlayerId string
+	Client   clientBundle
+	Rep      chan error
 }
 
 type disconnectMsg struct {

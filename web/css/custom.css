@@ -111,9 +111,11 @@ body {
   display: none;
   padding: .5em;
   border-radius: 0 0 .5em .5em;
+  flex-flow: column;
+  row-gap: .5rem;
 }
 .dropdown:hover > div {
-  display: block;
+  display: flex;
   background: white;
 }
 

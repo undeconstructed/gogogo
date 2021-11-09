@@ -1418,10 +1418,10 @@ function fixupData(indata) {
   return indata
 }
 
-function setup(inData, gameId, name, colour) {
+function setup(inData, ccode) {
   let data = fixupData(inData)
 
-  let ui = newUI(data, gameId, name, colour, processUpdate)
+  let ui = newUI(data, processUpdate)
   window.ui = ui
 
   ui.addComponent(makeLog)
@@ -1450,25 +1450,19 @@ function setup(inData, gameId, name, colour) {
   ui.addComponent(makeWindicator)
   ui.addComponent(makeChatter)
 
-  netState = connect(ui, { game: gameId, name, colour })
+  netState = connect(ui, ccode)
 }
 
 // main()
 
 function main() {
   let urlParams = new URLSearchParams(window.location.search)
-  let gameId = urlParams.get('gameId')
-  let name = urlParams.get('name')
-  let colour = urlParams.get('colour')
-
-  if (!gameId || !name) {
-    alert('missing params')
+  let ccode = urlParams.get('c')
+  if (!ccode) {
+    alert('missing connect code')
     return
   }
-  if (!colour) {
-    // if colour is null, then just observe
-    colour = ""
-  }
+
 
   let mapObject = document.createElement('object')
   mapObject.type = 'image/svg+xml'
@@ -1479,7 +1473,7 @@ function main() {
     fetch('data.json').
       then(rez => rez.json()).
       then(data => {
-        setup(data, gameId, name, colour)
+        setup(data, ccode)
       })
     })
 

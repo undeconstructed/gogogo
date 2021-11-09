@@ -210,6 +210,8 @@ type ConnectRequest struct {
 }
 
 type ConnectResponse struct {
-	Msg string      `json:"message"`
-	Err *CommsError `json:"error"`
+	GameID   string      `json:"game"`
+	PlayerID string      `json:"player"`
+	Colour   string      `json:"colour"`
+	Err      *CommsError `json:"error"`
 }

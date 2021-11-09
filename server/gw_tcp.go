@@ -60,7 +60,7 @@ func (m *tcpManager) manageTcpConnection(conn net.Conn) error {
 	dnStream := comms.NewEncoder(conn)
 
 	go func() {
-		var gameId, name, colour string
+		var gameId, playerId string
 
 		msg1, err := upStream.Decode()
 		if err != nil {
@@ -68,29 +68,31 @@ func (m *tcpManager) manageTcpConnection(conn net.Conn) error {
 			return
 		} else {
 			fields := msg1.Head.Fields()
-			if len(fields) != 4 || fields[0] != "connect" {
+			if len(fields) != 2 || fields[0] != "connect" {
 				log.Info().Msg("bad first message head")
 				return
 			}
 
-			// cheat and just use header for everything
-			gameId = fields[1]
-			name = fields[2]
-			colour = fields[3]
-
-			if name == "" || colour == "" {
-				log.Info().Msg("missing params")
+			ccode := fields[1]
+			var err error
+			gameId, playerId, err = decodeConnectString(ccode)
+			if err != nil {
+				log.Info().Msg("bad connect code")
 				return
 			}
 
-			err = m.server.Connect(gameId, name, colour, clientBundle{downCh})
+			err = m.server.Connect(gameId, playerId, clientBundle{downCh})
 			if err != nil {
 				log.Info().Err(err).Msg("connect error")
 				dnStream.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
 				return
 			}
 
-			dnStream.Encode("connected", comms.ConnectResponse{})
+			// XXX - colour is not set, does it matter?
+			dnStream.Encode("connected", comms.ConnectResponse{
+				GameID:   gameId,
+				PlayerID: playerId,
+			})
 		}
 
 		go func() {
@@ -129,19 +131,19 @@ func (m *tcpManager) manageTcpConnection(conn net.Conn) error {
 					log.Error().Err(err).Msg("decode text error")
 					return
 				}
-				m.server.coreCh <- textFromUser{gameId, name, text}
+				m.server.coreCh <- textFromUser{gameId, playerId, text}
 			case "request":
 				id := f[1]
 				rest := f[2:]
 				// cannot decode body yet?!
 				body := msg.Data
-				m.server.coreCh <- requestFromUser{gameId, name, id, rest, body}
+				m.server.coreCh <- requestFromUser{gameId, playerId, id, rest, body}
 			default:
 				log.Info().Msgf("junk from client: %v", f)
 			}
 		}
 
-		m.server.coreCh <- disconnectMsg{gameId, name}
+		m.server.coreCh <- disconnectMsg{gameId, playerId}
 	}()
 
 	return nil

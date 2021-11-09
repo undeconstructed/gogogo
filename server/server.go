@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type MakeGameFunc func(GameOptions) (game.Game, error)
+type MakeGameFunc func(MakeGameInput) (game.Game, error)
 
 type LoadGameFunc func(io.Reader) (game.Game, error)
 
@@ -50,7 +50,7 @@ func NewServer(makeGame MakeGameFunc, loadGame LoadGameFunc) Server {
 				}
 
 				games[gameId] = &oneGame{
-					name:    gameId,
+					id:      gameId,
 					game:    g,
 					clients: map[string]*clientBundle{},
 					log:     log,
@@ -70,7 +70,7 @@ func NewServer(makeGame MakeGameFunc, loadGame LoadGameFunc) Server {
 }
 
 type oneGame struct {
-	name    string
+	id      string
 	game    game.Game
 	turn    *game.TurnState
 	dirty   bool
@@ -103,7 +103,7 @@ func (s *server) Run() error {
 
 		if g != nil && len(news) > 0 {
 			state := g.game.GetGameState()
-			update := game.GameUpdate{News: news, Status: state.Status, Playing: state.Playing, Winner: state.Winner, Players: state.Players}
+			update := game.GameUpdate{News: news, GameState: state}
 			msg, err := comms.Encode("update", update)
 			if err != nil {
 				g.log.Error().Err(err).Msg("failed to encode update")
@@ -116,6 +116,7 @@ func (s *server) Run() error {
 			c, ok := g.clients[g.turn.Player]
 			if !ok {
 				g.log.Info().Msgf("current player not connected: %s", g.turn.Player)
+				continue
 			}
 
 			msg, err := comms.Encode("turn", g.turn)
@@ -147,32 +148,33 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 		msg.Rep <- list
 		return nil, nil
 	case createGameMsg:
-		log := log.With().Str("game", msg.Name).Logger()
+		id := RandomString(6)
+		log := log.With().Str("game", id).Logger()
 
-		if _, exists := s.games[msg.Name]; exists {
-			msg.Rep <- errors.New("name conflict")
-			return nil, nil
-		}
-
-		game, err := s.makeGame(msg.Options)
+		game, err := s.makeGame(msg.Req)
 		if err != nil {
-			msg.Rep <- err
+			msg.Rep <- MakeGameOutput{Err: err}
 			return nil, nil
 		}
 
 		gameholder := &oneGame{
-			name:    msg.Name,
+			id:      id,
 			dirty:   true,
 			game:    game,
 			clients: map[string]*clientBundle{},
 			log:     log,
 		}
 
-		s.games[msg.Name] = gameholder
+		s.games[id] = gameholder
 
 		log.Info().Msg("created")
 
-		msg.Rep <- nil
+		players := map[string]string{}
+		for _, pl := range msg.Req.Players {
+			players[pl.Name] = encodeConnectString(id, pl.Name)
+		}
+
+		msg.Rep <- MakeGameOutput{ID: id, Players: players}
 		return gameholder, nil
 	case queryGameMsg:
 		game, exists := s.games[msg.Name]
@@ -200,49 +202,25 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 		msg.Rep <- nil
 		return nil, nil
 	case connectMsg:
-		g, ok := s.games[msg.Game]
+		g, ok := s.games[msg.GameId]
 		if !ok {
 			msg.Rep <- errors.New("game not found")
 			return nil, nil
 		}
 
-		if msg.Colour == "" {
-			// just watching
-			g.clients[msg.Name] = &msg.Client
-			msg.Rep <- nil
-			return nil, nil
+		g.clients[msg.PlayerId] = &msg.Client
+		msg.Rep <- nil
+
+		// if it's this players turn, arrange for a new turn message
+		turn := g.game.GetTurnState()
+		if turn.Player == msg.PlayerId {
+			g.turn = &turn
 		}
 
-		err := g.game.AddPlayer(msg.Name, msg.Colour)
-		if err == game.ErrPlayerExists {
-			// assume this is same player rejoining
-			g.clients[msg.Name] = &msg.Client
-			msg.Rep <- nil
-
-			// if it's this players turn, arrange for a new turn message
-			turn := g.game.GetTurnState()
-			if turn.Player == msg.Name {
-				g.turn = &turn
-			}
-
-			return g, []game.Change{{
-				Who:  msg.Name,
-				What: "reconnects",
-			}}
-		} else if err != nil {
-			msg.Rep <- err
-		} else {
-			// new player
-			g.clients[msg.Name] = &msg.Client
-			msg.Rep <- nil
-
-			g.dirty = true
-
-			return g, []game.Change{{
-				Who:  msg.Name,
-				What: "joins",
-			}}
-		}
+		return g, []game.Change{{
+			Who:  msg.PlayerId,
+			What: "reconnects",
+		}}
 	case disconnectMsg:
 		g, ok := s.games[msg.Game]
 		if !ok {
@@ -278,9 +256,9 @@ func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
 	return nil, nil
 }
 
-func (s *server) Connect(game, name, colour string, client clientBundle) error {
+func (s *server) Connect(gameId, playerId string, client clientBundle) error {
 	resCh := make(chan error)
-	s.coreCh <- connectMsg{game, name, colour, client, resCh}
+	s.coreCh <- connectMsg{gameId, playerId, client, resCh}
 	return <-resCh
 }
 
@@ -290,9 +268,9 @@ func (s *server) ListGames() []string {
 	return <-resCh
 }
 
-func (s *server) CreateGame(name string, options GameOptions) error {
-	resCh := make(chan error)
-	s.coreCh <- createGameMsg{name, options, resCh}
+func (s *server) CreateGame(req MakeGameInput) MakeGameOutput {
+	resCh := make(chan MakeGameOutput)
+	s.coreCh <- createGameMsg{req, resCh}
 	return <-resCh
 }
 
@@ -309,7 +287,7 @@ func (s *server) DeleteGame(name string) error {
 }
 
 func (s *server) saveFileName(g *oneGame) string {
-	return fmt.Sprintf("state-%s.json", g.name)
+	return fmt.Sprintf("state-%s.json", g.id)
 }
 
 func (s *server) saveGame(g *oneGame) {

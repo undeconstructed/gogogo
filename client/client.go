@@ -49,13 +49,11 @@ type Client interface {
 	Run() error
 }
 
-func NewClient(data gogame.GameData, gameId, name, colour string, server string) Client {
+func NewClient(data gogame.GameData, ccode string, server string) Client {
 	coreCh := make(chan interface{}, 100)
 	return &client{
 		data:   data,
-		gameId: gameId,
-		name:   name,
-		colour: colour,
+		ccode:  ccode,
 		server: server,
 		coreCh: coreCh,
 		state:  NewBox(),
@@ -85,25 +83,19 @@ type ResponseFromServer struct {
 
 type gameState struct {
 	playing string
-	players map[string]game.PlayerState
+	players map[string]PlayerState
 	news    []game.Change
-	turn    *game.TurnState
-}
-
-func goTurn(s game.TurnState) gogame.TurnState {
-	return s.Custom.(gogame.TurnState)
-}
-
-func goPlayer(s game.PlayerState) gogame.PlayerState {
-	return s.Custom.(gogame.PlayerState)
+	turn    *TurnState
 }
 
 type client struct {
 	data   gogame.GameData
+	server string
+	ccode  string
+
 	gameId string
 	name   string
 	colour string
-	server string
 
 	// drives the main loop
 	coreCh chan interface{}
@@ -126,7 +118,7 @@ func (c *client) Run() error {
 	upStream := comms.NewEncoder(conn)
 	dnStream := comms.NewDecoder(conn)
 
-	err = upStream.Encode(fmt.Sprintf("connect:%s:%s:%s", c.gameId, c.name, c.colour), comms.ConnectRequest{})
+	err = upStream.Encode(fmt.Sprintf("connect:%s", c.ccode), comms.ConnectRequest{})
 	if err != nil {
 		return err
 	}
@@ -143,6 +135,9 @@ func (c *client) Run() error {
 		if err != nil {
 			return err
 		}
+		c.gameId = res.GameID
+		c.name = res.PlayerID
+		c.colour = res.Colour
 	}
 
 	upCh := make(chan interface{}, 1)
@@ -191,7 +186,7 @@ func (c *client) Run() error {
 			f := msg.Head.Fields()
 			switch f[0] {
 			case "turn":
-				about := game.TurnState{}
+				about := TurnState{}
 				err := comms.Decode(msg, &about)
 				if err != nil {
 					fmt.Printf("bad turn message: %v\n", err)
@@ -199,7 +194,7 @@ func (c *client) Run() error {
 				}
 				c.coreCh <- about
 			case "update":
-				about := game.GameUpdate{}
+				about := GameUpdate{}
 				err := comms.Decode(msg, &about)
 				if err != nil {
 					fmt.Printf("bad update message: %v\n", err)
@@ -242,9 +237,9 @@ func (c *client) Run() error {
 			upCh <- msg
 		case TextFromServer:
 			// TODO
-		case game.TurnState:
+		case TurnState:
 			c.receiveTurn(msg)
-		case game.GameUpdate:
+		case GameUpdate:
 			c.receiveUpdate(msg)
 		case RequestForServer:
 			reqID := strconv.Itoa(c.reqNo)
@@ -264,7 +259,7 @@ func (c *client) Run() error {
 	return nil
 }
 
-func (c *client) receiveTurn(turn game.TurnState) {
+func (c *client) receiveTurn(turn TurnState) {
 	var state gameState
 	if s, ok := c.state.Get().(*gameState); ok {
 		// copy the old state
@@ -274,7 +269,7 @@ func (c *client) receiveTurn(turn game.TurnState) {
 	c.state.Put(&state)
 }
 
-func (c *client) receiveUpdate(update game.GameUpdate) {
+func (c *client) receiveUpdate(update GameUpdate) {
 	var state gameState
 	if s, ok := c.state.Get().(*gameState); ok {
 		// copy the old state
@@ -289,7 +284,7 @@ func (c *client) receiveUpdate(update game.GameUpdate) {
 	state.playing = update.Playing
 
 	if state.players == nil {
-		state.players = map[string]game.PlayerState{}
+		state.players = map[string]PlayerState{}
 	}
 	for _, pl := range update.Players {
 		state.players[pl.Name] = pl
@@ -416,8 +411,8 @@ func (c *client) printBank() {
 	// fmt.Printf("Souvenirs: %v\n", state.Souvenirs)
 }
 
-func (c *client) printTurn(turn *game.TurnState) {
-	goturn := goTurn(*turn)
+func (c *client) printTurn(turn *TurnState) {
+	goturn := turn.Custom
 	on := "track"
 	if goturn.OnMap {
 		on = "map"
@@ -449,8 +444,8 @@ func (c *client) printPlace(placeId string) {
 	// fmt.Printf("%#v\n", place)
 }
 
-func (c *client) printPlayer(pl game.PlayerState) {
-	gopl := goPlayer(pl)
+func (c *client) printPlayer(pl PlayerState) {
+	gopl := pl.Custom
 	fmt.Printf("Player:    %s\n", pl.Name)
 	fmt.Printf("Money:     %v\n", gopl.Money)
 	fmt.Printf("Souvenirs: %v\n", gopl.Souvenirs)
@@ -466,7 +461,7 @@ func (c *client) printPlayer(pl game.PlayerState) {
 	// fmt.Printf("%#v\n", pl)
 }
 
-func (c *client) printPlayers(players map[string]game.PlayerState) {
+func (c *client) printPlayers(players map[string]PlayerState) {
 	for _, pl := range players {
 		c.printPlayer(pl)
 	}
@@ -483,11 +478,11 @@ func (c *client) gameRepl(l *rl.Instance) error {
 		number := s.turn.Number
 
 		loc := "track"
-		if goTurn(*s.turn).OnMap {
+		if s.turn.Custom.OnMap {
 			loc = "map"
 		}
 		phase := "moving"
-		if goTurn(*s.turn).Stopped {
+		if s.turn.Custom.Stopped {
 			phase = "stopped"
 		}
 		must := ""

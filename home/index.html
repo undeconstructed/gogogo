@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>gogogo</title>
+
+  <meta name="description" content="A Go game in Go lang">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="theme-color" content="#0d8db0">
+
+  <link rel="stylesheet" href="css/bootstrap-reboot.css">
+  <link rel="stylesheet" href="css/custom.css">
+
+  <script type="module" src="js/main.js"></script>
+</head>
+
+<body>
+
+  <div class="makegame">
+    <h1>gogogo</h1>
+    <div class="input">
+      <form>
+        <div class="form-group">
+          <label for="">Name:</label>
+          <input type="text" class="form-control" name="name" minlength="1" maxlength="24" required>
+        </div>
+        <div class="form-group">
+          <label for="">Souvenirs:</label>
+          <input type="number" class="form-control" name="souvenirs" value="4" min="1" max="10" required>
+        </div>
+        <div class="form-group">
+          <label for="">Players:</label>
+          <div>
+            <div class="players">
+            </div>
+            <div>
+              <button type="button" class="small addplayer">+</button>
+            </div>
+          </div>
+        </div>
+        <button type="submit">go</button>
+      </form>
+    </div>
+    <div class="output">
+      <table>
+        <tbody>
+          <tr>
+            <td>phil</td>
+            <td><a href="#">http://foo/?id=blahblah</a></td>
+          </tr>
+          <tr>
+            <td>bear</td>
+            <td><a href="#">http://foo/?id=blahblah</a></td>
+          </tr>
+          <tr>
+            <td>olaf</td>
+            <td><a href="#">http://foo/?id=blahblah</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <template id="playerline">
+    <div class="player">
+      <input type="text" class="form-control" name="player1" placeholder="name" minlength="1" maxlength="24" required>
+      <select class="" name="">
+        <option value="blue">blue</option>
+        <option value="green">green</option>
+        <option value="red">red</option>
+        <option value="purple">purple</option>
+        <option value="white">white</option>
+        <option value="yellow">yellow</option>
+      </select>
+      <button type="button" class="small removeplayer">-</button>
+    </div>
+  </template>
+
+</body>
+
+
+</html>

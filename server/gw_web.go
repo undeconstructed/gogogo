@@ -43,11 +43,11 @@ func runWebGateway(server *server, addr string) error {
 	}
 
 	r := gin.Default()
-	staticStuff := http.Dir("web")
+	homeStatic := http.Dir("home")
 	r.Use(func(c *gin.Context) {
 		c.Next()
 		if c.Writer.Status() == 404 {
-			c.FileFromFS(c.Request.URL.Path, staticStuff)
+			c.FileFromFS(c.Request.URL.Path, homeStatic)
 		}
 	})
 	a := r.Group("/api")
@@ -56,12 +56,16 @@ func runWebGateway(server *server, addr string) error {
 	a.GET("/games/:id", rh.getGame)
 	a.DELETE("/games/:id", rh.deleteGame)
 	r.GET("/ws", ch.serveWS)
-	r.StaticFile("/data.json", "data.json")
-	// staticStuff := http.Dir("web")
-	// r.GET("/*any", func(c *gin.Context) {
-	// 	c.FileFromFS(c.Request.URL.Path, staticStuff)
-	// 	c.String(http.StatusOK, "")
-	// })
+	// r.StaticFile("/data.json", "data.json")
+	gameStatic := http.Dir("web")
+	r.GET("/play/*any", func(c *gin.Context) {
+		path := c.Request.URL.Path[6:]
+		if path == "data.json" {
+			c.File("data.json")
+		} else {
+			c.FileFromFS(path, gameStatic)
+		}
+	})
 
 	s := &http.Server{
 		Handler:      r,
@@ -86,22 +90,30 @@ func (rh *restHandler) getGames(c *gin.Context) {
 }
 
 func (rh *restHandler) makeGame(c *gin.Context) {
-	id := c.Query("id")
-	if id == "" {
-		c.String(http.StatusBadRequest, "missing id")
+	i := MakeGameInput{}
+	if err := c.BindJSON(&i); err != nil {
 		return
 	}
 
-	options := c.QueryMap("options")
+	if len(i.Players) < 1 || len(i.Players) > 6 {
+		c.String(http.StatusBadRequest, "must have 1-6 players")
+		return
+	}
+	for _, pl := range i.Players {
+		if pl.Name == "" || pl.Colour == "" {
+			c.String(http.StatusBadRequest, "invalid player")
+			return
+		}
+	}
 
-	err := rh.server.CreateGame(id, options)
-	if err != nil {
-		rh.log.Error().Err(err).Msg("create game error")
-		c.String(http.StatusInternalServerError, "error: %v", err)
+	res := rh.server.CreateGame(i)
+	if res.Err != nil {
+		rh.log.Error().Err(res.Err).Msg("create game error")
+		c.String(http.StatusInternalServerError, "error: %v", res.Err)
 		return
 	}
 
-	c.String(http.StatusOK, "ok: %s", id)
+	c.JSON(http.StatusOK, res)
 }
 
 func (rh *restHandler) getGame(c *gin.Context) {
@@ -148,12 +160,10 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 	log := ch.log.With().Str("client", addr).Logger()
 	log.Info().Msgf("connecting")
 
-	gameId := c.Query("game")
-	name := c.Query("name")
-	colour := c.Query("colour")
-
-	if gameId == "" || name == "" {
-		c.String(http.StatusBadRequest, "missing params")
+	code := c.Query("c")
+	gameId, playerId, err := decodeConnectString(code)
+	if err != nil {
+		c.String(http.StatusBadRequest, "bad connect code")
 		return
 	}
 
@@ -180,7 +190,7 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 
 	downCh := make(chan interface{}, 100)
 
-	err = server.Connect(gameId, name, colour, clientBundle{downCh})
+	err = server.Connect(gameId, playerId, clientBundle{downCh})
 	if err != nil {
 		log.Info().Msgf("refusing: %s", addr)
 		msg, _ := comms.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
@@ -189,7 +199,11 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 		return
 	}
 
-	msg, _ := comms.Encode("connected", comms.ConnectResponse{})
+	// XXX - colour is not set, does it matter?
+	msg, _ := comms.Encode("connected", comms.ConnectResponse{
+		GameID:   gameId,
+		PlayerID: playerId,
+	})
 	sendDownWs(socket, msg)
 
 	go func() {
@@ -216,7 +230,7 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 		}
 		if err != nil {
 			log.Info().Err(err).Msgf("client read error: %v", addr)
-			server.coreCh <- disconnectMsg{gameId, name}
+			server.coreCh <- disconnectMsg{gameId, playerId}
 			return
 		}
 		log.Info().Msgf("received from: %s %s", msg.Head, string(msg.Data))
@@ -230,13 +244,13 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 				log.Info().Err(err).Msg("decode text error")
 				return
 			}
-			server.coreCh <- textFromUser{gameId, name, text}
+			server.coreCh <- textFromUser{gameId, playerId, text}
 		case "request":
 			id := f[1]
 			rest := f[2:]
 			// cannot decode body yet?!
 			body := msg.Data
-			req := requestFromUser{gameId, name, id, rest, body}
+			req := requestFromUser{gameId, playerId, id, rest, body}
 			server.coreCh <- req
 		default:
 			log.Info().Msgf("junk from client: %v", f)

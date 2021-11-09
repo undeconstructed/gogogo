@@ -4,7 +4,6 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/undeconstructed/gogogo/client"
@@ -27,7 +26,7 @@ func main() {
 	case "server":
 		serverMain()
 	case "client":
-		clientMain(os.Args[2], os.Args[3], os.Args[4])
+		clientMain(os.Args[2])
 	}
 }
 
@@ -35,13 +34,23 @@ func serverMain() {
 	rand.Seed(time.Now().Unix())
 	data := gogame.LoadJson()
 
-	server := server.NewServer(func(options server.GameOptions) (game.Game, error) {
-		goal, _ := strconv.Atoi(options["goal"])
-		if goal < 1 {
-			goal = 1
+	server := server.NewServer(func(req server.MakeGameInput) (game.Game, error) {
+		goal := 4
+		if g0, ok := req.Options["goal"]; ok {
+			if g1, ok := g0.(float64); ok {
+				goal = int(g1)
+			}
 		}
 
-		return gogame.NewGame(data, goal), nil
+		game := gogame.NewGame(data, goal)
+		for _, p := range req.Players {
+			err := game.AddPlayer(p.Name, p.Colour)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return game, nil
 	}, func(in io.Reader) (game.Game, error) {
 		return gogame.NewFromSaved(data, in)
 	})
@@ -53,10 +62,10 @@ func serverMain() {
 	}
 }
 
-func clientMain(gameId, name, colour string) {
+func clientMain(ccode string) {
 	data := gogame.LoadJson()
 
-	client := client.NewClient(data, gameId, name, colour, "game.socket")
+	client := client.NewClient(data, ccode, "game.socket")
 	err := client.Run()
 	if err != nil {
 		log.Info().Err(err).Msg("client ended")
