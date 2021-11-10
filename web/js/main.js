@@ -150,7 +150,7 @@ function makeMap(data, up) {
         ndot.id = "dot-"+pointId
         ndot.setAttributeNS(null, 'cx', x);
         ndot.setAttributeNS(null, 'cy', y);
-        ndot.addEventListener('click', _e => { alert(pointId) })
+        ndot.addEventListener('click', _e => { console.log(pointId) })
         dotsLayer.append(ndot)
       }
     }

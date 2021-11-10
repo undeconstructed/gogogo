@@ -39,7 +39,7 @@ body {
   z-index: -1;
 }
 .map > object {
-  margin: 4rem 10rem 9rem 16rem;
+  margin: 0 0 0 8rem;
   width: 2000px;
 }
 
@@ -159,17 +159,17 @@ body {
   margin-top: -1.5em;
 }
 .squares .sitting {
-  display: flex;
-  flex-flow: column wrap;
   padding: 1rem;
-  gap: .5em;
   justify-content: flex-start;
 }
 .squares .mark {
   height: 3rem;
   width: 3rem;
-  border-radius: 1.5em;
+  border-radius: 1.5rem;
   border: 2px solid black;
+}
+.squares .mark+.mark {
+  margin-top: -1rem;
 }
 
 .actions {
