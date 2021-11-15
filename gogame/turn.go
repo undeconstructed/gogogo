@@ -313,19 +313,19 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	case RiskMust:
 		cmd := code.Cmd.Sub(g.makeSubs(t))
 		t.Must = append(t.Must, string(cmd))
-	case RiskStart:
+	case RiskGoStart:
 		dest := t.player.Ticket.From
-		g.loseTicket(t, true)
+		if code.LoseTicket {
+			g.loseTicket(t, true)
+		}
 		g.jumpOnMap(t, dest)
 		g.stopOnMap(t)
 
-		t.addEvent("is back, ticketless")
-	case RiskStartX:
-		dest := t.player.Ticket.From
-		g.jumpOnMap(t, dest)
-		g.stopOnMap(t)
-
-		t.addEvent("is back")
+		if code.LoseTicket {
+			t.addEvent("is back, ticketless")
+		} else {
+			t.addEvent("is back")
+		}
 	case RiskCode:
 		t.addEvent("finds out that his risk card is unimplemented")
 	default:

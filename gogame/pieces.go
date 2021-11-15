@@ -7,6 +7,7 @@ import (
 	"github.com/undeconstructed/gogogo/game"
 )
 
+// WorldDot is one of the dots, including a city.
 type WorldDot struct {
 	Place    string   `json:"place"`
 	Danger   bool     `json:"danger"`
@@ -14,6 +15,7 @@ type WorldDot struct {
 	Links    []string `json:"links"`
 }
 
+// WorldPlace is a named place, where a player can stop.
 type WorldPlace struct {
 	Name     string         `json:"name"`
 	City     bool           `json:"city"`
@@ -24,6 +26,7 @@ type WorldPlace struct {
 	Dot string
 }
 
+// Ticket is a travel ticket, held by a player.
 type Ticket struct {
 	By       string `json:"by"`
 	From     string `json:"from"`
@@ -32,19 +35,22 @@ type Ticket struct {
 	Currency string `json:"currency"`
 }
 
+// Debt is an amount owed to the bank, for a fine or something.
 type Debt struct {
 	Amount int `json:"amount"`
 }
 
+// LuckCard is a luck card, as parsed from config, with an unparsed code.
 type LuckCard struct {
 	Name   string `json:"name"`
 	Code   string `json:"code"`
 	Retain bool   `json:"retain"`
 }
 
-func (lc LuckCard) ParseCode() LuckI {
+// ParseCode turns the code string into a typed struct.
+func (lc LuckCard) ParseCode() LuckCode {
 	code := lc.Code
-	ctxt := luckS{}
+	ctxt := luckContext{}
 
 	ss := strings.SplitN(code, ":", 2)
 	switch ss[0] {
@@ -78,38 +84,39 @@ func (lc LuckCard) ParseCode() LuckI {
 	case "speculation":
 		return LuckSpeculation{ctxt}
 	default:
-		return LuckCode{ctxt, code}
+		return LuckCustom{ctxt, code}
 	}
 }
 
-type LuckI interface {
+// LuckCode is a marker type for parsed luck codes.
+type LuckCode interface {
 	x()
 }
 
-type luckS struct{}
+type luckContext struct{}
 
-func (luckS) x() {}
+func (luckContext) x() {}
 
 type LuckAdvance struct {
-	luckS
+	luckContext
 	N int
 }
 
 type LuckCan struct {
-	luckS
+	luckContext
 	Can game.CommandPattern
 }
 
 type LuckDest struct {
-	luckS
+	luckContext
 }
 
 type LuckFreeInsurance struct {
-	luckS
+	luckContext
 }
 
 type LuckFreeTicket struct {
-	luckS
+	luckContext
 	From  string
 	To    string
 	Modes string
@@ -142,39 +149,41 @@ func (l LuckFreeTicket) Match(args []string) (to, from, modes string, err error)
 }
 
 type LuckGetMoney struct {
-	luckS
+	luckContext
 	CurrencyId string
 	Amount     int
 }
 
 type LuckGo struct {
-	luckS
+	luckContext
 	Dest string
 }
 
 type LuckImmunity struct {
-	luckS
+	luckContext
 }
 
 type LuckInoculation struct {
-	luckS
+	luckContext
 }
 
 type LuckSpeculation struct {
-	luckS
+	luckContext
 }
 
-type LuckCode struct {
-	luckS
+type LuckCustom struct {
+	luckContext
 	Code string
 }
 
+// RiskCard is a risk card, as parsed from config, with an unparsed code.
 type RiskCard struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
 }
 
-func (rc RiskCard) ParseCode() RiskI {
+// ParseCode turns the code string into a typed struct.
+func (rc RiskCard) ParseCode() RiskCode {
 	code := rc.Code
 	modes := "*"
 
@@ -184,7 +193,7 @@ func (rc RiskCard) ParseCode() RiskI {
 		code = ss[1]
 	}
 
-	ctxt := riskS{modes}
+	ctxt := riskContext{modes}
 
 	ss = strings.SplitN(code, ":", 2)
 	switch ss[0] {
@@ -209,91 +218,93 @@ func (rc RiskCard) ParseCode() RiskI {
 		cmd := ss[1]
 		return RiskMust{ctxt, game.CommandPattern(cmd)}
 	case "start":
-		return RiskStart{ctxt}
+		return RiskGoStart{ctxt, true}
 	case "startx":
-		return RiskStartX{ctxt}
+		return RiskGoStart{ctxt, false}
 	default:
-		return RiskCode{ctxt, code}
+		return RiskCustom{ctxt, code}
 	}
 }
 
-type RiskI interface {
+// RiskCode is a marker type for parsed luck codes.
+type RiskCode interface {
 	GetModes() string
 }
 
-type riskS struct {
+type riskContext struct {
 	Modes string
 }
 
-func (r riskS) GetModes() string {
+func (r riskContext) GetModes() string {
 	return r.Modes
 }
 
 type RiskAuto struct {
-	riskS
+	riskContext
 	Cmd game.CommandPattern
 }
 
 type RiskFog struct {
-	riskS
+	riskContext
 }
 
 type RiskGo struct {
-	riskS
+	riskContext
 	Dest string
 }
 
 type RiskCustomsHalf struct {
-	riskS
+	riskContext
 }
 
 type RiskDest struct {
-	riskS
+	riskContext
 }
 
 type RiskLoseTicket struct {
-	riskS
+	riskContext
 }
 
 type RiskMiss struct {
-	riskS
+	riskContext
 	N int
 }
 
 type RiskMust struct {
-	riskS
+	riskContext
 	Cmd game.CommandPattern
 }
 
-type RiskStart struct {
-	riskS
+type RiskGoStart struct {
+	riskContext
+	LoseTicket bool
 }
 
-type RiskStartX struct {
-	riskS
-}
-
-type RiskCode struct {
-	riskS
+type RiskCustom struct {
+	riskContext
 	Code string
 }
 
-type currency struct {
+// Currency is a currency parsed from config.
+type Currency struct {
 	Name  string `json:"name"`
 	Rate  int    `json:"rate"`
 	Units []int  `json:"units"`
 }
 
-type trackSquare struct {
+// TrackSquare us a board/track square, as parsed from config, with 0 or more
+// unparsed options.
+type TrackSquare struct {
 	Type    string   `json:"type"`
 	Name    string   `json:"name"`
 	Options []string `json:"options"`
 }
 
-func (t *trackSquare) ParseOptions() []OptionI {
-	var out []OptionI
+// ParseOptions turns the optino strings into typed structs.
+func (t *TrackSquare) ParseOptions() []OptionCode {
+	var out []OptionCode
 
-	ctxt := optionS{}
+	ctxt := optionContext{}
 
 	for _, option := range t.Options {
 		ss := strings.SplitN(option, ":", 2)
@@ -319,52 +330,48 @@ func (t *trackSquare) ParseOptions() []OptionI {
 			cmd := ss[1]
 			out = append(out, OptionMust{ctxt, game.CommandPattern(cmd)})
 		default:
-			out = append(out, OptionCode{ctxt, option})
+			out = append(out, OptionCustom{ctxt, option})
 		}
 	}
 
 	return out
 }
 
-type OptionI interface {
+type OptionCode interface {
 	x()
 }
 
-type optionS struct{}
+type optionContext struct{}
 
-func (optionS) x() {}
+func (optionContext) x() {}
 
 type OptionAuto struct {
-	optionS
+	optionContext
 	Cmd game.CommandPattern
 }
 
 type OptionCan struct {
-	optionS
+	optionContext
 	Cmd game.CommandPattern
 }
 
 type OptionGo struct {
-	optionS
+	optionContext
 	Dest     string
 	Forwards bool
 }
 
 type OptionMust struct {
-	optionS
+	optionContext
 	Cmd game.CommandPattern
 }
 
 type OptionMiss struct {
-	optionS
+	optionContext
 	N int
 }
 
-type OptionCode struct {
-	optionS
+type OptionCustom struct {
+	optionContext
 	Code string
-}
-
-func (t *trackSquare) hasOption(o string) bool {
-	return stringListContains(t.Options, o)
 }

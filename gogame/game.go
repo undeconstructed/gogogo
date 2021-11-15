@@ -17,9 +17,9 @@ type CommandHandler func(*turn, game.CommandPattern, []string) (interface{}, err
 
 type gogame struct {
 	cmds       map[string]CommandHandler
-	settings   settings
-	squares    []trackSquare
-	currencies map[string]currency
+	settings   Settings
+	squares    []TrackSquare
+	currencies map[string]Currency
 	places     map[string]WorldPlace
 	dots       map[string]WorldDot
 	risks      []RiskCard
@@ -141,7 +141,7 @@ func NewGame(data GameData, goal int) game.Game {
 	g.luckPile = NewCardStack(len(g.lucks))
 	g.riskPile = NewCardStack(len(g.risks))
 
-	// verify, by letting it panic now
+	// check that everything is parseable
 
 	for a := range data.Actions {
 		_, ok := g.cmds[a]
@@ -150,18 +150,22 @@ func NewGame(data GameData, goal int) game.Game {
 		}
 	}
 	for _, s := range g.squares {
-		s.ParseOptions()
+		for _, o := range s.ParseOptions() {
+			if cust, ok := o.(OptionCustom); ok {
+				log.Warn().Msgf("unparsed square option: %s", cust.Code)
+			}
+		}
 	}
 	for _, lc := range g.lucks {
 		code := lc.ParseCode()
-		if _, ok := code.(LuckCode); ok {
-			log.Warn().Msgf("unparsed luck card: %s", lc.Code)
+		if cust, ok := code.(LuckCustom); ok {
+			log.Warn().Msgf("unparsed luck card: %s", cust.Code)
 		}
 	}
 	for _, rc := range g.risks {
 		code := rc.ParseCode()
-		if _, ok := code.(RiskCode); ok {
-			log.Warn().Msgf("unparsed risk card: %s", rc.Code)
+		if cust, ok := code.(RiskCustom); ok {
+			log.Warn().Msgf("unparsed risk card: %s", cust.Code)
 		}
 	}
 
@@ -510,7 +514,7 @@ func (g *gogame) stopOnTrack(t *turn) {
 		case OptionMust:
 			cmd := option.Cmd.Sub(g.makeSubs(t))
 			t.Must = append(t.Must, string(cmd))
-		case OptionCode:
+		case OptionCustom:
 			panic("unhandled option " + option.Code)
 		}
 	}

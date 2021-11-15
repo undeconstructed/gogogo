@@ -52,6 +52,7 @@ func (c *circle) At(x, y int) color.Color {
 // func (l *Line) At(x, y int) color.Color {
 // }
 
+// Draw us an old hack, that might be resurrected sometime.
 func Draw(g *gogame, file string) error {
 	img := image.NewNRGBA(image.Rect(0, 0, 1000, 700))
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Src)

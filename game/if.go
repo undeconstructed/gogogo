@@ -4,6 +4,7 @@ import (
 	"io"
 )
 
+// GameStatus is the highest level indicator of what the game is doing.
 type GameStatus string
 
 const (
@@ -13,6 +14,13 @@ const (
 	StatusComplete              = "complete"
 )
 
+// Command is input to a game.
+type Command struct {
+	Command CommandString `json:"command"`
+	Options string        `json:"options"`
+}
+
+// TurnState is for the currenct player.
 type TurnState struct {
 	Number int    `json:"number"`
 	Player string `json:"player"`
@@ -23,6 +31,7 @@ type TurnState struct {
 	Custom interface{} `json:"custom"`
 }
 
+// GameState is the summary of the entire state of the game now.
 type GameState struct {
 	Status  GameStatus    `json:"status"`
 	Playing string        `json:"playing"`
@@ -32,6 +41,7 @@ type GameState struct {
 	Custom interface{} `json:"custom"`
 }
 
+// PlayerState is the current state of a player, it will usually be inside GameState.
 type PlayerState struct {
 	Name   string `json:"name"`
 	Colour string `json:"colour"`
@@ -39,6 +49,14 @@ type PlayerState struct {
 	Custom interface{} `json:"custom"`
 }
 
+// PlayResult is the result of a Game.Play() call
+type PlayResult struct {
+	Response interface{}
+	News     []Change
+	Next     TurnState
+}
+
+// Game describes a single game instance, that can be hosted by a server.
 type Game interface {
 	// activities
 	AddPlayer(name string, colour string) error

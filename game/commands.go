@@ -1,12 +1,11 @@
 package game
 
-import (
-	"strings"
-)
+import "strings"
 
 // CommandString is from the user, to do something
 type CommandString string
 
+// First gets just the first part of the string
 func (c CommandString) First() string {
 	return strings.SplitN(string(c), ":", 2)[0]
 }
@@ -14,14 +13,17 @@ func (c CommandString) First() string {
 // CommandPattern defines something that is allowed
 type CommandPattern string
 
+// First gets just the first part of the pattern
 func (c CommandPattern) First() string {
 	return strings.SplitN(string(c), ":", 2)[0]
 }
 
+// Parts splits the pattern
 func (c CommandPattern) Parts() []string {
 	return strings.Split(string(c), ":")
 }
 
+// Sub creates a new pattern, replacing items blindly from the map.
 func (p CommandPattern) Sub(subs map[string]string) CommandPattern {
 	s := string(p)
 	for f, t := range subs {
@@ -30,7 +32,7 @@ func (p CommandPattern) Sub(subs map[string]string) CommandPattern {
 	return CommandPattern(s)
 }
 
-// if the string matches the pattern, you will get the parts
+// Match will try to math a command to the pattern. If it matches, you will get the parts of the command.
 func (p CommandPattern) Match(c CommandString) []string {
 	ps, cs := strings.Split(string(p), ":"), strings.Split(string(c), ":")
 
@@ -49,35 +51,4 @@ func (p CommandPattern) Match(c CommandString) []string {
 	}
 
 	return cs
-}
-
-// Command is what the client sends?
-type Command struct {
-	Command CommandString `json:"command"`
-	Options string        `json:"options"`
-}
-
-type CommandResult struct {
-	Text string
-	Err  error
-}
-
-// Change is something that happened
-type Change struct {
-	Who   string `json:"who"`
-	What  string `json:"what"`
-	Where string `json:"where"`
-}
-
-// PlayResult is the result of a Game.Play() call
-type PlayResult struct {
-	Response interface{}
-	News     []Change
-	Next     TurnState
-}
-
-// GameUpdate is a giant state object, until I do some sort of selective updating.
-type GameUpdate struct {
-	News []Change `json:"news"`
-	GameState
 }

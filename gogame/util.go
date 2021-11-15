@@ -8,8 +8,12 @@ func isAColour(colour string) bool {
 	return stringListContains(colours, colour)
 }
 
+// CardStack is basically a stack structure for ints. The idea is that you can
+// take a card off the top, keep it for a while, and then put it back at the
+// bottom.
 type CardStack []int
 
+// NewCardStack creates a stack if the bumbers 0-size, and shuffles them.
 func NewCardStack(size int) CardStack {
 	stack := CardStack{}
 	for i := 0; i < size; i++ {
@@ -19,6 +23,7 @@ func NewCardStack(size int) CardStack {
 	return stack
 }
 
+// Take takes the top card.
 func (stack CardStack) Take() (int, CardStack) {
 	if len(stack) == 0 {
 		return -1, stack
@@ -29,6 +34,7 @@ func (stack CardStack) Take() (int, CardStack) {
 	return out, rest
 }
 
+// Return puts a card on the bottom of the stack. It does no checks.
 func (stack CardStack) Return(card int) CardStack {
 	return append(stack, card)
 }

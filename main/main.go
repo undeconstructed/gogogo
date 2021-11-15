@@ -32,7 +32,7 @@ func main() {
 
 func serverMain() {
 	rand.Seed(time.Now().Unix())
-	data := gogame.LoadJson()
+	data := gogame.LoadJson(".")
 
 	server := server.NewServer(func(req server.MakeGameInput) (game.Game, error) {
 		goal := 4
@@ -63,7 +63,7 @@ func serverMain() {
 }
 
 func clientMain(ccode string) {
-	data := gogame.LoadJson()
+	data := gogame.LoadJson(".")
 
 	client := client.NewClient(data, ccode, "game.socket")
 	err := client.Run()

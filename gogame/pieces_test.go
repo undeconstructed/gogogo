@@ -65,7 +65,7 @@ func TestRiskCard(t *testing.T) {
 }
 
 func TestSquare(t *testing.T) {
-	sq := trackSquare{Type: "bank", Name: "Bank", Options: []string{"can:buyticket:r"}}
+	sq := TrackSquare{Type: "bank", Name: "Bank", Options: []string{"can:buyticket:r"}}
 	opts := sq.ParseOptions()
 	if len(opts) != 1 {
 		t.Errorf("wrong size")

@@ -3,6 +3,7 @@ package gogame
 import (
 	"encoding/json"
 	"io/ioutil"
+	"path"
 )
 
 // PlayerState is a summary of each player
@@ -22,8 +23,10 @@ type TurnState struct {
 	Stopped bool `json:"stopped"`
 }
 
-func LoadJson() GameData {
-	jsdata, err := ioutil.ReadFile("data.json")
+// LoadJson loads the GameData from a file.
+func LoadJson(dir string) GameData {
+	fileName := path.Join(dir, "data.json")
+	jsdata, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		panic("no data.json")
 	}
@@ -35,30 +38,32 @@ func LoadJson() GameData {
 	return data
 }
 
+// GameData is the JSON structure of the game data.
 type GameData struct {
-	Settings   settings              `json:"settings"`
-	Actions    map[string]action     `json:"actions"`
-	Squares    []trackSquare         `json:"squares"`
-	Currencies map[string]currency   `json:"currencies"`
+	Settings   Settings              `json:"settings"`
+	Actions    map[string]Action     `json:"actions"`
+	Squares    []TrackSquare         `json:"squares"`
+	Currencies map[string]Currency   `json:"currencies"`
 	Places     map[string]WorldPlace `json:"places"`
 	Dots       map[string]WorldDot   `json:"dots"`
 	Lucks      []LuckCard            `json:"lucks"`
 	Risks      []RiskCard            `json:"risks"`
 }
 
-type settings struct {
+// Settings is things that control the game, and may be overriden per game.
+type Settings struct {
 	Home          string `json:"home"`
 	SouvenirPrice int    `json:"souvenirPrice"`
 	Goal          int    `json:"goal"`
 }
 
-type action struct {
+type Action struct {
 	Help string `json:"help"`
 }
 
-// gameSave is container for saving all changing
+// gameSave is container for saving all changing things.
 type gameSave struct {
-	Settings settings `json:"settings"`
+	Settings Settings `json:"settings"`
 	Players  []player `json:"players"`
 	Winner   string   `json:"winner"`
 	Bank     bank     `json:"bank"`
