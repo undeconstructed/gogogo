@@ -1,108 +1,102 @@
-package server
+package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-type MakeGameFunc func(MakeGameInput) (game.Game, error)
-
-type LoadGameFunc func(io.Reader) (game.Game, error)
-
-// Server serves just one game, that's enough
-type Server interface {
-	Run() error
-}
-
-func NewServer(makeGame MakeGameFunc, loadGame LoadGameFunc) Server {
-	games := map[string]*oneGame{}
+func NewServer() *server {
+	games := map[string]*instance{}
 	files, err := ioutil.ReadDir(".")
 	if err != nil {
 		log.Error().Err(err).Msg("not loading anything")
 	} else {
 		for _, f := range files {
 			fname := f.Name()
+			// use list of files as database, but don't actually load anything here
 			if strings.HasPrefix(fname, "state-") && strings.HasSuffix(fname, ".json") {
 				gameId := fname[6 : len(fname)-5]
-				log := log.With().Str("game", gameId).Logger()
-
-				f, err := os.Open(f.Name())
-				if err != nil {
-					log.Error().Err(err).Msg("cannot open state file")
-					continue
-				}
-
-				g, err := loadGame(f)
-				if err != nil {
-					log.Error().Err(err).Msg("cannot restore state")
-					continue
-				}
-
-				games[gameId] = &oneGame{
-					id:      gameId,
-					game:    g,
-					clients: map[string]*clientBundle{},
-					log:     log,
-				}
-
-				log.Info().Msg("loaded state")
+				games[gameId] = newInstance(gameId)
 			}
 		}
 	}
 
 	coreCh := make(chan interface{}, 100)
 	return &server{
-		makeGame: makeGame,
-		games:    games,
-		coreCh:   coreCh,
+		games:  games,
+		coreCh: coreCh,
 	}
 }
 
-type oneGame struct {
-	id      string
-	game    game.Game
-	turn    *game.TurnState
-	dirty   bool
-	clients map[string]*clientBundle
-	log     zerolog.Logger
-}
-
 type server struct {
-	makeGame MakeGameFunc
-	games    map[string]*oneGame
-	coreCh   chan interface{}
+	games  map[string]*instance
+	coreCh chan interface{}
 }
 
-func (s *server) Run() error {
+func (s *server) Run(ctx context.Context) error {
 	log.Info().Msg("server running")
 	defer log.Info().Msg("server stopping")
 
-	_ = runTcpGateway(s, "0.0.0.0:1234")
-	_ = runWebGateway(s, "0.0.0.0:1235")
+	go func() {
+		<-ctx.Done()
+		// XXX
+		close(s.coreCh)
+	}()
+
+	_ = runTcpGateway(ctx, s, "0.0.0.0:1234")
+	_ = runWebGateway(ctx, s, "0.0.0.0:1235")
+
+	for _, instance := range s.games {
+		// XXX - starts all games, and does it serially
+		err := instance.StartLoad(ctx)
+		if err != nil {
+			log.Err(err).Msg("instance start failed")
+		}
+	}
 
 	// this is the server's main loop
 	for in := range s.coreCh {
+		var g *instance
+		var news []game.Change
 
-		g, news := s.processMessage(in)
-
-		if g != nil && g.dirty {
-			s.saveGame(g)
-			g.dirty = false
+		switch msg := in.(type) {
+		case listGamesMsg:
+			s.doListGames(msg)
+		case createGameMsg:
+			s.doCreateGame(msg)
+		case afterCreate:
+			s.games[msg.game.id] = msg.game
+			msg.in.Rep <- msg.out
+			g = msg.game
+		case queryGameMsg:
+			s.doQueryGame(msg)
+		case deleteGameMsg:
+			s.doDeleteGame(msg)
+		case connectMsg:
+			g, news = s.doConnect(msg)
+		case disconnectMsg:
+			g, news = s.doDisconnect(msg)
+		case textFromUser:
+			g, news = s.doTextMessage(msg)
+		case requestFromUser:
+			s.doUserRequest(msg)
+		case afterRequest:
+			g, news = msg.game, msg.news
+		default:
+			log.Warn().Msgf("nonsense in core: %#v", in)
 		}
 
 		if g != nil && len(news) > 0 {
-			state := g.game.GetGameState()
+			state := *g.state
 			update := game.GameUpdate{News: news, GameState: state}
 			msg, err := comms.Encode("update", update)
 			if err != nil {
@@ -138,122 +132,193 @@ func (s *server) Run() error {
 	return nil
 }
 
-func (s *server) processMessage(in interface{}) (*oneGame, []game.Change) {
-	switch msg := in.(type) {
-	case listGamesMsg:
-		list := []string{}
-		for gameId := range s.games {
-			list = append(list, gameId)
-		}
-		msg.Rep <- list
-		return nil, nil
-	case createGameMsg:
-		id := RandomString(6)
-		log := log.With().Str("game", id).Logger()
+func (s *server) doListGames(in listGamesMsg) {
+	list := []string{}
+	for gameId := range s.games {
+		list = append(list, gameId)
+	}
+	in.Rep <- list
+}
 
-		game, err := s.makeGame(msg.Req)
+func (s *server) doCreateGame(in createGameMsg) {
+	ctx := context.TODO()
+
+	id := RandomString(6)
+	i := newInstance(id)
+
+	go func() {
+		err := i.StartInit(ctx, in.Req)
 		if err != nil {
-			msg.Rep <- MakeGameOutput{Err: err}
-			return nil, nil
+			log.Err(err).Msg("instance start failed")
+			in.Rep <- MakeGameOutput{Err: err}
+			return
 		}
-
-		gameholder := &oneGame{
-			id:      id,
-			dirty:   true,
-			game:    game,
-			clients: map[string]*clientBundle{},
-			log:     log,
-		}
-
-		s.games[id] = gameholder
-
-		log.Info().Msg("created")
 
 		players := map[string]string{}
-		for _, pl := range msg.Req.Players {
+		for _, pl := range in.Req.Players {
 			players[pl.Name] = encodeConnectString(id, pl.Name)
 		}
 
-		msg.Rep <- MakeGameOutput{ID: id, Players: players}
-		return gameholder, nil
-	case queryGameMsg:
-		game, exists := s.games[msg.Name]
-		if !exists {
-			msg.Rep <- nil
-			return nil, nil
-		}
+		out := MakeGameOutput{ID: id, Players: players}
 
-		s := game.game.GetGameState()
-		msg.Rep <- s
-		return nil, nil
-	case deleteGameMsg:
-		game, exists := s.games[msg.Name]
-		if !exists {
-			msg.Rep <- nil
-			return nil, nil
-		}
+		s.coreCh <- afterCreate{in, out, i}
+	}()
+}
 
-		// XXX - doesn't disconnect anyone
-		delete(s.games, msg.Name)
-		s.wipeGame(game)
-
-		log.Info().Msg("deleted")
-
-		msg.Rep <- nil
-		return nil, nil
-	case connectMsg:
-		g, ok := s.games[msg.GameId]
-		if !ok {
-			msg.Rep <- errors.New("game not found")
-			return nil, nil
-		}
-
-		g.clients[msg.PlayerId] = &msg.Client
-		msg.Rep <- nil
-
-		// if it's this players turn, arrange for a new turn message
-		turn := g.game.GetTurnState()
-		if turn.Player == msg.PlayerId {
-			g.turn = &turn
-		}
-
-		return g, []game.Change{{
-			Who:  msg.PlayerId,
-			What: "reconnects",
-		}}
-	case disconnectMsg:
-		g, ok := s.games[msg.Game]
-		if !ok {
-			return nil, nil
-		}
-
-		g.log.Info().Msgf("client gone: %s", msg.Name)
-
-		delete(g.clients, msg.Name)
-		return g, []game.Change{{
-			Who:  msg.Name,
-			What: "disconnects",
-		}}
-	case textFromUser:
-		return s.handleText(msg)
-	case requestFromUser:
-		g, ok := s.games[msg.Game]
-		if !ok {
-			return nil, nil
-		}
-
-		news, turn := s.handleRequest(msg)
-		if turn != nil {
-			// XXX - could this become nil intentionally at the end?
-			g.turn = turn
-			g.dirty = true
-		}
-
-		return g, news
-	default:
-		log.Warn().Msgf("nonsense in core: %#v", in)
+func (s *server) doQueryGame(in queryGameMsg) {
+	instance, exists := s.games[in.Name]
+	if !exists {
+		in.Rep <- nil
+		return
 	}
-	return nil, nil
+
+	in.Rep <- instance.state
+}
+
+func (s *server) doDeleteGame(in deleteGameMsg) {
+	// game, exists := s.games[in.Name]
+	// if !exists {
+	// 	in.Rep <- nil
+	// 	return
+	// }
+	//
+	// // XXX - doesn't actually stop or disconnnect or anything
+	// delete(s.games, in.Name)
+	// s.wipeGame(game)
+
+	// log.Info().Msg("deleted")
+	log.Info().Msg("not really deleted")
+
+	in.Rep <- nil
+}
+
+func (s *server) doConnect(in connectMsg) (*instance, []game.Change) {
+	instance, ok := s.games[in.GameId]
+	if !ok {
+		in.Rep <- errors.New("game not found")
+		return nil, nil
+	}
+
+	instance.clients[in.PlayerId] = &in.Client
+	in.Rep <- nil
+
+	// if it's this players turn, arrange for a new turn message
+	if instance.turn.Player == in.PlayerId {
+		// TODO
+	}
+
+	return instance, []game.Change{{
+		Who:  in.PlayerId,
+		What: "reconnects",
+	}}
+}
+
+func (s *server) doDisconnect(in disconnectMsg) (*instance, []game.Change) {
+	g, ok := s.games[in.Game]
+	if !ok {
+		return nil, nil
+	}
+
+	g.log.Info().Msgf("client gone: %s", in.Name)
+
+	delete(g.clients, in.Name)
+	return g, []game.Change{{
+		Who:  in.Name,
+		What: "disconnects",
+	}}
+}
+
+func (s *server) doTextMessage(in textFromUser) (*instance, []game.Change) {
+	g, ok := s.games[in.Game]
+	if !ok {
+		return nil, nil
+	}
+
+	news := []game.Change{
+		{Who: in.Who, What: "says " + in.Text},
+	}
+
+	return g, news
+}
+
+func (s *server) doUserRequest(in requestFromUser) {
+	g, ok := s.games[in.Game]
+	if !ok {
+		// TODO - reply to user?
+		return
+	}
+
+	go func() {
+		res, news := s.doUserRequestSub(g, in)
+
+		cres := responseToUser{ID: in.ID, Body: res}
+		c := g.clients[in.Who]
+
+		select {
+		case c.downCh <- cres:
+		default:
+			// client lagging
+		}
+
+		s.coreCh <- afterRequest{
+			game: g,
+			news: news,
+		}
+	}()
+}
+
+func (s *server) doUserRequestSub(g *instance, in requestFromUser) (interface{}, []game.Change) {
+	f := in.Cmd
+	switch f[0] {
+	case "start":
+		err := g.Start()
+		if err != nil {
+			return game.StartResultJSON{
+				Err: comms.WrapError(err),
+			}, nil
+		}
+		return game.StartResultJSON{}, []game.Change{{What: "the game starts"}}
+	case "query":
+		f = f[1:]
+		switch f[0] {
+		default:
+			return comms.WrapError(fmt.Errorf("unknown query: %v", f)), nil
+		}
+	case "play":
+		data, ok := in.Body.([]byte)
+		if !ok {
+			return game.PlayResultJSON{Err: comms.WrapError(errors.New("bad data"))}, nil
+		}
+
+		gameCommand := game.Command{}
+		if err := json.Unmarshal(data, &gameCommand); err != nil {
+			// bad command
+			return comms.WrapError(fmt.Errorf("bad body: %w", err)), nil
+		}
+
+		res, err := g.Play(in.Who, gameCommand)
+		if err != nil {
+			return game.PlayResultJSON{Err: comms.WrapError(err)}, nil
+		}
+
+		return game.PlayResultJSON{Msg: res.Response}, res.News
+	default:
+		return comms.WrapError(fmt.Errorf("unknown request: %v", in.Cmd)), nil
+	}
+}
+
+func (s *server) broadcast(g *instance, msg comms.Message, skip string) {
+	for n, c := range g.clients {
+		if n == skip {
+			continue
+		}
+		select {
+		case c.downCh <- msg:
+		default:
+			// client lagging
+			g.log.Info().Msgf("client lagging: %s", n)
+		}
+	}
 }
 
 func (s *server) Connect(gameId, playerId string, client clientBundle) error {
@@ -284,129 +349,4 @@ func (s *server) DeleteGame(name string) error {
 	resCh := make(chan error)
 	s.coreCh <- deleteGameMsg{name, resCh}
 	return <-resCh
-}
-
-func (s *server) saveFileName(g *oneGame) string {
-	return fmt.Sprintf("state-%s.json", g.id)
-}
-
-func (s *server) saveGame(g *oneGame) {
-	outFile, err := os.Create(s.saveFileName(g))
-	if err != nil {
-		g.log.Error().Err(err).Msg("can't save")
-		return
-	}
-	defer outFile.Close()
-
-	g.game.WriteOut(outFile)
-}
-
-func (s *server) wipeGame(g *oneGame) {
-	err := os.Remove(s.saveFileName(g))
-	if err != nil {
-		g.log.Error().Err(err).Msg("can't delete")
-		return
-	}
-}
-
-func (s *server) handleText(in textFromUser) (*oneGame, []game.Change) {
-	g, ok := s.games[in.Game]
-	if !ok {
-		return nil, nil
-	}
-
-	news := []game.Change{
-		{Who: in.Who, What: "says " + in.Text},
-	}
-
-	return g, news
-}
-
-func (s *server) handleRequest(in requestFromUser) ([]game.Change, *game.TurnState) {
-	g, ok := s.games[in.Game]
-	if !ok {
-		return nil, nil
-	}
-
-	f := s.parseRequest(g, in)
-	res, news, turn := f()
-
-	cres := responseToUser{ID: in.ID, Body: res}
-	c := g.clients[in.Who]
-
-	select {
-	case c.downCh <- cres:
-	default:
-		// client lagging
-	}
-
-	return news, turn
-}
-
-type requestFunc func() (forUser interface{}, forEveryone []game.Change, forServer *game.TurnState)
-
-func (s *server) parseRequest(g *oneGame, in requestFromUser) requestFunc {
-	f := in.Cmd
-	switch f[0] {
-	case "start":
-		return func() (interface{}, []game.Change, *game.TurnState) {
-			turn, err := g.game.Start()
-			if err != nil {
-				return game.StartResultJSON{
-					Err: comms.WrapError(err),
-				}, nil, nil
-			}
-			return game.StartResultJSON{}, []game.Change{{What: "the game starts"}}, &turn
-		}
-	case "query":
-		f = f[1:]
-		switch f[0] {
-		default:
-			return func() (interface{}, []game.Change, *game.TurnState) {
-				return comms.WrapError(fmt.Errorf("unknown query: %v", f)), nil, nil
-			}
-		}
-	case "play":
-		data, ok := in.Body.([]byte)
-		if !ok {
-			return func() (interface{}, []game.Change, *game.TurnState) {
-				return game.PlayResultJSON{Err: comms.WrapError(errors.New("bad data"))}, nil, nil
-			}
-		}
-
-		gameCommand := game.Command{}
-		if err := json.Unmarshal(data, &gameCommand); err != nil {
-			// bad command
-			return func() (interface{}, []game.Change, *game.TurnState) {
-				return comms.WrapError(fmt.Errorf("bad body: %w", err)), nil, nil
-			}
-		}
-
-		return func() (interface{}, []game.Change, *game.TurnState) {
-			res, err := g.game.Play(in.Who, gameCommand)
-			if err != nil {
-				return game.PlayResultJSON{Err: comms.WrapError(err)}, nil, nil
-			}
-
-			return game.PlayResultJSON{Msg: res.Response}, res.News, &res.Next
-		}
-	default:
-		return func() (interface{}, []game.Change, *game.TurnState) {
-			return comms.WrapError(fmt.Errorf("unknown request: %v", in.Cmd)), nil, nil
-		}
-	}
-}
-
-func (s *server) broadcast(g *oneGame, msg comms.Message, skip string) {
-	for n, c := range g.clients {
-		if n == skip {
-			continue
-		}
-		select {
-		case c.downCh <- msg:
-		default:
-			// client lagging
-			g.log.Info().Msgf("client lagging: %s", n)
-		}
-	}
 }

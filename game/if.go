@@ -20,7 +20,7 @@ type Command struct {
 	Options string        `json:"options"`
 }
 
-// TurnState is for the currenct player.
+// TurnState is for the current player.
 type TurnState struct {
 	Number int    `json:"number"`
 	Player string `json:"player"`

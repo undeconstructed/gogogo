@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"context"
@@ -22,7 +22,7 @@ type WsJSONMessage struct {
 	Data json.RawMessage `json:"data"`
 }
 
-func runWebGateway(server *server, addr string) error {
+func runWebGateway(ctx context.Context, server *server, addr string) error {
 	log := log.With().Str("gw", "web").Logger()
 
 	ln, err := net.Listen("tcp", addr)
@@ -60,6 +60,7 @@ func runWebGateway(server *server, addr string) error {
 	gameStatic := http.Dir("web")
 	r.GET("/play/*any", func(c *gin.Context) {
 		path := c.Request.URL.Path[6:]
+		// TODO - data file for other games?
 		if path == "data.json" {
 			c.File("data.json")
 		} else {
@@ -74,6 +75,10 @@ func runWebGateway(server *server, addr string) error {
 	}
 	go func() {
 		_ = s.Serve(ln)
+	}()
+	go func() {
+		<-ctx.Done()
+		s.Shutdown(context.TODO())
 	}()
 
 	return nil

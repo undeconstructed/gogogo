@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+option go_package = "github.com/undeconstructed/gogogo/game";
+
+package game;
+
+// Empty is empty
+message Empty {
+}
+
+message RPlayer {
+  string name = 1;
+  string colour = 2;
+
+  string custom = 9;
+}
+
+message RGameState {
+  string status = 1;
+  string playing = 2;
+  string winner = 3;
+  repeated RPlayer players = 4;
+
+  string custom = 9;
+}
+
+message RTurnState {
+  int32 number = 1;
+  string player = 2;
+  repeated string can = 3;
+  repeated string must = 4;
+
+  string custom = 9;
+}
+
+message RChange {
+  string who = 1;
+  string what = 2;
+  string where = 3;
+}
+
+message RLoadRequest {
+  string id = 1;
+}
+
+message RLoadResponse {
+  RGameState state = 1;
+  RTurnState turn = 2;
+}
+
+message RInitRequest {
+  string id = 1;
+  map<string, string> options = 2;
+}
+
+message RInitResponse {
+  RGameState state = 1;
+}
+
+message RAddPlayerRequest {
+  string name = 1;
+  string colour = 2;
+}
+
+message RAddPlayerResponse {
+}
+
+message RStartResponse {
+  RTurnState turn = 1;
+}
+
+message RPlayRequest {
+  string player = 1;
+  string command = 2;
+  string options = 3;
+}
+
+message RPlayResponse {
+  string response = 1;
+  repeated RChange news = 2;
+  RTurnState turn = 3;
+}
+
+// Game service, represents a game instance
+service RGame {
+  rpc Load(RLoadRequest) returns (RLoadResponse) {}
+  rpc Init(RInitRequest) returns (RInitResponse) {}
+
+  rpc AddPlayer (RAddPlayerRequest) returns (RAddPlayerResponse) {}
+  rpc Start (Empty) returns (RStartResponse) {}
+  rpc Play (RPlayRequest) returns (RPlayResponse) {}
+
+  rpc GetGameState(Empty) returns (RGameState) {}
+  rpc GetTurnState(Empty) returns (RTurnState) {}
+}

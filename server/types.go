@@ -1,4 +1,6 @@
-package server
+package main
+
+import "github.com/undeconstructed/gogogo/game"
 
 type MakeGameInput struct {
 	Players []GamePlayerInput `json:"players"`
@@ -76,4 +78,15 @@ type responseToUser struct {
 
 type clientBundle struct {
 	downCh chan interface{}
+}
+
+type afterCreate struct {
+	in   createGameMsg
+	out  MakeGameOutput
+	game *instance
+}
+
+type afterRequest struct {
+	game *instance
+	news []game.Change
 }

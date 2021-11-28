@@ -1,6 +1,7 @@
-package server
+package main
 
 import (
+	"context"
 	"io"
 	"net"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func runTcpGateway(server *server, addr string) error {
+func runTcpGateway(ctx context.Context, server *server, addr string) error {
 	log := log.With().Str("gw", "tcp").Logger()
 
 	// ln, err := net.Listen("unix", "game.socket")
@@ -27,6 +28,10 @@ func runTcpGateway(server *server, addr string) error {
 	}
 	go func() {
 		_ = m.Serve(ln)
+	}()
+	go func() {
+		<-ctx.Done()
+		ln.Close()
 	}()
 
 	return nil
