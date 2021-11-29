@@ -89,4 +89,5 @@ type afterCreate struct {
 type afterRequest struct {
 	game *instance
 	news []game.Change
+	turn *game.TurnState
 }

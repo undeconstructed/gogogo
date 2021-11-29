@@ -24,7 +24,7 @@ func WrapGameState(in *GameState) *RGameState {
 		players = append(players, &RPlayer{
 			Name:   p.Name,
 			Colour: p.Colour,
-			Custom: string(custom),
+			Custom: custom,
 		})
 	}
 
@@ -33,7 +33,7 @@ func WrapGameState(in *GameState) *RGameState {
 		Playing: in.Playing,
 		Winner:  in.Winner,
 		Players: players,
-		Custom:  string(custom),
+		Custom:  custom,
 	}
 }
 
@@ -45,7 +45,7 @@ func WrapTurnState(in *TurnState) *RTurnState {
 		Player: in.Player,
 		Can:    in.Can,
 		Must:   in.Must,
-		Custom: string(custom),
+		Custom: custom,
 	}
 }
 

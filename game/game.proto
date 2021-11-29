@@ -4,7 +4,6 @@ option go_package = "github.com/undeconstructed/gogogo/game";
 
 package game;
 
-// Empty is empty
 message Empty {
 }
 
@@ -12,7 +11,7 @@ message RPlayer {
   string name = 1;
   string colour = 2;
 
-  string custom = 9;
+  bytes custom = 9;
 }
 
 message RGameState {
@@ -21,7 +20,7 @@ message RGameState {
   string winner = 3;
   repeated RPlayer players = 4;
 
-  string custom = 9;
+  bytes custom = 9;
 }
 
 message RTurnState {
@@ -30,7 +29,7 @@ message RTurnState {
   repeated string can = 3;
   repeated string must = 4;
 
-  string custom = 9;
+  bytes custom = 9;
 }
 
 message RChange {
@@ -63,10 +62,15 @@ message RAddPlayerRequest {
 }
 
 message RAddPlayerResponse {
+  RGameState state = 1;
+}
+
+message RStartRequest {
 }
 
 message RStartResponse {
   RTurnState turn = 1;
+  RGameState state = 2;
 }
 
 message RPlayRequest {
@@ -79,6 +83,13 @@ message RPlayResponse {
   string response = 1;
   repeated RChange news = 2;
   RTurnState turn = 3;
+  RGameState state = 4;
+}
+
+message RDestroyRequest {
+}
+
+message RDestroyResponse {
 }
 
 // Game service, represents a game instance
@@ -87,9 +98,11 @@ service RGame {
   rpc Init(RInitRequest) returns (RInitResponse) {}
 
   rpc AddPlayer (RAddPlayerRequest) returns (RAddPlayerResponse) {}
-  rpc Start (Empty) returns (RStartResponse) {}
+  rpc Start (RStartRequest) returns (RStartResponse) {}
   rpc Play (RPlayRequest) returns (RPlayResponse) {}
 
-  rpc GetGameState(Empty) returns (RGameState) {}
-  rpc GetTurnState(Empty) returns (RTurnState) {}
+  // rpc GetGameState(Empty) returns (RGameState) {}
+  // rpc GetTurnState(Empty) returns (RTurnState) {}
+
+  rpc Destroy(RDestroyRequest) returns (RDestroyResponse) {}
 }

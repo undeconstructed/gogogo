@@ -92,6 +92,7 @@ func (s *gsrv) Load(ctx context.Context, req *game.RLoadRequest) (*game.RLoadRes
 		return nil, err
 	}
 
+	s.id = req.Id
 	s.gg = gg
 
 	sg := s.gg.GetGameState()
@@ -117,7 +118,9 @@ func (s *gsrv) Init(ctx context.Context, req *game.RInitRequest) (*game.RInitRes
 	}
 
 	gg := gogame.NewGame(s.data, goal)
+	s.id = req.Id
 	s.gg = gg
+	s.saveGame()
 
 	sg := s.gg.GetGameState()
 
@@ -136,10 +139,14 @@ func (s *gsrv) AddPlayer(ctx context.Context, in *game.RAddPlayerRequest) (*game
 		return nil, status.Errorf(codes.Unknown, "%v", err)
 	}
 
-	return &game.RAddPlayerResponse{}, nil
+	sg := s.gg.GetGameState()
+
+	return &game.RAddPlayerResponse{
+		State: game.WrapGameState(&sg),
+	}, nil
 }
 
-func (s *gsrv) Start(context.Context, *game.Empty) (*game.RStartResponse, error) {
+func (s *gsrv) Start(context.Context, *game.RStartRequest) (*game.RStartResponse, error) {
 	if s.gg == nil {
 		panic("no game")
 	}
@@ -148,9 +155,13 @@ func (s *gsrv) Start(context.Context, *game.Empty) (*game.RStartResponse, error)
 	if err != nil {
 		return nil, status.Errorf(codes.Unknown, "%v", err)
 	}
+	s.saveGame()
+
+	sg := s.gg.GetGameState()
 
 	return &game.RStartResponse{
-		Turn: game.WrapTurnState(&st),
+		State: game.WrapGameState(&sg),
+		Turn:  game.WrapTurnState(&st),
 	}, nil
 }
 
@@ -166,12 +177,16 @@ func (s *gsrv) Play(ctx context.Context, in *game.RPlayRequest) (*game.RPlayResp
 	if err != nil {
 		return nil, status.Errorf(codes.Unknown, "%v", err)
 	}
+	s.saveGame()
 
 	rr, _ := json.Marshal(res.Response)
+
+	sg := s.gg.GetGameState()
 
 	return &game.RPlayResponse{
 		Response: string(rr),
 		News:     game.WrapChanges(res.News),
+		State:    game.WrapGameState(&sg),
 		Turn:     game.WrapTurnState(&res.Next),
 	}, nil
 }
@@ -188,6 +203,17 @@ func (s *gsrv) GetTurnState(context.Context, *game.Empty) (*game.RTurnState, err
 		panic("no game")
 	}
 	return nil, status.Errorf(codes.Unimplemented, "method GetTurnState not implemented")
+}
+
+func (s *gsrv) Destroy(context.Context, *game.RDestroyRequest) (*game.RDestroyResponse, error) {
+	if s.gg == nil {
+		panic("no game")
+	}
+
+	s.wipeGame()
+	s.gg = nil
+
+	return &game.RDestroyResponse{}, nil
 }
 
 func (s *gsrv) saveFileName() string {
@@ -217,4 +243,7 @@ func (s *gsrv) wipeGame() {
 		log.Error().Err(err).Msg("can't delete")
 		return
 	}
+
+	s.id = ""
+	s.gg = nil
 }

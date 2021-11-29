@@ -21,10 +21,9 @@ type RGameClient interface {
 	Load(ctx context.Context, in *RLoadRequest, opts ...grpc.CallOption) (*RLoadResponse, error)
 	Init(ctx context.Context, in *RInitRequest, opts ...grpc.CallOption) (*RInitResponse, error)
 	AddPlayer(ctx context.Context, in *RAddPlayerRequest, opts ...grpc.CallOption) (*RAddPlayerResponse, error)
-	Start(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RStartResponse, error)
+	Start(ctx context.Context, in *RStartRequest, opts ...grpc.CallOption) (*RStartResponse, error)
 	Play(ctx context.Context, in *RPlayRequest, opts ...grpc.CallOption) (*RPlayResponse, error)
-	GetGameState(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RGameState, error)
-	GetTurnState(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RTurnState, error)
+	Destroy(ctx context.Context, in *RDestroyRequest, opts ...grpc.CallOption) (*RDestroyResponse, error)
 }
 
 type rGameClient struct {
@@ -62,7 +61,7 @@ func (c *rGameClient) AddPlayer(ctx context.Context, in *RAddPlayerRequest, opts
 	return out, nil
 }
 
-func (c *rGameClient) Start(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RStartResponse, error) {
+func (c *rGameClient) Start(ctx context.Context, in *RStartRequest, opts ...grpc.CallOption) (*RStartResponse, error) {
 	out := new(RStartResponse)
 	err := c.cc.Invoke(ctx, "/game.RGame/Start", in, out, opts...)
 	if err != nil {
@@ -80,18 +79,9 @@ func (c *rGameClient) Play(ctx context.Context, in *RPlayRequest, opts ...grpc.C
 	return out, nil
 }
 
-func (c *rGameClient) GetGameState(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RGameState, error) {
-	out := new(RGameState)
-	err := c.cc.Invoke(ctx, "/game.RGame/GetGameState", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *rGameClient) GetTurnState(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RTurnState, error) {
-	out := new(RTurnState)
-	err := c.cc.Invoke(ctx, "/game.RGame/GetTurnState", in, out, opts...)
+func (c *rGameClient) Destroy(ctx context.Context, in *RDestroyRequest, opts ...grpc.CallOption) (*RDestroyResponse, error) {
+	out := new(RDestroyResponse)
+	err := c.cc.Invoke(ctx, "/game.RGame/Destroy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +95,9 @@ type RGameServer interface {
 	Load(context.Context, *RLoadRequest) (*RLoadResponse, error)
 	Init(context.Context, *RInitRequest) (*RInitResponse, error)
 	AddPlayer(context.Context, *RAddPlayerRequest) (*RAddPlayerResponse, error)
-	Start(context.Context, *Empty) (*RStartResponse, error)
+	Start(context.Context, *RStartRequest) (*RStartResponse, error)
 	Play(context.Context, *RPlayRequest) (*RPlayResponse, error)
-	GetGameState(context.Context, *Empty) (*RGameState, error)
-	GetTurnState(context.Context, *Empty) (*RTurnState, error)
+	Destroy(context.Context, *RDestroyRequest) (*RDestroyResponse, error)
 	mustEmbedUnimplementedRGameServer()
 }
 
@@ -125,17 +114,14 @@ func (UnimplementedRGameServer) Init(context.Context, *RInitRequest) (*RInitResp
 func (UnimplementedRGameServer) AddPlayer(context.Context, *RAddPlayerRequest) (*RAddPlayerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPlayer not implemented")
 }
-func (UnimplementedRGameServer) Start(context.Context, *Empty) (*RStartResponse, error) {
+func (UnimplementedRGameServer) Start(context.Context, *RStartRequest) (*RStartResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 }
 func (UnimplementedRGameServer) Play(context.Context, *RPlayRequest) (*RPlayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Play not implemented")
 }
-func (UnimplementedRGameServer) GetGameState(context.Context, *Empty) (*RGameState, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGameState not implemented")
-}
-func (UnimplementedRGameServer) GetTurnState(context.Context, *Empty) (*RTurnState, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTurnState not implemented")
+func (UnimplementedRGameServer) Destroy(context.Context, *RDestroyRequest) (*RDestroyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Destroy not implemented")
 }
 func (UnimplementedRGameServer) mustEmbedUnimplementedRGameServer() {}
 
@@ -205,7 +191,7 @@ func _RGame_AddPlayer_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _RGame_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(RStartRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -217,7 +203,7 @@ func _RGame_Start_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: "/game.RGame/Start",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RGameServer).Start(ctx, req.(*Empty))
+		return srv.(RGameServer).Start(ctx, req.(*RStartRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -240,38 +226,20 @@ func _RGame_Play_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RGame_GetGameState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+func _RGame_Destroy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RDestroyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RGameServer).GetGameState(ctx, in)
+		return srv.(RGameServer).Destroy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/game.RGame/GetGameState",
+		FullMethod: "/game.RGame/Destroy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RGameServer).GetGameState(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RGame_GetTurnState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RGameServer).GetTurnState(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/game.RGame/GetTurnState",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RGameServer).GetTurnState(ctx, req.(*Empty))
+		return srv.(RGameServer).Destroy(ctx, req.(*RDestroyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -304,12 +272,8 @@ var RGame_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RGame_Play_Handler,
 		},
 		{
-			MethodName: "GetGameState",
-			Handler:    _RGame_GetGameState_Handler,
-		},
-		{
-			MethodName: "GetTurnState",
-			Handler:    _RGame_GetTurnState_Handler,
+			MethodName: "Destroy",
+			Handler:    _RGame_Destroy_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

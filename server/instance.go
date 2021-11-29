@@ -15,33 +15,50 @@ type instance struct {
 	state   *game.GameState
 	turn    *game.TurnState
 	clients map[string]*clientBundle
-	coreCh  chan interface{}
+	stopCh  chan struct{}
 	log     zerolog.Logger
 }
 
 func newInstance(id string) *instance {
-	coreCh := make(chan interface{}, 100)
+	stopCh := make(chan struct{})
 	log := log.With().Str("game", id).Logger()
 	log.Info().Msg("created")
 
 	// TODO - port management
-	bind := ":9001"
+	bind := "localhost:9001"
 
 	return &instance{
 		id:      id,
 		bind:    bind,
 		clients: map[string]*clientBundle{},
-		coreCh:  coreCh,
+		stopCh:  stopCh,
 		log:     log,
 	}
 }
 
-func (i *instance) StartInit(ctx context.Context, in MakeGameInput) error {
+func (i *instance) startProcess(ctx context.Context) (game.RGameClient, error) {
 	i.log.Info().Msg("instance starting")
 
 	pro := newProcess("./gogame.plugin", i.bind)
 
-	cli, err := pro.Start(ctx)
+	ctx1, cancel := context.WithCancel(ctx)
+
+	cli, err := pro.Start(ctx1)
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+
+	go func() {
+		<-i.stopCh
+		cancel()
+	}()
+
+	return cli, nil
+}
+
+func (i *instance) StartInit(ctx context.Context, in MakeGameInput) error {
+	cli, err := i.startProcess(ctx)
 	if err != nil {
 		return err
 	}
@@ -50,6 +67,7 @@ func (i *instance) StartInit(ctx context.Context, in MakeGameInput) error {
 	if err != nil {
 		return err
 	}
+	i.log.Info().Msg("instance inited")
 
 	i.cli = cli
 
@@ -57,27 +75,26 @@ func (i *instance) StartInit(ctx context.Context, in MakeGameInput) error {
 }
 
 func (i *instance) doInit(ctx context.Context, cli game.RGameClient, in MakeGameInput) error {
-	_, err := cli.Init(ctx, &game.RInitRequest{Id: i.id})
+	res, err := cli.Init(ctx, &game.RInitRequest{Id: i.id})
 	if err != nil {
 		return err
 	}
 
+	i.state = game.UnwrapGameState(res.State)
+
 	for _, p := range in.Players {
-		_, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Colour: p.Colour})
+		res, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Colour: p.Colour})
 		if err != nil {
 			return err
 		}
+		i.state = game.UnwrapGameState(res.State)
 	}
 
 	return nil
 }
 
 func (i *instance) StartLoad(ctx context.Context) error {
-	i.log.Info().Msg("instance starting")
-
-	pro := newProcess("./gogame.plugin", i.bind)
-
-	cli, err := pro.Start(ctx)
+	cli, err := i.startProcess(ctx)
 	if err != nil {
 		return err
 	}
@@ -86,6 +103,7 @@ func (i *instance) StartLoad(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	i.log.Info().Msg("instance loaded")
 
 	i.cli = cli
 
@@ -114,6 +132,7 @@ func (i *instance) Start() error {
 		return err
 	}
 
+	i.state = game.UnwrapGameState(res.State)
 	i.turn = game.UnwrapTurnState(res.Turn)
 
 	return nil
@@ -134,6 +153,7 @@ func (i *instance) Play(player string, c game.Command) (game.PlayResult, error) 
 		return game.PlayResult{}, err
 	}
 
+	i.state = game.UnwrapGameState(res.State)
 	i.turn = game.UnwrapTurnState(res.Turn)
 
 	return game.PlayResult{
@@ -148,4 +168,15 @@ func (i *instance) GetGameState() game.GameState {
 
 func (i *instance) GetTurnState() game.TurnState {
 	return *i.turn
+}
+
+func (i *instance) Destroy() error {
+	_, err := i.cli.Destroy(context.TODO(), &game.RDestroyRequest{})
+	if err != nil {
+		return err
+	}
+
+	close(i.stopCh)
+
+	return nil
 }
