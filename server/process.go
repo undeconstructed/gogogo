@@ -30,7 +30,7 @@ func newProcess(file, bind string) *process {
 	}
 }
 
-func (p *process) Start(ctx context.Context) (game.RGameClient, error) {
+func (p *process) Start(ctx context.Context) (game.InstanceClient, error) {
 	cmd := exec.CommandContext(ctx, p.file, p.bind)
 
 	stdout, err := cmd.StdoutPipe()
@@ -89,6 +89,6 @@ func (p *process) Start(ctx context.Context) (game.RGameClient, error) {
 		// return nil, err
 	}
 
-	cli := game.NewRGameClient(conn)
+	cli := game.NewInstanceClient(conn)
 	return cli, nil
 }

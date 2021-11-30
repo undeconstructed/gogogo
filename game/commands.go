@@ -2,6 +2,12 @@ package game
 
 import "strings"
 
+// Command is input to a game.
+type Command struct {
+	Command CommandString `json:"command"`
+	Options string        `json:"options"`
+}
+
 // CommandString is from the user, to do something
 type CommandString string
 

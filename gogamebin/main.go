@@ -49,7 +49,7 @@ func main() {
 }
 
 type gsrv struct {
-	game.UnimplementedRGameServer
+	game.UnimplementedInstanceServer
 
 	listener net.Listener
 	data     gogame.GameData
@@ -71,7 +71,7 @@ func makeGSrv(bind string, data gogame.GameData) (*gsrv, error) {
 
 func (s *gsrv) StartServer(ctx context.Context) error {
 	srv := grpc.NewServer()
-	game.RegisterRGameServer(srv, s)
+	game.RegisterInstanceServer(srv, s)
 
 	return srv.Serve(s.listener)
 }
@@ -184,25 +184,11 @@ func (s *gsrv) Play(ctx context.Context, in *game.RPlayRequest) (*game.RPlayResp
 	sg := s.gg.GetGameState()
 
 	return &game.RPlayResponse{
-		Response: string(rr),
+		Response: rr,
 		News:     game.WrapChanges(res.News),
 		State:    game.WrapGameState(&sg),
 		Turn:     game.WrapTurnState(&res.Next),
 	}, nil
-}
-
-func (s *gsrv) GetGameState(context.Context, *game.Empty) (*game.RGameState, error) {
-	if s.gg == nil {
-		panic("no game")
-	}
-	return nil, status.Errorf(codes.Unimplemented, "method GetGameState not implemented")
-}
-
-func (s *gsrv) GetTurnState(context.Context, *game.Empty) (*game.RTurnState, error) {
-	if s.gg == nil {
-		panic("no game")
-	}
-	return nil, status.Errorf(codes.Unimplemented, "method GetTurnState not implemented")
 }
 
 func (s *gsrv) Destroy(context.Context, *game.RDestroyRequest) (*game.RDestroyResponse, error) {

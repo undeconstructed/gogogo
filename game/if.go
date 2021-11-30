@@ -14,12 +14,6 @@ const (
 	StatusComplete              = "complete"
 )
 
-// Command is input to a game.
-type Command struct {
-	Command CommandString `json:"command"`
-	Options string        `json:"options"`
-}
-
 // TurnState is for the current player.
 type TurnState struct {
 	Number int    `json:"number"`

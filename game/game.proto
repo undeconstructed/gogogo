@@ -80,7 +80,7 @@ message RPlayRequest {
 }
 
 message RPlayResponse {
-  string response = 1;
+  bytes response = 1;
   repeated RChange news = 2;
   RTurnState turn = 3;
   RGameState state = 4;
@@ -92,17 +92,14 @@ message RDestroyRequest {
 message RDestroyResponse {
 }
 
-// Game service, represents a game instance
-service RGame {
-  rpc Load(RLoadRequest) returns (RLoadResponse) {}
-  rpc Init(RInitRequest) returns (RInitResponse) {}
+// Instance service, represents a game instance
+service Instance {
+  rpc Load (RLoadRequest) returns (RLoadResponse);
+  rpc Init (RInitRequest) returns (RInitResponse);
 
-  rpc AddPlayer (RAddPlayerRequest) returns (RAddPlayerResponse) {}
-  rpc Start (RStartRequest) returns (RStartResponse) {}
-  rpc Play (RPlayRequest) returns (RPlayResponse) {}
+  rpc AddPlayer (RAddPlayerRequest) returns (RAddPlayerResponse);
+  rpc Start (RStartRequest) returns (RStartResponse);
+  rpc Play (RPlayRequest) returns (RPlayResponse);
 
-  // rpc GetGameState(Empty) returns (RGameState) {}
-  // rpc GetTurnState(Empty) returns (RTurnState) {}
-
-  rpc Destroy(RDestroyRequest) returns (RDestroyResponse) {}
+  rpc Destroy (RDestroyRequest) returns (RDestroyResponse);
 }

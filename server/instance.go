@@ -11,7 +11,7 @@ import (
 type instance struct {
 	id      string
 	bind    string
-	cli     game.RGameClient
+	cli     game.InstanceClient
 	state   *game.GameState
 	turn    *game.TurnState
 	clients map[string]*clientBundle
@@ -36,7 +36,7 @@ func newInstance(id string) *instance {
 	}
 }
 
-func (i *instance) startProcess(ctx context.Context) (game.RGameClient, error) {
+func (i *instance) startProcess(ctx context.Context) (game.InstanceClient, error) {
 	i.log.Info().Msg("instance starting")
 
 	pro := newProcess("./gogame.plugin", i.bind)
@@ -74,7 +74,7 @@ func (i *instance) StartInit(ctx context.Context, in MakeGameInput) error {
 	return nil
 }
 
-func (i *instance) doInit(ctx context.Context, cli game.RGameClient, in MakeGameInput) error {
+func (i *instance) doInit(ctx context.Context, cli game.InstanceClient, in MakeGameInput) error {
 	res, err := cli.Init(ctx, &game.RInitRequest{Id: i.id})
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (i *instance) StartLoad(ctx context.Context) error {
 	return nil
 }
 
-func (i *instance) doLoad(ctx context.Context, cli game.RGameClient) error {
+func (i *instance) doLoad(ctx context.Context, cli game.InstanceClient) error {
 	res, err := cli.Load(ctx, &game.RLoadRequest{Id: i.id})
 	if err != nil {
 		return err
