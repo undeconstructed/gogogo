@@ -1,19 +1,21 @@
 package main
 
-import "github.com/undeconstructed/gogogo/game"
+import (
+	"encoding/json"
+
+	"github.com/undeconstructed/gogogo/game"
+)
 
 type MakeGameInput struct {
 	Players []GamePlayerInput `json:"players"`
-	Options GameOptions       `json:"options"`
+	Options json.RawMessage   `json:"options"`
 }
 
 type GamePlayerInput struct {
-	Name    string      `json:"name"`
-	Colour  string      `json:"colour"`
-	Options GameOptions `json:"options"`
+	Name    string          `json:"name"`
+	Colour  string          `json:"colour"`
+	Options json.RawMessage `json:"options"`
 }
-
-type GameOptions map[string]interface{}
 
 type MakeGameOutput struct {
 	ID      string            `json:"id"`

@@ -321,14 +321,14 @@ func (c *client) doGameStart() error {
 	return nil
 }
 
-func (c *client) doGamePlay(command game.Command) (interface{}, error) {
+func (c *client) doGamePlay(command game.Command) (json.RawMessage, error) {
 	res := game.PlayResultJSON{}
 	err := c.doRequest("play", command, &res)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if res.Err != nil {
-		return "", game.ReError(res.Err)
+		return nil, game.ReError(res.Err)
 	}
 	return res.Msg, nil
 }
@@ -643,7 +643,7 @@ func (c *client) gameRepl(l *rl.Instance) error {
 					continue
 				}
 			}
-			fmt.Printf("%v\n", res)
+			fmt.Printf("%v\n", string(res))
 			if cmd == "end" {
 				// auto follow on successful end
 				follow = true

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/undeconstructed/gogogo/comms"
@@ -35,7 +36,7 @@ type StartResultJSON struct {
 
 // PlayResultJSON is an encoding of the play result.
 type PlayResultJSON struct {
-	Msg interface{}       `json:"message"`
+	Msg json.RawMessage   `json:"message"`
 	Err *comms.CommsError `json:"error"`
 }
 

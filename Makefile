@@ -2,9 +2,10 @@
 modules = comms client game gogame gogamebin server
 
 gogame.plugin: .FORCE
-	go build -o gogame.plugin ./gogamebin
+	go build -o ./run/gogame.plugin ./gogamebin
 
 server.run: gogame.plugin
+	-rm ./run/*.pipe
 	go run ./server
 
 listgames:
@@ -19,7 +20,7 @@ test: $(modules:=.test)
 	go test ./$<
 
 generate.grpc:
-	protoc --go_out=. --go_opt=M --go_opt=paths=source_relative     --go-grpc_out=. --go-grpc_opt=paths=source_relative game/game.proto
+	protoc --go_out=. --go_opt=M --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative game/game.proto
 
 .PHONY: .FORCE
 

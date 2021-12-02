@@ -56,6 +56,7 @@ function main() {
 
   form.addEventListener('submit', e => {
     e.preventDefault()
+    let goal = parseInt(form.querySelector('[name=souvenirs]').value)
     let players = []
     for (let p of playersDiv.querySelectorAll('.player')) {
       let n = p.querySelector('input').value
@@ -63,7 +64,7 @@ function main() {
       players.push({ name: n, colour: c })
     }
     inpDiv.style.display = 'none'
-    doCreate({}, players)
+    doCreate({ goal }, players)
   })
 }
 

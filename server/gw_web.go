@@ -74,7 +74,8 @@ func runWebGateway(ctx context.Context, server *server, addr string) error {
 		WriteTimeout: time.Second * 10,
 	}
 	go func() {
-		_ = s.Serve(ln)
+		err := s.Serve(ln)
+		log.Info().Err(err).Msg("server return")
 	}()
 	go func() {
 		<-ctx.Done()
@@ -113,7 +114,6 @@ func (rh *restHandler) makeGame(c *gin.Context) {
 
 	res := rh.server.CreateGame(i)
 	if res.Err != nil {
-		rh.log.Error().Err(res.Err).Msg("create game error")
 		c.String(http.StatusInternalServerError, "error: %v", res.Err)
 		return
 	}
@@ -146,7 +146,6 @@ func (rh *restHandler) deleteGame(c *gin.Context) {
 
 	err := rh.server.DeleteGame(id)
 	if err != nil {
-		rh.log.Error().Err(err).Msg("delete game error")
 		c.String(http.StatusInternalServerError, "error: %v", err)
 		return
 	}
@@ -193,13 +192,16 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 
 	// start real work
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	downCh := make(chan interface{}, 100)
 
 	err = server.Connect(gameId, playerId, clientBundle{downCh})
 	if err != nil {
-		log.Info().Msgf("refusing: %s", addr)
+		log.Info().Err(err).Msgf("connection error, refusing")
 		msg, _ := comms.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
-		sendDownWs(socket, msg)
+		sendDownWs(ctx, socket, msg)
 		socket.Close(websocket.StatusNormalClosure, "cannot connect")
 		return
 	}
@@ -209,7 +211,7 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 		GameID:   gameId,
 		PlayerID: playerId,
 	})
-	sendDownWs(socket, msg)
+	sendDownWs(ctx, socket, msg)
 
 	go func() {
 		// read downCh, write to conn
@@ -219,26 +221,28 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 				log.Info().Err(err).Msg("encode error")
 				break
 			}
-			err = sendDownWs(socket, msg)
+			err = sendDownWs(ctx, socket, msg)
 			if err != nil {
 				log.Info().Err(err).Msg("send error")
 				break
 			}
 		}
+		// server wants us gone
+		socket.Close(websocket.StatusNormalClosure, "server closure")
 	}()
 
 	for {
 		// read conn, despatch into server
-		msg, err = readMessageWs(socket)
+		msg, err = readMessageWs(ctx, socket)
 		if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 			return
 		}
 		if err != nil {
-			log.Info().Err(err).Msgf("client read error: %v", addr)
+			log.Info().Err(err).Msgf("client read error")
 			server.coreCh <- disconnectMsg{gameId, playerId}
 			return
 		}
-		log.Info().Msgf("received from: %s %s", msg.Head, string(msg.Data))
+		log.Info().Msgf("received [%s %s]", msg.Head, string(msg.Data))
 
 		f := msg.Head.Fields()
 		switch f[0] {
@@ -258,13 +262,13 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 			req := requestFromUser{gameId, playerId, id, rest, body}
 			server.coreCh <- req
 		default:
-			log.Info().Msgf("junk from client: %v", f)
+			log.Info().Msgf("junk from client [%v]", f)
 		}
 	}
 }
 
-func sendDownWs(ws *websocket.Conn, msg comms.Message) error {
-	w, err := ws.Writer(context.TODO(), websocket.MessageText)
+func sendDownWs(ctx context.Context, ws *websocket.Conn, msg comms.Message) error {
+	w, err := ws.Writer(ctx, websocket.MessageText)
 	if err != nil {
 		return err
 	}
@@ -286,8 +290,8 @@ func sendDownWs(ws *websocket.Conn, msg comms.Message) error {
 	return w.Close()
 }
 
-func readMessageWs(c *websocket.Conn) (comms.Message, error) {
-	typ, r, err := c.Reader(context.TODO())
+func readMessageWs(ctx context.Context, c *websocket.Conn) (comms.Message, error) {
+	typ, r, err := c.Reader(ctx)
 	if err != nil {
 		return comms.Message{}, err
 	}

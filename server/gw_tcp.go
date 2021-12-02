@@ -27,7 +27,8 @@ func runTcpGateway(ctx context.Context, server *server, addr string) error {
 		log:    log,
 	}
 	go func() {
-		_ = m.Serve(ln)
+		err := m.Serve(ln)
+		m.log.Info().Err(err).Msg("server return")
 	}()
 	go func() {
 		<-ctx.Done()
@@ -46,14 +47,13 @@ func (m *tcpManager) Serve(ln net.Listener) error {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			m.log.Error().Err(err).Msg("listener error")
 			return err
 		}
 		m.manageTcpConnection(conn)
 	}
 }
 
-func (m *tcpManager) manageTcpConnection(conn net.Conn) error {
+func (m *tcpManager) manageTcpConnection(conn net.Conn) {
 	addr := conn.RemoteAddr()
 
 	log := m.log.With().Str("client", addr.String()).Logger()
@@ -150,6 +150,4 @@ func (m *tcpManager) manageTcpConnection(conn net.Conn) error {
 
 		m.server.coreCh <- disconnectMsg{gameId, playerId}
 	}()
-
-	return nil
 }

@@ -49,7 +49,7 @@ message RLoadResponse {
 
 message RInitRequest {
   string id = 1;
-  map<string, string> options = 2;
+  bytes options = 2;
 }
 
 message RInitResponse {
@@ -59,6 +59,7 @@ message RInitResponse {
 message RAddPlayerRequest {
   string name = 1;
   string colour = 2;
+  bytes options = 3;
 }
 
 message RAddPlayerResponse {

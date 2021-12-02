@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/undeconstructed/gogogo/game"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type instance struct {
@@ -21,11 +24,10 @@ type instance struct {
 
 func newInstance(id string) *instance {
 	stopCh := make(chan struct{})
-	log := log.With().Str("game", id).Logger()
-	log.Info().Msg("created")
+	log := log.With().Str("instance", id).Logger()
 
-	// TODO - port management
-	bind := "localhost:9001"
+	bind := "run/" + id + ".pipe"
+	log.Info().Msgf("will bind to: %s", bind)
 
 	return &instance{
 		id:      id,
@@ -39,7 +41,7 @@ func newInstance(id string) *instance {
 func (i *instance) startProcess(ctx context.Context) (game.InstanceClient, error) {
 	i.log.Info().Msg("instance starting")
 
-	pro := newProcess("./gogame.plugin", i.bind)
+	pro := newProcess("./run/gogame.plugin", i.bind)
 
 	ctx1, cancel := context.WithCancel(ctx)
 
@@ -50,7 +52,13 @@ func (i *instance) startProcess(ctx context.Context) (game.InstanceClient, error
 	}
 
 	go func() {
-		<-i.stopCh
+		select {
+		case <-i.stopCh:
+			// internal stop via destroy
+		case <-ctx.Done():
+			// external stop via context
+		}
+
 		cancel()
 	}()
 
@@ -75,7 +83,10 @@ func (i *instance) StartInit(ctx context.Context, in MakeGameInput) error {
 }
 
 func (i *instance) doInit(ctx context.Context, cli game.InstanceClient, in MakeGameInput) error {
-	res, err := cli.Init(ctx, &game.RInitRequest{Id: i.id})
+	res, err := cli.Init(ctx, &game.RInitRequest{
+		Id:      i.id,
+		Options: []byte(in.Options),
+	})
 	if err != nil {
 		return err
 	}
@@ -127,8 +138,12 @@ func (i *instance) Start() error {
 		panic("no client")
 	}
 
-	res, err := i.cli.Start(context.TODO(), nil)
+	res, err := i.cli.Start(context.TODO(), &game.RStartRequest{})
 	if err != nil {
+		code := status.Code(err)
+		if code == codes.Unavailable {
+			log.Warn().Err(err).Msg("rpc unavailable")
+		}
 		return err
 	}
 
@@ -138,7 +153,7 @@ func (i *instance) Start() error {
 	return nil
 }
 
-func (i *instance) Play(player string, c game.Command) (game.PlayResult, error) {
+func (i *instance) Play(player string, c game.Command) ([]game.Change, json.RawMessage, error) {
 	if i.cli == nil {
 		panic("no client")
 	}
@@ -150,16 +165,17 @@ func (i *instance) Play(player string, c game.Command) (game.PlayResult, error) 
 	})
 
 	if err != nil {
-		return game.PlayResult{}, err
+		code := status.Code(err)
+		if code == codes.Unavailable {
+			log.Warn().Err(err).Msg("rpc unavailable")
+		}
+		return nil, nil, err
 	}
 
 	i.state = game.UnwrapGameState(res.State)
 	i.turn = game.UnwrapTurnState(res.Turn)
 
-	return game.PlayResult{
-		Response: res.Response,
-		News:     game.UnwrapChanges(res.News),
-	}, nil
+	return game.UnwrapChanges(res.News), res.Response, nil
 }
 
 func (i *instance) GetGameState() game.GameState {
@@ -173,9 +189,17 @@ func (i *instance) GetTurnState() game.TurnState {
 func (i *instance) Destroy() error {
 	_, err := i.cli.Destroy(context.TODO(), &game.RDestroyRequest{})
 	if err != nil {
+		code := status.Code(err)
+		if code == codes.Unavailable {
+			log.Warn().Err(err).Msg("rpc unavailable")
+		}
 		return err
 	}
 
+	return i.Shutdown()
+}
+
+func (i *instance) Shutdown() error {
 	close(i.stopCh)
 
 	return nil

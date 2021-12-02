@@ -52,16 +52,20 @@ func (s *server) Run(ctx context.Context) error {
 		close(s.coreCh)
 	}()
 
-	_ = runTcpGateway(ctx, s, "0.0.0.0:1234")
-	_ = runWebGateway(ctx, s, "0.0.0.0:1235")
-
 	for _, instance := range s.games {
 		// XXX - starts all games, and does it serially
 		err := instance.StartLoad(ctx)
 		if err != nil {
 			log.Err(err).Msgf("instance start failed: %s", instance.id)
+			err := instance.Shutdown()
+			if err != nil {
+				log.Err(err).Msgf("instance shutdown failed: %s", instance.id)
+			}
 		}
 	}
+
+	_ = runTcpGateway(ctx, s, "0.0.0.0:1234")
+	_ = runWebGateway(ctx, s, "0.0.0.0:1235")
 
 	// this is the server's main loop
 	for in := range s.coreCh {
@@ -149,8 +153,12 @@ func (s *server) doCreateGame(in createGameMsg) {
 	go func() {
 		err := i.StartInit(ctx, in.Req)
 		if err != nil {
-			log.Err(err).Msg("instance start failed")
+			log.Err(err).Msgf("instance start failed: %s", i.id)
 			in.Rep <- MakeGameOutput{Err: err}
+			err := i.Shutdown()
+			if err != nil {
+				log.Err(err).Msgf("instance shutdown failed: %s", i.id)
+			}
 			return
 		}
 
@@ -166,13 +174,14 @@ func (s *server) doCreateGame(in createGameMsg) {
 }
 
 func (s *server) doQueryGame(in queryGameMsg) {
-	instance, exists := s.games[in.Name]
+	_, exists := s.games[in.Name]
 	if !exists {
 		in.Rep <- nil
 		return
 	}
 
-	in.Rep <- instance.state
+	// XXX - unused, unwritten
+	in.Rep <- nil
 }
 
 func (s *server) doDeleteGame(in deleteGameMsg) {
@@ -187,7 +196,11 @@ func (s *server) doDeleteGame(in deleteGameMsg) {
 		in.Rep <- err
 		return
 	}
-	// XXX - doesn't actually stop or disconnnect or anything
+
+	for _, client := range game.clients {
+		close(client.downCh)
+	}
+
 	delete(s.games, in.Name)
 
 	in.Rep <- nil
@@ -295,12 +308,12 @@ func (s *server) doUserRequestSub(g *instance, in requestFromUser) (interface{},
 			return game.PlayResultJSON{Err: comms.WrapError(fmt.Errorf("bad body: %w", err))}, nil, nil
 		}
 
-		res, err := g.Play(in.Who, gameCommand)
+		news, res, err := g.Play(in.Who, gameCommand)
 		if err != nil {
 			return game.PlayResultJSON{Err: comms.WrapError(err)}, nil, nil
 		}
 
-		return game.PlayResultJSON{Msg: res.Response}, res.News, g.turn
+		return game.PlayResultJSON{Msg: res}, news, g.turn
 	default:
 		return comms.WrapError(fmt.Errorf("unknown request: %v", in.Cmd)), nil, nil
 	}

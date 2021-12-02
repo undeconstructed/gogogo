@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"context"
+	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/undeconstructed/gogogo/game"
@@ -12,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// process is an OS process that exports a gRPC game over TCP.
+// process is an OS process that exports a gRPC game over a socket.
 type process struct {
 	log  zerolog.Logger
 	file string
@@ -22,7 +24,7 @@ type process struct {
 // newProcess makes a process, that will run a binary file and tell it to bind
 // gRPC on some address.
 func newProcess(file, bind string) *process {
-	log := log.With().Str("pr", bind).Logger()
+	log := log.With().Str("process", bind).Logger()
 	return &process{
 		log:  log,
 		file: file,
@@ -35,20 +37,17 @@ func (p *process) Start(ctx context.Context) (game.InstanceClient, error) {
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		p.log.Err(err).Msg("failed to get game app out pipe")
-		return nil, err
+		return nil, fmt.Errorf("failed to get process out pipe: %w", err)
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		p.log.Err(err).Msg("failed to get game app err pipe")
-		return nil, err
+		return nil, fmt.Errorf("failed to get process err pipe: %w", err)
 	}
 
 	err = cmd.Start()
 	if err != nil {
-		p.log.Err(err).Msg("failed to start game app")
-		return nil, err
+		return nil, fmt.Errorf("failed to start process: %w", err)
 	}
 
 	go func() {
@@ -56,10 +55,9 @@ func (p *process) Start(ctx context.Context) (game.InstanceClient, error) {
 		for {
 			s, err := r.ReadString('\n')
 			if err != nil {
-				p.log.Err(err).Msgf("game app gone")
 				return
 			}
-			p.log.Info().Msgf("from app out: %s", s)
+			p.log.Info().Msgf("stdout: %s", s)
 		}
 	}()
 
@@ -68,25 +66,27 @@ func (p *process) Start(ctx context.Context) (game.InstanceClient, error) {
 		for {
 			s, err := r.ReadString('\n')
 			if err != nil {
-				p.log.Err(err).Msgf("game app gone")
 				return
 			}
-			p.log.Info().Msgf("from app err: %s", s)
+			p.log.Info().Msgf("stderr: %s", s)
 		}
 	}()
 
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			p.log.Err(err).Msgf("game app ended with error")
+			p.log.Err(err).Msgf("process ended with error")
+		}
+		err = os.Remove(p.bind)
+		if err != nil {
+			p.log.Err(err).Msgf("cannot delete pipe file: %s", p.bind)
 		}
 	}()
 
-	conn, err := grpc.Dial(p.bind, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial("unix:"+p.bind, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		p.log.Err(err).Msg("failed to connect to game app")
 		cmd.Process.Kill()
-		// return nil, err
+		return nil, fmt.Errorf("failed to connect to process: %w", err)
 	}
 
 	cli := game.NewInstanceClient(conn)

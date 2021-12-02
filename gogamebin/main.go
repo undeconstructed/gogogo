@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -31,6 +30,7 @@ func main() {
 
 	gsrvr, err := makeGSrv(bind, data)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		panic("cannot make gsrv")
 	}
 
@@ -59,7 +59,7 @@ type gsrv struct {
 }
 
 func makeGSrv(bind string, data gogame.GameData) (*gsrv, error) {
-	l, err := net.Listen("tcp", bind)
+	l, err := net.Listen("unix", bind)
 	if err != nil {
 		return nil, err
 	}
@@ -109,11 +109,18 @@ func (s *gsrv) Init(ctx context.Context, req *game.RInitRequest) (*game.RInitRes
 		return nil, status.Errorf(codes.AlreadyExists, "game already present")
 	}
 
+	options := map[string]interface{}{}
+	err := json.Unmarshal(req.Options, &options)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "bad options json")
+	}
+
 	goal := 4
-	if g0, ok := req.Options["goal"]; ok {
-		if g1, err := strconv.Atoi(g0); err != nil {
-			// XXX - lost error
+	if g0, ok := options["goal"]; ok {
+		if g1, ok := g0.(float64); ok {
 			goal = int(g1)
+		} else {
+			return nil, status.Errorf(codes.InvalidArgument, "bad goal option: %v", g0)
 		}
 	}
 
@@ -138,6 +145,7 @@ func (s *gsrv) AddPlayer(ctx context.Context, in *game.RAddPlayerRequest) (*game
 	if err != nil {
 		return nil, status.Errorf(codes.Unknown, "%v", err)
 	}
+	s.saveGame()
 
 	sg := s.gg.GetGameState()
 
