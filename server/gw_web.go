@@ -228,13 +228,14 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 			}
 		}
 		// server wants us gone
-		socket.Close(websocket.StatusNormalClosure, "server closure")
+		socket.Close(websocket.StatusGoingAway, "server closure")
 	}()
 
 	for {
 		// read conn, despatch into server
 		msg, err = readMessageWs(ctx, socket)
 		if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
+			server.coreCh <- disconnectMsg{gameId, playerId}
 			return
 		}
 		if err != nil {
