@@ -90,11 +90,34 @@ button[type=submit] {
   width: 100%;
 }
 
+.input, .message, .output {
+  display: none;
+}
+
+.input {
+}
+.makegame[show=input] .input {
+  display: block;
+}
+
+.message {
+  text-align: center;
+  margin-bottom: 3em;
+}
+.makegame[show=message] .message {
+  display: block;
+}
+
 .output {
   display: none;
   margin-bottom: 3em;
 }
-
 .output table {
   margin: 0 auto;
+}
+.output table th {
+  font-weight: bold;
+}
+.makegame[show=output] .output {
+  display: block;
 }

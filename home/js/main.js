@@ -1,10 +1,20 @@
 
+function showMessage(msg) {
+  let div = document.querySelector('.makegame')
+  let msgDiv = div.querySelector('.message')
+  msgDiv.textContent = msg
+  div.setAttribute('show', 'message')
+}
+
 function doCreate(options, players) {
   let js = JSON.stringify({ options, players })
   fetch('/api/games', { method: 'POST', body: js }).
     then(rez => rez.json()).
     then(data => {
       doOnCreate(data)
+    }).
+    catch(e => {
+      showMessage(e)
     })
 }
 
@@ -16,24 +26,23 @@ function doOnCreate(msg) {
   for (let k in msg.players) {
     let c = msg.players[k]
     let tr = document.createElement('tr')
+    let th0 = document.createElement('th')
+    th0.textContent = k
     let td0 = document.createElement('td')
-    td0.textContent = k
-    let td1 = document.createElement('td')
     let a = document.createElement('a')
     let link = `${window.location.origin}/play/?c=${c}`
     a.href = link
     a.textContent = link
-    td1.append(a)
-    tr.append(td0, td1)
+    td0.append(a)
+    tr.append(th0, td0)
     tbody.append(tr)
   }
-  outDiv.style.display = 'block'
+  div.setAttribute('show', 'output')
 }
 
 function main() {
   let div = document.querySelector('.makegame')
   let inpDiv = div.querySelector('.input')
-  let outDiv = div.querySelector('.output')
   let form = div.querySelector('.input form')
 
   let playersDiv = form.querySelector('.players')
@@ -64,8 +73,11 @@ function main() {
       players.push({ name: n, colour: c })
     }
     inpDiv.style.display = 'none'
+    showMessage('... working ...')
     doCreate({ goal }, players)
   })
+
+  div.setAttribute('show', 'input')
 }
 
 document.addEventListener('DOMContentLoaded', main)
