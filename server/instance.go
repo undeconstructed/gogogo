@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -89,7 +90,7 @@ func (i *instance) doInit(ctx context.Context, cli game.InstanceClient, in MakeG
 		Options: []byte(in.Options),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("init error: %w", err)
 	}
 
 	i.state = game.UnwrapGameState(res.State)
@@ -97,7 +98,7 @@ func (i *instance) doInit(ctx context.Context, cli game.InstanceClient, in MakeG
 	for _, p := range in.Players {
 		res, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Colour: p.Colour})
 		if err != nil {
-			return err
+			return fmt.Errorf("addplayer error: %w", err)
 		}
 		i.state = game.UnwrapGameState(res.State)
 	}

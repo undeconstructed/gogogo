@@ -201,15 +201,15 @@ func (s *GRPCServer) Init(ctx context.Context, req *RInitRequest) (*RInitRespons
 		return nil, status.Error(codes.InvalidArgument, "bad options json")
 	}
 
+	s.id = req.Id
 	gg, _ := s.newGame(options)
+	s.gg = gg
+
 	err = s.saveGame()
 	if err != nil {
 		// XXX - this and others are dangerous, as they break sync
 		log.Error().Err(err).Msg("save failed")
 	}
-
-	s.id = req.Id
-	s.gg = gg
 
 	sg := s.gg.GetGameState()
 

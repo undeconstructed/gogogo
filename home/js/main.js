@@ -9,12 +9,16 @@ function showMessage(msg) {
 function doCreate(options, players) {
   let js = JSON.stringify({ options, players })
   fetch('/api/games', { method: 'POST', body: js }).
-    then(rez => rez.json()).
-    then(data => {
-      doOnCreate(data)
-    }).
-    catch(e => {
-      showMessage(e)
+    then(rez => {
+      if (!rez.ok) {
+        rez.json().then(j => {
+          showMessage(j.error.message)
+        })
+      } else {
+        rez.json().then(j => {
+          doOnCreate(j)
+        })
+      }
     })
 }
 

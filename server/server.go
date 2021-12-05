@@ -154,7 +154,7 @@ func (s *server) doCreateGame(in createGameMsg) {
 		err := i.StartInit(ctx, in.Req)
 		if err != nil {
 			log.Err(err).Msgf("instance start failed: %s", i.id)
-			in.Rep <- MakeGameOutput{Err: err}
+			in.Rep <- MakeGameOutput{Err: comms.WrapError(err)}
 			err := i.Shutdown()
 			if err != nil {
 				log.Err(err).Msgf("instance shutdown failed: %s", i.id)

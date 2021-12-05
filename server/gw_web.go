@@ -114,7 +114,7 @@ func (rh *restHandler) makeGame(c *gin.Context) {
 
 	res := rh.server.CreateGame(i)
 	if res.Err != nil {
-		c.String(http.StatusInternalServerError, "error: %v", res.Err)
+		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
@@ -199,6 +199,7 @@ func (ch *commsHandler) serveWS(c *gin.Context) {
 
 	err = server.Connect(gameId, playerId, clientBundle{downCh})
 	if err != nil {
+		// TODO - if game not found, maybe StatusGoingAway?
 		log.Info().Err(err).Msgf("connection error, refusing")
 		msg, _ := comms.Encode("connected", comms.ConnectResponse{Err: comms.WrapError(err)})
 		sendDownWs(ctx, socket, msg)
