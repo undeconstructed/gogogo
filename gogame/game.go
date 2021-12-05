@@ -2,7 +2,6 @@ package gogame
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -209,18 +208,15 @@ func NewFromSaved(data GameData, r io.Reader) (game.Game, error) {
 func (g *gogame) AddPlayer(name string, colour string) error {
 	for _, pl := range g.players {
 		if pl.Name == name {
-			if pl.Colour == colour {
-				return game.ErrPlayerExists
-			}
-			return errors.New("name conflict")
+			return game.Error(game.StatusConflict, "name conflict")
 		}
 		if pl.Colour == colour && pl.Name != name {
-			return errors.New("colour conflict")
+			return game.Error(game.StatusConflict, "colour conflict")
 		}
 	}
 
 	if !isAColour(colour) {
-		return fmt.Errorf("not a colour: %s", colour)
+		return game.Error(game.StatusBadRequest, "not a colour")
 	}
 
 	homePlace := g.places[g.settings.Home]
@@ -245,10 +241,10 @@ func (g *gogame) AddPlayer(name string, colour string) error {
 // Start starts the game
 func (g *gogame) Start() (game.TurnState, error) {
 	if g.turn != nil {
-		return game.TurnState{}, game.ErrAlreadyStarted
+		return game.TurnState{}, game.Error(game.StatusNotStarted, "")
 	}
 	if len(g.players) < 1 {
-		return game.TurnState{}, game.ErrNoPlayers
+		return game.TurnState{}, game.Error(game.StatusNoPlayers, "")
 	}
 
 	rand.Shuffle(len(g.players), func(i, j int) {
@@ -264,11 +260,11 @@ func (g *gogame) Start() (game.TurnState, error) {
 func (g *gogame) Play(player string, c game.Command) (game.PlayResult, error) {
 	t := g.turn
 	if t == nil {
-		return game.PlayResult{}, game.ErrNotStarted
+		return game.PlayResult{}, game.Error(game.StatusNotStarted, "")
 	}
 
 	if t.player.Name != player {
-		return game.PlayResult{}, game.ErrNotYourTurn
+		return game.PlayResult{}, game.Error(game.StatusNotYourTurn, "")
 	}
 
 	res, err := g.doPlay(t, c)
@@ -295,7 +291,7 @@ func (g *gogame) doPlay(t *turn, c game.Command) (interface{}, error) {
 
 	handler, ok := g.cmds[cmd]
 	if !ok {
-		return nil, errors.New("bad command: " + string(c.Command))
+		return nil, game.Errorf(game.StatusBadRequest, "bad command: "+string(c.Command))
 	}
 
 	find := func(l []string) (game.CommandPattern, []string) {
@@ -314,7 +310,7 @@ func (g *gogame) doPlay(t *turn, c game.Command) (interface{}, error) {
 		pattern, args = find(t.Must)
 	}
 	if args == nil {
-		return nil, game.ErrNotNow
+		return nil, game.Error(game.StatusNotNow, "")
 	}
 
 	return handler(t, pattern, args[1:])
@@ -324,7 +320,7 @@ func (g *gogame) doPlay(t *turn, c game.Command) (interface{}, error) {
 func (g *gogame) doAutoCommand(t *turn, cmd game.CommandPattern) (interface{}, error) {
 	handler, ok := g.cmds[cmd.First()]
 	if !ok {
-		return nil, errors.New("bad command: " + string(cmd))
+		return nil, game.Errorf(game.StatusBadRequest, "bad command: "+string(cmd))
 	}
 
 	args := cmd.Parts()

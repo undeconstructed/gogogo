@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -140,8 +141,13 @@ func (i *instance) Start() error {
 
 	res, err := i.cli.Start(context.TODO(), &game.RStartRequest{})
 	if err != nil {
-		code := status.Code(err)
-		if code == codes.Unavailable {
+		se, _ := status.FromError(err)
+		switch se.Code() {
+		case codes.FailedPrecondition:
+			return errors.New(err.Error())
+		case codes.InvalidArgument:
+			return errors.New(err.Error())
+		case codes.Unavailable:
 			log.Warn().Err(err).Msg("rpc unavailable")
 		}
 		return err
@@ -165,8 +171,13 @@ func (i *instance) Play(player string, c game.Command) ([]game.Change, json.RawM
 	})
 
 	if err != nil {
-		code := status.Code(err)
-		if code == codes.Unavailable {
+		se, _ := status.FromError(err)
+		switch se.Code() {
+		case codes.FailedPrecondition:
+			return nil, nil, errors.New(se.Message())
+		case codes.InvalidArgument:
+			return nil, nil, errors.New(se.Message())
+		case codes.Unavailable:
 			log.Warn().Err(err).Msg("rpc unavailable")
 		}
 		return nil, nil, err

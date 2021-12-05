@@ -124,7 +124,7 @@ type LuckFreeTicket struct {
 
 func (l LuckFreeTicket) Match(args []string) (to, from, modes string, err error) {
 	if len(args) != 3 {
-		err = game.ErrBadRequest
+		err = game.Error(game.StatusBadRequest, "?")
 		return
 	}
 
@@ -133,15 +133,15 @@ func (l LuckFreeTicket) Match(args []string) (to, from, modes string, err error)
 	modes = args[2]
 
 	if l.From != "*" && l.From != from {
-		err = game.ErrBadRequest
+		err = game.Error(game.StatusBadRequest, "?")
 		return
 	}
 	if l.To != "*" && l.To != to {
-		err = game.ErrBadRequest
+		err = game.Error(game.StatusBadRequest, "?")
 		return
 	}
 	if l.Modes != "*" && l.Modes != modes {
-		err = game.ErrBadRequest
+		err = game.Error(game.StatusBadRequest, "?")
 		return
 	}
 

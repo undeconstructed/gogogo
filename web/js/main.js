@@ -31,6 +31,17 @@ function makeByLine(data, modes) {
   return ms.join('/')
 }
 
+function buttonCallback0(div, then) {
+  return (e, r) => {
+    if (e) {
+      alert(e.message)
+      div.classList.add('open')
+      return
+    }
+    then && then(r)
+  }
+}
+
 // ui components
 
 function makeStartButton() {
@@ -978,6 +989,7 @@ function makeAutoButtons(data, up) {
   let buttonBox = document.querySelector('.actions')
 
   let skip = [
+    'airlift',
     'buysouvenir',
     'buyticket',
     'changemoney',
@@ -1088,7 +1100,7 @@ function makeStopButton() {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      let cb = buttonCallback0(div)
       netState.doRequest('play', { command: 'stop' }, cb)
       div.classList.remove('open')
     })
@@ -1109,10 +1121,7 @@ function makeDiceButton(_data, up) {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, r) => {
-        if (e) { alert(e.message); return; }
-        up.send({ do: 'notify', msg: 'you rolled a ' + r.message})
-      }
+      let cb = buttonCallback0(div, r => up.send({ do: 'notify', msg: 'you rolled a ' + r.message}))
       netState.doRequest('play', { command: 'dicemove' }, cb)
       div.classList.remove('open')
     })
@@ -1132,10 +1141,7 @@ function makeGambleButton(_data, up) {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, r) => {
-        if (e) { alert(e.message); return; }
-        up.send({ do: 'notify', msg: 'you gambled and ' + r.message})
-      }
+      let cb = buttonCallback0(div, r => up.send({ do: 'notify', msg: 'you gambled and ' + r.message}))
       netState.doRequest('play', { command: `gamble:${currency}:${amount}` }, cb)
       div.classList.remove('open')
     })
@@ -1164,13 +1170,7 @@ function makeCustomsButton(_data, up) {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, r) => {
-        if (e) {
-          alert(e.message)
-          div.classList.add('open')
-          return
-        }
-      }
+      let cb = buttonCallback0(div)
       netState.doRequest('play', { command: cmd }, cb)
       div.classList.remove('open')
     })
@@ -1197,10 +1197,7 @@ function makeBuySouvenirButton(_data, up) {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, r) => {
-        if (e) { alert(e.message); return; }
-        up.send({ do: 'notify', msg: 'you have bought a sort of ' + r.message })
-      }
+      let cb = buttonCallback0(div, r => up.send({ do: 'notify', msg: 'you have bought a sort of ' + r.message }))
       netState.doRequest('play', { command: cmd }, cb)
       div.classList.remove('open')
     })
@@ -1225,9 +1222,7 @@ function makeAirliftButton(_data, up) {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, r) => {
-        if (e) { alert(e.message); return; }
-      }
+      let cb = buttonCallback0(div)
       netState.doRequest('play', { command: cmd }, cb)
       div.classList.remove('open')
     })
@@ -1236,7 +1231,7 @@ function makeAirliftButton(_data, up) {
   let onTurn = t => {
     cmd = ''
     for (let c of t.can) {
-      if (c.startsWith('airlift:')) {
+      if (c.startsWith('airlift')) {
         cmd = c
       }
     }
@@ -1252,7 +1247,7 @@ function makeSleepButton() {
 
   ;(() => {
     div.addEventListener('click', _e => {
-      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      let cb = buttonCallback0(div)
       netState.doRequest('play', { command: cmd }, cb)
       div.classList.remove('open')
     })

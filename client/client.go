@@ -558,7 +558,8 @@ func (c *client) gameRepl(l *rl.Instance) error {
 		case "start":
 			err := c.doGameStart()
 			if err != nil {
-				if err != game.ErrAlreadyStarted {
+				errCode := game.Code(err)
+				if errCode != game.StatusAlreadyStarted {
 					fmt.Printf("Error: %v\n", err)
 					continue
 				}
@@ -631,7 +632,8 @@ func (c *client) gameRepl(l *rl.Instance) error {
 
 			res, err := c.doGamePlay(game.Command{Command: cmd})
 			if err != nil {
-				if err == game.ErrBadRequest {
+				errCode := game.Code(err)
+				if errCode == game.StatusBadRequest {
 					a, ok := c.data.Actions[cmd.First()]
 					if !ok {
 						fmt.Printf("Bad request.")

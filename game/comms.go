@@ -2,7 +2,6 @@ package game
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/undeconstructed/gogogo/comms"
 )
@@ -13,19 +12,10 @@ func ReError(cerr *comms.CommsError) error {
 		return nil
 	}
 
-	switch cerr.Code {
-	case "ALREADYSTARTED":
-		return ErrAlreadyStarted
-	case "NOTSTOPPED":
-		return ErrNotStopped
-	case "MUSTDO":
-		return ErrMustDo
-	case "NOTYOURTURN":
-		return ErrNotYourTurn
-	case "BADREQUEST":
-		return ErrBadRequest
-	default:
-		return errors.New(cerr.Error())
+	// XXX - should this check if the code is a known one?
+	return &GameError{
+		StatusCode(cerr.Code),
+		cerr.Error(),
 	}
 }
 

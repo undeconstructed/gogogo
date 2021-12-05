@@ -1,7 +1,6 @@
 package gogame
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -28,7 +27,7 @@ func (g *gogame) turn_buysouvenir(t *turn, c game.CommandPattern, args []string)
 	atNow := g.dots[t.player.OnDot].Place
 
 	if placeId != atNow {
-		return nil, game.ErrNotNow
+		return nil, game.Error(game.StatusNotNow, "can only buy souvenir from current place")
 	}
 
 	place := g.places[placeId]
@@ -39,12 +38,12 @@ func (g *gogame) turn_buysouvenir(t *turn, c game.CommandPattern, args []string)
 
 	haveMoney := t.player.Money[currencyId]
 	if haveMoney < price {
-		return nil, errors.New("not enough money")
+		return nil, game.Error(game.StatusNotNow, "not enough money")
 	}
 
 	numLeft := g.bank.Souvenirs[placeId]
 	if numLeft < 1 {
-		return nil, errors.New("out of stock")
+		return nil, game.Error(game.StatusNotNow, "out of stock")
 	}
 
 	g.moveMoney(t.player.Money, g.bank.Money, currencyId, price)
@@ -67,11 +66,11 @@ func (g *gogame) turn_buyticket(t *turn, c game.CommandPattern, args []string) (
 	atNow := g.dots[t.player.OnDot].Place
 
 	if from != atNow {
-		return nil, game.ErrNotNow
+		return nil, game.Error(game.StatusNotNow, "must buy ticket from current place")
 	}
 
 	if t.player.Ticket != nil {
-		return nil, errors.New("already have ticket")
+		return nil, game.Error(game.StatusNotNow, "already have ticket")
 	}
 
 	ticket, err := g.makeTicket(from, to, modes)
@@ -81,7 +80,7 @@ func (g *gogame) turn_buyticket(t *turn, c game.CommandPattern, args []string) (
 
 	haveMoney := t.player.Money[ticket.Currency]
 	if haveMoney < ticket.Fare {
-		return nil, errors.New("not enough money")
+		return nil, game.Error(game.StatusNotNow, "not enough money")
 	}
 
 	g.moveMoney(t.player.Money, g.bank.Money, ticket.Currency, ticket.Fare)
@@ -99,7 +98,7 @@ func (g *gogame) turn_changemoney(t *turn, c game.CommandPattern, args []string)
 	// the command pattern will block this
 	// atNow := g.places[g.dots[t.player.OnDot].Place].Currency
 	// if to != atNow {
-	// 	return nil, game.ErrNotNow
+	// 	return nil, game.Error(game.StatusNotNow, "can only change to local currency")
 	// }
 
 	fromCurrency := g.currencies[from]
@@ -107,12 +106,12 @@ func (g *gogame) turn_changemoney(t *turn, c game.CommandPattern, args []string)
 
 	smallestUnit := fromCurrency.Units[0]
 	if amount%smallestUnit != 0 {
-		return nil, fmt.Errorf("%s must be in unit of %d", fromCurrency.Name, smallestUnit)
+		return nil, game.Errorf(game.StatusBadRequest, "%s must be in unit of %d", fromCurrency.Name, smallestUnit)
 	}
 
 	haveMoney := t.player.Money[from]
 	if haveMoney < amount {
-		return nil, errors.New("not enough money")
+		return nil, game.Error(game.StatusNotNow, "not enough money")
 	}
 
 	fromRate := fromCurrency.Rate
@@ -152,7 +151,7 @@ func (g *gogame) turn_declare(t *turn, c game.CommandPattern, args []string) (in
 
 	if place == "none" {
 		if len(t.player.Souvenirs) > 0 {
-			return nil, errors.New("you have a souvenir")
+			return nil, game.Error(game.StatusNotNow, "you have a souvenir, you must declare it")
 		}
 		t.Must, _ = stringListWithout(t.Must, string(c))
 		t.addEvent("declares no souvenirs")
@@ -161,7 +160,7 @@ func (g *gogame) turn_declare(t *turn, c game.CommandPattern, args []string) (in
 
 	list, changed := stringListWithout(t.player.Souvenirs, place)
 	if !changed {
-		return nil, errors.New("souvenir not found")
+		return nil, game.Error(game.StatusNotNow, "souvenir not found")
 	}
 
 	t.player.Souvenirs = list
@@ -201,12 +200,12 @@ func (g *gogame) turn_gamble(t *turn, c game.CommandPattern, args []string) (int
 	currency := g.currencies[currencyId]
 	smallestUnit := currency.Units[0]
 	if amount%smallestUnit != 0 {
-		return nil, fmt.Errorf("%s must be in unit of %d", currency.Name, smallestUnit)
+		return nil, game.Errorf(game.StatusBadRequest, "%s must be in unit of %d", currency.Name, smallestUnit)
 	}
 
 	haveMoney := t.player.Money[currencyId]
 	if haveMoney < amount {
-		return nil, errors.New("not enough money")
+		return nil, game.Error(game.StatusNotNow, "not enough money")
 	}
 
 	roll := g.rollDice()
@@ -262,7 +261,7 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 	args = args[1:]
 
 	if cardId > len(g.risks) {
-		return nil, game.ErrNotNow
+		return nil, game.Error(game.StatusBadRequest, "invalid risk card number")
 	}
 
 	card := g.risks[cardId]
@@ -341,7 +340,7 @@ func (g *gogame) turn_pawnsouvenir(t *turn, c game.CommandPattern, args []string
 	place := args[0]
 
 	if !stringListContains(t.player.Souvenirs, place) {
-		return nil, errors.New("souvenir not found")
+		return nil, game.Error(game.StatusNotNow, "souvenir not found")
 	}
 
 	t.addEventf("tries to pawn a souvenir from %s", place)
@@ -374,12 +373,12 @@ func (g *gogame) turn_pay(t *turn, c game.CommandPattern, args []string) (interf
 	currency := g.currencies[currencyId]
 	smallestUnit := currency.Units[0]
 	if amount%smallestUnit != 0 {
-		return nil, fmt.Errorf("%s must be in unit of %d", currency.Name, smallestUnit)
+		return nil, game.Errorf(game.StatusBadRequest, "%s must be in unit of %d", currency.Name, smallestUnit)
 	}
 
 	haveMoney := t.player.Money[currencyId]
 	if haveMoney < amount {
-		return nil, errors.New("not enough money")
+		return nil, game.Error(game.StatusNotNow, "not enough money")
 	}
 
 	nAmount := amount / currency.Rate
@@ -434,7 +433,7 @@ func (g *gogame) turn_sellsouvenir(t *turn, c game.CommandPattern, args []string
 	place := args[0]
 
 	if !stringListContains(t.player.Souvenirs, place) {
-		return nil, errors.New("souvenir not found")
+		return nil, game.Error(game.StatusNotNow, "souvenir not found")
 	}
 
 	t.addEventf("tries to sell a souvenir from %s", place)
@@ -548,7 +547,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 
 	luckList, changed := intListWithout(t.player.LuckCards, cardId)
 	if !changed {
-		return nil, errors.New("card not held")
+		return nil, game.Error(game.StatusNotNow, "card not held")
 	}
 
 	card := g.lucks[cardId]
@@ -556,7 +555,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 	switch code := card.ParseCode().(type) {
 	case LuckAdvance:
 		if t.Stopped {
-			return nil, game.ErrNotNow
+			return nil, game.Error(game.StatusNotNow, "cannot move after stopping")
 		}
 
 		t.player.LuckCards = luckList
@@ -575,7 +574,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		}
 	case LuckDest:
 		if !t.OnMap {
-			return nil, game.ErrNotNow
+			return nil, game.Error(game.StatusNotNow, "cannot go to destination while not on map")
 		}
 
 		dest := t.player.Ticket.To
@@ -589,7 +588,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		t.addEvent("luckily arrives early")
 	case LuckFreeInsurance:
 		if t.LostTicket == nil {
-			return nil, game.ErrNotNow
+			return nil, game.Error(game.StatusNotNow, "cannot claim insurance when no ticket lost")
 		}
 
 		fare := t.LostTicket.Fare
@@ -606,7 +605,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		t.addEvent("luckily gets a big refund")
 	case LuckFreeTicket:
 		if t.player.Ticket != nil {
-			return nil, game.ErrNotNow
+			return nil, game.Error(game.StatusNotNow, "cannot claim free ticket when already have ticket")
 		}
 
 		from, to, modes, err := code.Match(args)
@@ -617,7 +616,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		atNow := g.dots[t.player.OnDot].Place
 
 		if from != atNow {
-			return nil, game.ErrNotNow
+			return nil, game.Error(game.StatusNotNow, "can only claim ticket from current place")
 		}
 
 		ticket, err := g.makeTicket(from, to, modes)
@@ -637,7 +636,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		if !changed {
 			must, changed = stringListWithout(t.Must, "paycustoms")
 			if !changed {
-				return nil, game.ErrNotNow
+				return nil, game.Error(game.StatusNotNow, "not at customs")
 			}
 		}
 
@@ -649,7 +648,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 	case LuckInoculation:
 		must, changed := stringListWithout(t.Must, "quarantine")
 		if !changed {
-			return nil, game.ErrNotNow
+			return nil, game.Error(game.StatusNotNow, "not at quarantine")
 		}
 
 		t.Must = must
@@ -671,10 +670,10 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 
 func (g *gogame) turn_end(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
 	if !t.Stopped {
-		return nil, game.ErrNotStopped
+		return nil, game.Error(game.StatusWrongPhase, "not stopped")
 	}
 	if len(t.Must) > 0 {
-		return nil, game.ErrMustDo
+		return nil, game.Error(game.StatusMustDo, "")
 	}
 	g.toNextPlayer()
 	t.addEvent("goes to sleep")
