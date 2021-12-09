@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -14,36 +15,43 @@ import (
 )
 
 type instance struct {
-	id      string
-	bind    string
-	cli     game.InstanceClient
-	state   *game.GameState
-	turn    *game.TurnState
-	clients map[string]*clientBundle
-	stopCh  chan struct{}
-	log     zerolog.Logger
+	gameType string
+	id       string
+	bind     string
+	cli      game.InstanceClient
+	state    *game.GameState
+	turn     *game.TurnState
+	clients  map[string]*clientBundle
+	stopCh   chan struct{}
+	log      zerolog.Logger
 }
 
-func newInstance(id string) *instance {
+func newInstance(gameType string, id string) *instance {
 	stopCh := make(chan struct{})
 	log := log.With().Str("instance", id).Logger()
 
-	bind := "run/" + id + ".pipe"
+	bind := "./" + path.Join("run", gameType, "bind", id+".pipe")
 	log.Info().Msgf("will bind to: %s", bind)
 
 	return &instance{
-		id:      id,
-		bind:    bind,
-		clients: map[string]*clientBundle{},
-		stopCh:  stopCh,
-		log:     log,
+		gameType: gameType,
+		id:       id,
+		bind:     bind,
+		clients:  map[string]*clientBundle{},
+		stopCh:   stopCh,
+		log:      log,
 	}
 }
 
 func (i *instance) startProcess(ctx context.Context) (game.InstanceClient, error) {
 	i.log.Info().Msg("instance starting")
 
-	pro := newProcess("./run/gogame.plugin", i.bind)
+	// pwd for the game
+	dir := path.Join(".", "run", i.gameType)
+	// bin and bind need to be relative to game's pwd
+	bin := "./bin"
+	bind := path.Join("bind", i.id+".pipe")
+	pro := newProcess(dir, bin, bind)
 
 	ctx1, cancel := context.WithCancel(ctx)
 

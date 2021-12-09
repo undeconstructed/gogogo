@@ -1,18 +1,25 @@
 
-modules = comms client game gogame gogamebin server
+modules = comms client game go-game/lib go-game/bin server
 
-gogame.plugin: .FORCE
-	go build -o ./run/gogame.plugin ./gogamebin
+gogame.bin: .FORCE
+	go build -o ./run/go/bin ./go-game/bin
 
-server.run: gogame.plugin
-	-rm ./run/*.pipe
-	go run ./server
+gogame.data: .FORCE
+	cp -r ./go-game/web ./run/go
+	cp -r ./go-game/home ./run/go
+	cp ./go-game/data.json ./run/go
+	-mkdir ./run/go/bind
+	-mkdir ./run/go/save
+
+server.run: gogame.bin gogame.data
+	-rm ./run/*/bind/*.pipe
+	go run ./server --games go
 
 listgames:
 	curl -v 'localhost:1235/api/games'
 
 makegame:
-	curl -XPOST -H"Content-Type: application/json" -v 'localhost:1235/api/games' --data '{"players":[{"name":"phil","colour":"red"}],"options":{"goal":8}}'
+	curl -XPOST -H"Content-Type: application/json" -v 'localhost:1235/api/games' --data '{"type":"go","players":[{"name":"phil","colour":"red"}],"options":{"goal":8}}'
 
 test: $(modules:=.test)
 

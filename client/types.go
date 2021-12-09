@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/undeconstructed/gogogo/game"
-	"github.com/undeconstructed/gogogo/gogame"
+	gogame "github.com/undeconstructed/gogogo/go-game/lib"
 )
 
 type GameUpdate struct {

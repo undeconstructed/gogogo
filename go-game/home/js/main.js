@@ -7,7 +7,7 @@ function showMessage(msg) {
 }
 
 function doCreate(options, players) {
-  let js = JSON.stringify({ options, players })
+  let js = JSON.stringify({ 'type': 'go', options, players })
   fetch('/api/games', { method: 'POST', body: js }).
     then(rez => {
       if (!rez.ok) {
@@ -34,7 +34,7 @@ function doOnCreate(msg) {
     th0.textContent = k
     let td0 = document.createElement('td')
     let a = document.createElement('a')
-    let link = `${window.location.origin}/play/?c=${c}`
+    let link = `${window.location.origin}/play/go/web/?c=${c}`
     a.href = link
     a.textContent = link
     td0.append(a)

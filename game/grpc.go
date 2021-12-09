@@ -166,7 +166,7 @@ func (s *GRPCServer) Load(ctx context.Context, req *RLoadRequest) (*RLoadRespons
 		return nil, status.Errorf(codes.AlreadyExists, "game already present")
 	}
 
-	f, err := os.Open("state-" + req.Id + ".json")
+	f, err := os.Open(saveFileName(req.Id))
 	if err != nil {
 		log.Error().Err(err).Msg("cannot open state file")
 		return nil, err
@@ -322,16 +322,12 @@ func (s *GRPCServer) Destroy(context.Context, *RDestroyRequest) (*RDestroyRespon
 	return &RDestroyResponse{}, nil
 }
 
-func (s *GRPCServer) saveFileName() string {
-	return fmt.Sprintf("state-%s.json", s.id)
-}
-
 func (s *GRPCServer) saveGame() error {
 	if s.gg == nil {
 		panic("no game")
 	}
 
-	outFile, err := os.Create(s.saveFileName())
+	outFile, err := os.Create(saveFileName(s.id))
 	if err != nil {
 		return err
 	}
@@ -345,7 +341,7 @@ func (s *GRPCServer) wipeGame() error {
 		panic("no game")
 	}
 
-	err := os.Remove(s.saveFileName())
+	err := os.Remove(saveFileName(s.id))
 	if err != nil {
 		return err
 	}
@@ -354,4 +350,8 @@ func (s *GRPCServer) wipeGame() error {
 	s.gg = nil
 
 	return nil
+}
+
+func saveFileName(id string) string {
+	return fmt.Sprintf("save/%s.json", id)
 }

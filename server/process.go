@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
+	"time"
 
 	"github.com/undeconstructed/gogogo/game"
 	"google.golang.org/grpc"
@@ -17,16 +19,18 @@ import (
 // process is an OS process that exports a gRPC game over a socket.
 type process struct {
 	log  zerolog.Logger
+	dir  string
 	file string
 	bind string
 }
 
 // newProcess makes a process, that will run a binary file and tell it to bind
 // gRPC on some address.
-func newProcess(file, bind string) *process {
+func newProcess(dir, file, bind string) *process {
 	log := log.With().Str("process", bind).Logger()
 	return &process{
 		log:  log,
+		dir:  dir,
 		file: file,
 		bind: bind,
 	}
@@ -34,6 +38,7 @@ func newProcess(file, bind string) *process {
 
 func (p *process) Start(ctx context.Context) (game.InstanceClient, error) {
 	cmd := exec.CommandContext(ctx, p.file, p.bind)
+	cmd.Dir = p.dir
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -77,13 +82,17 @@ func (p *process) Start(ctx context.Context) (game.InstanceClient, error) {
 		if err != nil {
 			p.log.Err(err).Msgf("process ended with error")
 		}
-		err = os.Remove(p.bind)
+		bind := path.Join(p.dir, p.bind)
+		err = os.Remove(bind)
 		if err != nil {
-			p.log.Err(err).Msgf("cannot delete pipe file: %s", p.bind)
+			p.log.Err(err).Msgf("cannot delete pipe file: %s", bind)
 		}
 	}()
 
-	conn, err := grpc.Dial("unix:"+p.bind, grpc.WithInsecure(), grpc.WithBlock())
+	bind := path.Join(p.dir, p.bind)
+	ctx1, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx1, "unix:"+bind, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		cmd.Process.Kill()
 		return nil, fmt.Errorf("failed to connect to process: %w", err)

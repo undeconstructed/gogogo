@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/undeconstructed/gogogo/game"
-	"github.com/undeconstructed/gogogo/gogame"
+	"github.com/undeconstructed/gogogo/go-game/lib"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/undeconstructed/gogogo/gogame"
+	gogame "github.com/undeconstructed/gogogo/go-game/lib"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

@@ -13,7 +13,7 @@ import (
 
 	"github.com/undeconstructed/gogogo/comms"
 	"github.com/undeconstructed/gogogo/game"
-	"github.com/undeconstructed/gogogo/gogame"
+	gogame "github.com/undeconstructed/gogogo/go-game/lib"
 
 	rl "github.com/chzyer/readline"
 )

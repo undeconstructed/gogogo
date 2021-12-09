@@ -7,6 +7,7 @@ import (
 )
 
 type MakeGameInput struct {
+	Type    string            `json:"type"`
 	Players []GamePlayerInput `json:"players"`
 	Options json.RawMessage   `json:"options"`
 }
@@ -18,6 +19,7 @@ type GamePlayerInput struct {
 }
 
 type MakeGameOutput struct {
+	Type    string            `json:"type"`
 	ID      string            `json:"id"`
 	Players map[string]string `json:"players"`
 	Err     error             `json:"error"`

@@ -50,22 +50,22 @@ func runWebGateway(ctx context.Context, server *server, addr string) error {
 			c.FileFromFS(c.Request.URL.Path, homeStatic)
 		}
 	})
+
 	a := r.Group("/api")
 	a.GET("/games", rh.getGames)
 	a.POST("/games", rh.makeGame)
 	a.GET("/games/:id", rh.getGame)
 	a.DELETE("/games/:id", rh.deleteGame)
 	r.GET("/ws", ch.serveWS)
-	// r.StaticFile("/data.json", "data.json")
-	gameStatic := http.Dir("web")
-	r.GET("/play/*any", func(c *gin.Context) {
-		path := c.Request.URL.Path[6:]
-		// TODO - data file for other games?
-		if path == "data.json" {
-			c.File("data.json")
-		} else {
-			c.FileFromFS(path, gameStatic)
-		}
+
+	r.GET("/play/:type/*any", func(c *gin.Context) {
+		gameType := c.Param("type")
+		gameStatic := http.Dir("./run/" + gameType)
+
+		rest := c.Request.URL.EscapedPath()[len(gameType)+6:]
+
+		// XXX - shouldn't blindly serve everything
+		c.FileFromFS(rest, gameStatic)
 	})
 
 	s := &http.Server{
@@ -101,6 +101,10 @@ func (rh *restHandler) makeGame(c *gin.Context) {
 		return
 	}
 
+	if i.Type == "" {
+		c.String(http.StatusBadRequest, "missing game type")
+		return
+	}
 	if len(i.Players) < 1 || len(i.Players) > 6 {
 		c.String(http.StatusBadRequest, "must have 1-6 players")
 		return

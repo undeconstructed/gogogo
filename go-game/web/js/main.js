@@ -1465,12 +1465,13 @@ function main() {
   document.querySelector('.map').append(mapObject)
 
   mapObject.addEventListener('load', _e => {
-    fetch('data.json').
-      then(rez => rez.json()).
-      then(data => {
-        setup(data, ccode)
-      })
-    })
+    fetch('../data.json').then(
+      rez => rez.json().then(
+        data => setup(data, ccode)
+      ),
+      err => alert('missing data: ' + err)
+    )
+  })
 
   window.cheat = function(cmd) {
     netState.doRequest('play', { command: 'cheat', options: cmd }, console.log)

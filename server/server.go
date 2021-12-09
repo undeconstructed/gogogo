@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"strings"
 
 	"github.com/undeconstructed/gogogo/comms"
@@ -14,31 +15,38 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewServer() *server {
+func NewServer(gameTypes []string) *server {
 	games := map[string]*instance{}
-	files, err := ioutil.ReadDir(".")
-	if err != nil {
-		log.Error().Err(err).Msg("not loading anything")
-	} else {
+	for _, gt := range gameTypes {
+		saveDir := path.Join("run", gt, "save")
+		files, err := ioutil.ReadDir(saveDir)
+		if err != nil {
+			log.Error().Err(err).Msgf("can't read save dir for %s", gt)
+		}
 		for _, f := range files {
 			fname := f.Name()
 			// use list of files as database, but don't actually load anything here
-			if strings.HasPrefix(fname, "state-") && strings.HasSuffix(fname, ".json") {
-				gameId := fname[6 : len(fname)-5]
-				games[gameId] = newInstance(gameId)
+			if strings.HasSuffix(fname, ".json") {
+				gameId := fname[:len(fname)-5]
+				games[gameId] = newInstance(gt, gameId)
 			}
 		}
 	}
 
 	coreCh := make(chan interface{}, 100)
 	return &server{
-		games:  games,
-		coreCh: coreCh,
+		gameTypes: gameTypes,
+		games:     games,
+		coreCh:    coreCh,
 	}
 }
 
 type server struct {
-	games  map[string]*instance
+	// game types
+	gameTypes []string
+	// game instances
+	games map[string]*instance
+	// control channel
 	coreCh chan interface{}
 }
 
@@ -148,7 +156,7 @@ func (s *server) doCreateGame(in createGameMsg) {
 	ctx := context.TODO()
 
 	id := RandomString(6)
-	i := newInstance(id)
+	i := newInstance(in.Req.Type, id)
 
 	go func() {
 		err := i.StartInit(ctx, in.Req)
@@ -167,7 +175,7 @@ func (s *server) doCreateGame(in createGameMsg) {
 			players[pl.Name] = encodeConnectString(id, pl.Name)
 		}
 
-		out := MakeGameOutput{ID: id, Players: players}
+		out := MakeGameOutput{Type: in.Req.Type, ID: id, Players: players}
 
 		s.coreCh <- afterCreate{in, out, i}
 	}()
