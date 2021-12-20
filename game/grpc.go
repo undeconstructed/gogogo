@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -143,7 +144,9 @@ type GRPCServer struct {
 }
 
 func NewGRPCServer(bind string, newGame NewGameFunc, loadGame LoadGameFunc) (*GRPCServer, error) {
-	l, err := net.Listen("unix", bind)
+	binds := strings.SplitN(bind, ":", 2)
+
+	l, err := net.Listen(binds[0], binds[1])
 	if err != nil {
 		return nil, err
 	}

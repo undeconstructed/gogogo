@@ -17,7 +17,6 @@ import (
 type instance struct {
 	gameType string
 	id       string
-	bind     string
 	cli      game.InstanceClient
 	state    *game.GameState
 	turn     *game.TurnState
@@ -30,13 +29,9 @@ func newInstance(gameType string, id string) *instance {
 	stopCh := make(chan struct{})
 	log := log.With().Str("instance", id).Logger()
 
-	bind := "./" + path.Join("run", gameType, "bind", id+".pipe")
-	log.Info().Msgf("will bind to: %s", bind)
-
 	return &instance{
 		gameType: gameType,
 		id:       id,
-		bind:     bind,
 		clients:  map[string]*clientBundle{},
 		stopCh:   stopCh,
 		log:      log,
@@ -46,16 +41,20 @@ func newInstance(gameType string, id string) *instance {
 func (i *instance) startProcess(ctx context.Context) (game.InstanceClient, error) {
 	i.log.Info().Msg("instance starting")
 
-	// pwd for the game
-	dir := path.Join(".", "run", i.gameType)
-	// bin and bind need to be relative to game's pwd
+	// run dir
+	dir := "./" + path.Join("run", i.gameType)
+	// relative binary path
 	bin := "./bin"
+	// relative bind file
 	bind := path.Join("bind", i.id+".pipe")
+
+	log.Info().Msgf("will bind to: %s", bind)
+
 	pro := newProcess(dir, bin, bind)
 
 	ctx1, cancel := context.WithCancel(ctx)
 
-	cli, err := pro.Start(ctx1)
+	conn, err := pro.Start(ctx1)
 	if err != nil {
 		cancel()
 		return nil, err
@@ -71,6 +70,8 @@ func (i *instance) startProcess(ctx context.Context) (game.InstanceClient, error
 
 		cancel()
 	}()
+
+	cli := game.NewInstanceClient(conn)
 
 	return cli, nil
 }
