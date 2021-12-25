@@ -647,6 +647,7 @@ body {
   justify-content: space-between;
   padding: 1rem;
   z-index: 101;
+  box-shadow: 0px 0px 5px 0px #000000;
 }
 .rates:hover {
   top: -1rem;
@@ -694,13 +695,14 @@ body {
   flex-flow: column;
   overflow: hidden;
   font-size: smaller;
+  box-shadow: 0px 0px 5px 0px #000000;
 }
 .prices.canbuy {
   rotate: -.01turn;
   left: -15rem;
 }
 .prices.open {
-  rotate: -.05turn;
+  rotate: -.01turn;
   left: 20rem;
 }
 .prices > * {
@@ -901,20 +903,39 @@ body {
 }
 
 .debt {
-  display: none;
   position: absolute;
   top: 5rem;
-  left: 18rem;
-  border: 1rem red dashed;
-  color: red;
-  font-size: 5rem;
-  font-weight: bold;
-  transition: right .5s, rotate .5s, bottom .5s;
+  left: -18rem;
+  rotate: -.04turn;
+  color: black;
+  transition: left .5s;
   padding: 0 .5em;
-  background-color: #fff9;
+  background-color: #dfd8c7;
+  box-shadow: 0px 0px 5px 0px #000000;
+  padding: 1em;
+}
+.debt .head {
+  text-align: center;
+  font-size: 200%;
+}
+.debt .body {
+  font-size: 100%;
+  margin: 1rem 0;
 }
 .debt.show {
-  display: block;
+  left: 18rem;
+}
+.debt.show:hover {
+  background-color: #dfd8c7;
+}
+.debt table {
+  width: 100%;
+}
+.debt tr {
+  border-bottom: 1px dotted black;
+}
+.debt td {
+  padding: 1rem 1rem 0rem 0;
 }
 
 .win {

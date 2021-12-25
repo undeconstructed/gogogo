@@ -1,7 +1,8 @@
 {
   "settings": {
     "home": "london",
-    "souvenirPrice": 6,
+    "startMoney": 400,
+    "souvenirPrice": 60,
     "goal": 3
   },
   "modes": {
@@ -59,7 +60,7 @@
       "type": "curspec",
       "name": "Currency speculation - receive £100 from the bank in the currency of the country you are visiting",
       "options": [
-        "auto:getmoney:<lc>:10"
+        "auto:getmoney:<lc>:100"
       ]
     },
     {
@@ -204,7 +205,7 @@
       "type": "hotel",
       "name": "Hotel bill - £100 - Payable in local currency",
       "options": [
-        "auto:debt:<lc>:10"
+        "auto:debt:hotel:<lc>:100"
       ]
     },
     {
@@ -277,73 +278,73 @@
     "tc": {
       "name": "Traveller's Cheque",
       "colour": "#333",
-      "rate": 10,
+      "rate": 100,
       "units": [ 200 ]
     },
     "fr": {
       "name": "Francs",
       "colour": "#3f8a3f",
-      "rate": 100,
+      "rate": 1000,
       "units": [ 100, 500 ]
     },
     "hk": {
       "name": "HK Dollars",
       "colour": "#819e41",
-      "rate": 150,
+      "rate": 1500,
       "units": [ 150, 300 ]
     },
     "li": {
       "name": "Lire",
       "colour": "#676094",
-      "rate": 10000,
+      "rate": 100000,
       "units": [ 10000, 50000 ]
     },
     "ma": {
       "name": "Marks",
       "colour": "#99939a",
-      "rate": 100,
+      "rate": 1000,
       "units": [ 100, 500 ]
     },
     "pe": {
       "name": "Pesos",
       "colour": "#cfad03",
-      "rate": 500,
+      "rate": 5000,
       "units": [ 500, 1000, 2500 ]
     },
     "pi": {
       "name": "Piastres",
       "colour": "#e8cdba",
-      "rate": 1000,
+      "rate": 10000,
       "units": [ 1000, 5000 ]
     },
     "ro": {
       "name": "Roubles",
       "colour": "#eb7132",
-      "rate": 25,
+      "rate": 250,
       "units": [ 25, 50, 100 ]
     },
     "ru": {
       "name": "Rupees",
       "colour": "#e493a6",
-      "rate": 100,
+      "rate": 1000,
       "units": [ 100, 500 ]
     },
     "st": {
       "name": "Sterling",
       "colour": "#cf293f",
-      "rate": 10,
+      "rate": 100,
       "units": [ 10, 50, 100 ]
     },
     "us": {
       "name": "US Dollars",
       "colour": "#373eea",
-      "rate": 25,
+      "rate": 250,
       "units": [ 25, 50, 100 ]
     },
     "ye": {
       "name": "Yen",
       "colour": "#9f5b91",
-      "rate": 10000,
+      "rate": 100000,
       "units": [ 10000, 50000 ]
     }
   },
@@ -352,35 +353,35 @@
       "name": "Archangel",
       "currency": "ro",
       "routes": {
-        "london:s": 5,
-        "moscow:r": 2
+        "london:s": 50,
+        "moscow:r": 20
       }
     },
     "arica": {
       "name": "Arica",
       "currency": "pe",
       "routes": {
-        "buenosaires:s": 6,
-        "riodejaneiro:r": 3,
-        "sanfrancisco:s": 9
+        "buenosaires:s": 60,
+        "riodejaneiro:r": 30,
+        "sanfrancisco:s": 90
       }
     },
     "ascensionisland": {
       "name": "Ascension Island",
       "currency": "st",
       "routes": {
-        "capetown:s": 4,
-        "casablanca:s": 4,
-        "buenosaires:s": 4
+        "capetown:s": 40,
+        "casablanca:s": 40,
+        "buenosaires:s": 40
       }
     },
     "bahamas": {
       "name": "Bahamas",
       "currency": "st",
       "routes": {
-        "mexicocity:a": 3,
-        "newyork:s": 2,
-        "riodejaneiro:s": 5
+        "mexicocity:a": 30,
+        "newyork:s": 20,
+        "riodejaneiro:s": 50
       }
     },
     "berlin": {
@@ -389,14 +390,14 @@
       "currency": "ma",
       "souvenir": "stein",
       "routes": {
-        "london:a": 4,
-        "moscow:r": 3,
-        "moscow:a": 7,
-        "moscow:l": 4,
-        "paris:l": 1,
-        "paris:a": 4,
-        "rome:l": 2,
-        "rome:a": 5
+        "london:a": 40,
+        "moscow:r": 30,
+        "moscow:a": 70,
+        "moscow:l": 40,
+        "paris:l": 10,
+        "paris:a": 40,
+        "rome:l": 20,
+        "rome:a": 50
       }
     },
     "bombay": {
@@ -405,17 +406,17 @@
       "currency": "ru",
       "souvenir": "elephant",
       "routes": {
-        "cairo:s": 4,
-        "cairo:a": 5,
-        "capetown:s": 5,
-        "capetown:a": 10,
-        "hongkong:a": 6,
-        "moscow:a": 8,
-        "rome:a": 8,
-        "sydney:a": 15,
-        "sydney:sr": 7,
-        "sydney:s": 8,
-        "tokyo:s": 10
+        "cairo:s": 40,
+        "cairo:a": 50,
+        "capetown:s": 50,
+        "capetown:a": 100,
+        "hongkong:a": 60,
+        "moscow:a": 80,
+        "rome:a": 80,
+        "sydney:a": 150,
+        "sydney:sr": 70,
+        "sydney:s": 80,
+        "tokyo:s": 100
       }
     },
     "buenosaires": {
@@ -424,14 +425,13 @@
       "currency": "pe",
       "souvenir": "cowboy",
       "routes": {
-        "capetown:a": 10,
-        "capetown:s": 5,
-        "casablanca:s": 6,
-        "mexicocity:a": 10,
-        "riodejaneiro:s": 1,
-        "riodejaneiro:l": 3,
-        "riodejaneiro:sr": -1,
-        "sanfrancisco:s": 15
+        "capetown:a": 100,
+        "capetown:s": 50,
+        "casablanca:s": 60,
+        "mexicocity:a": 100,
+        "riodejaneiro:s": 10,
+        "riodejaneiro:l": 30,
+        "sanfrancisco:s": 150
       }
     },
     "cairo": {
@@ -440,13 +440,12 @@
       "currency": "pi",
       "souvenir": "pyramidart",
       "routes": {
-        "bombay:s": 4,
-        "bombay:a": 5,
-        "capetown:rl": -1,
-        "capetown:a": 10,
-        "capetown:l": 8,
-        "casablanca:l": 4,
-        "rome:a": 3
+        "bombay:s": 40,
+        "bombay:a": 50,
+        "capetown:a": 100,
+        "capetown:l": 80,
+        "casablanca:l": 40,
+        "rome:a": 30
       }
     },
     "capetown": {
@@ -455,18 +454,17 @@
       "currency": "st",
       "souvenir": "springbok",
       "routes": {
-        "bombay:a": 10,
-        "bombay:s": 5,
-        "buenosaires:a": 10,
-        "buenosaires:s": 5,
-        "cairo:l": 8,
-        "cairo:a": 10,
-        "cairo:lr": -1,
-        "casablanca:l": 10,
-        "casablanca:s": 7,
-        "sydney:a": 15,
-        "sydney:s": 12,
-        "tokyo:s": 15
+        "bombay:a": 100,
+        "bombay:s": 50,
+        "buenosaires:a": 100,
+        "buenosaires:s": 50,
+        "cairo:l": 80,
+        "cairo:a": 100,
+        "casablanca:l": 100,
+        "casablanca:s": 70,
+        "sydney:a": 150,
+        "sydney:s": 120,
+        "tokyo:s": 150
       }
     },
     "casablanca": {
@@ -475,39 +473,39 @@
       "currency": "fr",
       "souvenir": "arch",
       "routes": {
-        "buenosaires:s": 6,
-        "cairo:l": 4,
-        "capetown:l": 10,
-        "capetown:s": 7,
-        "london:s": 3,
-        "riodejaneiro:a": 10
+        "buenosaires:s": 60,
+        "cairo:l": 40,
+        "capetown:l": 100,
+        "capetown:s": 70,
+        "london:s": 30,
+        "riodejaneiro:a": 100
       }
     },
     "christmasisland": {
       "name": "Christmas Island",
       "currency": "st",
       "routes": {
-        "sydney:s": 5,
-        "tokyo:s": 5
+        "sydney:s": 50,
+        "tokyo:s": 50
       }
     },
     "falklandislands": {
       "name": "Falkland Islands",
       "currency": "st",
       "routes": {
-        "buenosaires:s": 2,
-        "riodejaneiro:sr": 8,
-        "sanfrancisco:s": 13
+        "buenosaires:s": 20,
+        "riodejaneiro:sr": 80,
+        "sanfrancisco:s": 130
       }
     },
     "heardisland": {
       "name": "Heard Island",
       "currency": "st",
       "routes": {
-        "bombay:s": 10,
-        "capetown:s": 13,
-        "sydney:s": 7,
-        "tokyo:s": 12
+        "bombay:s": 100,
+        "capetown:s": 130,
+        "sydney:s": 70,
+        "tokyo:s": 120
       }
     },
     "hongkong": {
@@ -516,27 +514,27 @@
       "currency": "hk",
       "souvenir": "dragon",
       "routes": {
-        "bombay:a": 6,
-        "moscow:a": 15,
-        "moscow:r": 10,
-        "tokyo:s": 2
+        "bombay:a": 60,
+        "moscow:a": 150,
+        "moscow:r": 100,
+        "tokyo:s": 20
       }
     },
     "honolulu": {
       "name": "Honolulu",
       "currency": "us",
       "routes": {
-        "sanfrancisco:s": 4,
-        "tokyo:s": 4
+        "sanfrancisco:s": 40,
+        "tokyo:s": 40
       }
     },
     "lapaz": {
       "name": "La Paz",
       "currency": "pe",
       "routes": {
-        "buenosaires:rs": 7,
-        "riodejaneiro:r": 2,
-        "sanfrancisco:rs": 10
+        "buenosaires:rs": 70,
+        "riodejaneiro:r": 20,
+        "sanfrancisco:rs": 100
       }
     },
     "london": {
@@ -544,12 +542,12 @@
       "city": true,
       "currency": "st",
       "routes": {
-        "berlin:a": 4,
-        "casablanca:s": 3,
-        "moscow:sr": 7,
-        "newyork:a": 10,
-        "newyork:s": 5,
-        "paris:a": 2
+        "berlin:a": 40,
+        "casablanca:s": 30,
+        "moscow:sr": 70,
+        "newyork:a": 100,
+        "newyork:s": 50,
+        "paris:a": 20
       }
     },
     "losangeles": {
@@ -558,18 +556,18 @@
       "currency": "us",
       "souvenir": "movie",
       "routes": {
-        "mexicocity:l": 3,
-        "newyork:a": 8,
-        "sanfrancisco:l": 1,
-        "tokyo:a": 12
+        "mexicocity:l": 30,
+        "newyork:a": 80,
+        "sanfrancisco:l": 10,
+        "tokyo:a": 120
       }
     },
     "madagascar": {
       "name": "Madagascar",
       "currency": "fr",
       "routes": {
-        "capetown:s": 1,
-        "bombay:s": 4
+        "capetown:s": 10,
+        "bombay:s": 40
       }
     },
     "mexicocity": {
@@ -578,18 +576,18 @@
       "currency": "pe",
       "souvenir": "donkey",
       "routes": {
-        "buenosaires:a": 10,
-        "losangeles:l": 3,
-        "newyork:a": 5,
-        "riodejaneiro:a": 10
+        "buenosaires:a": 100,
+        "losangeles:l": 30,
+        "newyork:a": 50,
+        "riodejaneiro:a": 100
       }
     },
     "mombasa": {
       "name": "Mombasa",
       "currency": "st",
       "routes": {
-        "cairo:r": 2,
-        "capetown:l": 3
+        "cairo:r": 20,
+        "capetown:l": 30
       }
     },
     "moscow": {
@@ -598,13 +596,13 @@
       "currency": "ro",
       "souvenir": "bell",
       "routes": {
-        "bombay:a": 8,
-        "berlin:a": 7,
-        "berlin:l": 4,
-        "berlin:r": 3,
-        "hongkong:a": 15,
-        "hongkong:r": 10,
-        "london:rs": 7
+        "bombay:a": 80,
+        "berlin:a": 70,
+        "berlin:l": 40,
+        "berlin:r": 30,
+        "hongkong:a": 150,
+        "hongkong:r": 100,
+        "london:rs": 70
       }
     },
     "newyork": {
@@ -613,14 +611,14 @@
       "currency": "us",
       "souvenir": "liberty",
       "routes": {
-        "london:a": 10,
-        "london:s": 5,
-        "losangeles:a": 8,
-        "mexicocity:a": 5,
-        "riodejaneiro:a": 12,
-        "riodejaneiro:s": 7,
-        "sanfrancisco:l": 5,
-        "sanfrancisco:r": 3
+        "london:a": 100,
+        "london:s": 50,
+        "losangeles:a": 80,
+        "mexicocity:a": 50,
+        "riodejaneiro:a": 120,
+        "riodejaneiro:s": 70,
+        "sanfrancisco:l": 50,
+        "sanfrancisco:r": 30
       }
     },
     "paris": {
@@ -629,22 +627,22 @@
       "currency": "fr",
       "souvenir": "eiffel",
       "routes": {
-        "berlin:a": 4,
-        "berlin:l": 1,
-        "london:a": 2,
-        "rome:a": 3
+        "berlin:a": 40,
+        "berlin:l": 10,
+        "london:a": 20,
+        "rome:a": 30
       }
     },
     "perth": {
       "name": "Perth",
       "currency": "st",
       "routes": {
-        "capetown:s": 8,
-        "bombay:s": 5,
-        "sydney:l": 3,
-        "sydney:r": 2,
-        "sydney:s": 3,
-        "tokyo:s": 7
+        "capetown:s": 80,
+        "bombay:s": 50,
+        "sydney:l": 30,
+        "sydney:r": 20,
+        "sydney:s": 30,
+        "tokyo:s": 70
       }
     },
     "riodejaneiro": {
@@ -653,14 +651,13 @@
       "currency": "pe",
       "souvenir": "toucan",
       "routes": {
-        "buenosaires:s": 1,
-        "buenosaires:l": 3,
-        "buenosaires:rs": -1,
-        "casablanca:a": 10,
-        "mexicocity:a": 10,
-        "newyork:a": 12,
-        "newyork:s": 7,
-        "sanfrancisco:rs": 11
+        "buenosaires:s": 10,
+        "buenosaires:l": 30,
+        "casablanca:a": 100,
+        "mexicocity:a": 100,
+        "newyork:a": 120,
+        "newyork:s": 70,
+        "sanfrancisco:rs": 110
       }
     },
     "rome": {
@@ -669,11 +666,11 @@
       "currency": "li",
       "souvenir": "fountain",
       "routes": {
-        "berlin:a": 5,
-        "berlin:l": 2,
-        "bombay:a": 8,
-        "cairo:a": 3,
-        "paris:a": 3
+        "berlin:a": 50,
+        "berlin:l": 20,
+        "bombay:a": 80,
+        "cairo:a": 30,
+        "paris:a": 30
       }
     },
     "sanfrancisco": {
@@ -682,12 +679,12 @@
       "currency": "us",
       "souvenir": "bridge",
       "routes": {
-        "buenosaires:s": 15,
-        "losangeles:l": 1,
-        "newyork:l": 5,
-        "newyork:r": 3,
-        "riodejaneiro:sr": 11,
-        "tokyo:s": 7
+        "buenosaires:s": 150,
+        "losangeles:l": 10,
+        "newyork:l": 50,
+        "newyork:r": 30,
+        "riodejaneiro:sr": 110,
+        "tokyo:s": 70
       }
     },
     "sydney": {
@@ -696,16 +693,13 @@
       "currency": "st",
       "souvenir": "kangaroo",
       "routes": {
-        "bombay:a": 15,
-        "bombay:ls": -1,
-        "bombay:rs": 7,
-        "bombay:s": 8,
-        "capetown:a": 15,
-        "capetown:ls": -1,
-        "capetown:rs": -1,
-        "capetown:s": 12,
-        "tokyo:a": 10,
-        "tokyo:s": 5
+        "bombay:a": 150,
+        "bombay:rs": 70,
+        "bombay:s": 80,
+        "capetown:a": 150,
+        "capetown:s": 120,
+        "tokyo:a": 100,
+        "tokyo:s": 50
       }
     },
     "tokyo": {
@@ -714,28 +708,28 @@
       "currency": "ye",
       "souvenir": "geisha",
       "routes": {
-        "bombay:s": 10,
-        "capetown:s": 15,
-        "hongkong:s": 2,
-        "losangeles:a": 12,
-        "sanfrancisco:s": 7,
-        "sydney:a": 10,
-        "sydney:s": 5
+        "bombay:s": 100,
+        "capetown:s": 150,
+        "hongkong:s": 20,
+        "losangeles:a": 120,
+        "sanfrancisco:s": 70,
+        "sydney:a": 100,
+        "sydney:s": 50
       }
     },
     "vladivostok": {
       "name": "Vladivokstok",
       "currency": "ro",
       "routes": {
-        "hongkong:r": 9,
-        "moscow:r": 9
+        "hongkong:r": 90,
+        "moscow:r": 90
       }
     },
     "wellington": {
       "name": "Wellington",
       "currency": "st",
       "routes": {
-        "sydney:s": 3
+        "sydney:s": 30
       }
     }
   },
@@ -2338,7 +2332,8 @@
     },
     {
       "name": "All transport - Excess baggage. - 100 kilos overweight. - Pay £40 (or equivalent in local currency)",
-      "code": "auto:debt:*:4"
+      "code": "auto:debt:baggage:*:40",
+      "codex": "auto:debt:baggage:st,<lc>:40"
     },
     {
       "name": "Ships and planes only - Hurricane. - You are diverted to Wellington (New Zealand). - Surrender ticket for present journey. Purchase new ticket to leave.",

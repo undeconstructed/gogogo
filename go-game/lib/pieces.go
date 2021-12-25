@@ -37,7 +37,9 @@ type Ticket struct {
 
 // Debt is an amount owed to the bank, for a fine or something.
 type Debt struct {
-	Amount int `json:"amount"`
+	Reason   string `json:"reason"`
+	Amount   int    `json:"amount"`
+	Currency string `json:"currency"`
 }
 
 // LuckCard is a luck card, as parsed from config, with an unparsed code.

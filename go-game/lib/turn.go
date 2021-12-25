@@ -34,7 +34,7 @@ func (g *gogame) turn_buysouvenir(t *turn, c game.CommandPattern, args []string)
 	currencyId := place.Currency
 
 	rate := g.currencies[currencyId].Rate
-	price := g.settings.SouvenirPrice * rate
+	price := g.settings.SouvenirPrice * rate / 100
 
 	haveMoney := t.player.Money[currencyId]
 	if haveMoney < price {
@@ -127,21 +127,14 @@ func (g *gogame) turn_changemoney(t *turn, c game.CommandPattern, args []string)
 }
 
 func (g *gogame) turn_debt(t *turn, c game.CommandPattern, args []string) (interface{}, error) {
-	currency := args[0]
-	amount, _ := strconv.Atoi(args[1])
+	reason := args[0]
+	currency := args[1]
+	amount, _ := strconv.Atoi(args[2])
 
-	// TODO - currencies
-	debt0 := t.player.Debt
-	if debt0 == nil {
-		debt0 = &debt{amount}
-	} else {
-		debt0.Amount += amount
-	}
-	t.player.Debt = debt0
-
+	t.player.Debts = append(t.player.Debts, Debt{reason, amount, currency})
 	t.Can = append(t.Can, "pay:*:*")
 
-	t.addEventf("now owes %s %d", currency, amount)
+	t.addEventf("now owes %s %d for %s", currency, amount, reason)
 
 	return nil, nil
 }
@@ -227,7 +220,7 @@ func (g *gogame) turn_getmoney(t *turn, c game.CommandPattern, args []string) (i
 	currencyId := args[0]
 	currency := g.currencies[currencyId]
 	baseAmount, _ := strconv.Atoi(args[1])
-	amount := baseAmount * currency.Rate
+	amount := baseAmount * currency.Rate / 100
 
 	g.moveMoney(g.bank.Money, t.player.Money, currencyId, amount)
 
@@ -274,7 +267,14 @@ func (g *gogame) turn_obeyrisk(t *turn, c game.CommandPattern, args []string) (i
 			log.Error().Err(err).Msgf("auto command error: %s", cmd)
 		}
 	case RiskCustomsHalf:
-		t.addEvent("finds out customs is not very efficient")
+		amount := (len(t.player.Souvenirs) * g.settings.SouvenirPrice) / 2
+		if amount > 0 {
+			cmd := fmt.Sprintf("debt:customs:*:%d", amount)
+			_, err := g.doAutoCommand(t, game.CommandPattern(cmd))
+			if err != nil {
+				log.Error().Err(err).Msgf("auto command error: %s", cmd)
+			}
+		}
 	case RiskDest:
 		dest := t.player.Ticket.To
 		g.loseTicket(t, false)
@@ -381,20 +381,40 @@ func (g *gogame) turn_pay(t *turn, c game.CommandPattern, args []string) (interf
 		return nil, game.Error(game.StatusNotNow, "not enough money")
 	}
 
-	nAmount := amount / currency.Rate
+	// nAmount is in neutral units
+	nAmount := amount * 100 / currency.Rate
 
-	// TODO - error check
-	// TODO - conversion?
-	_ = g.moveMoney(t.player.Money, g.bank.Money, currencyId, amount)
+	var newDebts []Debt
+	for _, debt := range t.player.Debts {
+		if nAmount == 0 {
+			break
+		}
+		if (debt.Currency == currencyId) || debt.Currency == "*" {
+			if nAmount >= debt.Amount {
+				// can pay off
+				// cAmount is the amount in the currency being used to pay
+				cAmount := debt.Amount * currency.Rate / 100
+				// TODO - error checks
+				_ = g.moveMoney(t.player.Money, g.bank.Money, currencyId, cAmount)
+				t.addEventf("pays his %s debt", debt.Reason)
+				nAmount -= debt.Amount
+			} else {
+				// can pay part
+				debt.Amount -= nAmount
+				nAmount = 0
+				t.addEventf("pays some of his %s debt", debt.Reason)
+				newDebts = append(newDebts, debt)
+			}
+		} else {
+			// cannot pay this debt with this currency
+			newDebts = append(newDebts, debt)
+		}
+	}
+	t.player.Debts = newDebts
 
-	// TODO - currencies
-	t.player.Debt.Amount -= nAmount
-	if t.player.Debt.Amount <= 0 {
-		t.player.Debt = nil
+	if len(t.player.Debts) == 0 {
+		// nothing more to pay
 		t.Can, _ = stringListWithout(t.Can, string(c))
-		t.addEvent("clears his debt")
-	} else {
-		t.addEvent("pays some of his debt")
 	}
 
 	return nil, nil
@@ -404,7 +424,7 @@ func (g *gogame) turn_paycustoms(t *turn, c game.CommandPattern, args []string) 
 	// TODO - this just removes the must
 	t.Must, _ = stringListWithout(t.Must, string(c))
 
-	cmd := "debt:*:10"
+	cmd := "debt:customs:*:100"
 	_, err := g.doAutoCommand(t, game.CommandPattern(cmd))
 	if err != nil {
 		log.Error().Err(err).Msgf("auto command error: %s", cmd)
@@ -483,7 +503,7 @@ func (g *gogame) turn_takeluck(t *turn, c game.CommandPattern, args []string) (i
 		g.jumpOnTrack(t, code.Dest, true)
 	case LuckGetMoney:
 		currency := g.currencies[code.CurrencyId]
-		amount := code.Amount * currency.Rate
+		amount := code.Amount * currency.Rate / 100
 		g.moveMoney(g.bank.Money, t.player.Money, code.CurrencyId, amount)
 	case LuckSpeculation:
 		// TODO
@@ -595,7 +615,7 @@ func (g *gogame) turn_useluck(t *turn, c game.CommandPattern, args []string) (in
 		// the card says sterling ..
 		lcRate := g.currencies[t.LostTicket.Currency].Rate
 		stRate := g.currencies["st"].Rate
-		refund := fare * stRate / lcRate * 2
+		refund := (fare * stRate / lcRate) * 2
 
 		g.moveMoney(g.bank.Money, t.player.Money, "st", refund)
 

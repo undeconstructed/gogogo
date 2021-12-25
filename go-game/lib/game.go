@@ -126,7 +126,7 @@ func NewGame(data GameData, goal int) game.Game {
 	}
 
 	for id, currency := range g.currencies {
-		g.bank.Money[id] = 0 * currency.Rate
+		g.bank.Money[id] = 100 * currency.Rate
 	}
 
 	for id, place := range g.places {
@@ -222,8 +222,9 @@ func (g *gogame) AddPlayer(name string, colour string) error {
 	homePlace := g.places[g.settings.Home]
 
 	basePlace := homePlace.Dot
-	baseCurrency := homePlace.Currency
-	baseMoney := 400
+	baseCurrencyId := homePlace.Currency
+	baseCurrency := g.currencies[baseCurrencyId]
+	baseMoney := g.settings.StartMoney * 100 / baseCurrency.Rate
 
 	newp := player{
 		Name:   name,
@@ -231,7 +232,7 @@ func (g *gogame) AddPlayer(name string, colour string) error {
 		Money:  map[string]int{},
 		OnDot:  basePlace,
 	}
-	g.moveMoney(g.bank.Money, newp.Money, baseCurrency, baseMoney)
+	g.moveMoney(g.bank.Money, newp.Money, baseCurrencyId, baseMoney)
 
 	g.players = append(g.players, newp)
 
@@ -376,11 +377,9 @@ func (g *gogame) GetGameState() game.GameState {
 				Currency: pl.Ticket.Currency,
 			}
 		}
-		var debt0 *Debt
-		if pl.Debt != nil {
-			debt0 = &Debt{
-				Amount: pl.Debt.Amount,
-			}
+		var debts []Debt
+		for _, d := range pl.Debts {
+			debts = append(debts, d)
 		}
 		// XXX - is this always serialized in-process? money is a live map
 		players = append(players, game.PlayerState{
@@ -393,7 +392,7 @@ func (g *gogame) GetGameState() game.GameState {
 				Souvenirs: pl.Souvenirs,
 				Lucks:     pl.LuckCards,
 				Ticket:    ticket,
-				Debt:      debt0,
+				Debts:     debts,
 			},
 		})
 	}
@@ -656,7 +655,7 @@ func (g *gogame) findPrice(from, to, modes string) (currency string, n int) {
 		return "", -1
 	}
 	c := g.currencies[pl.Currency]
-	price = price * c.Rate
+	price = price * c.Rate / 100
 	return pl.Currency, price
 }
 
@@ -706,7 +705,7 @@ func (g *gogame) toNextPlayer() {
 		}
 
 		hasTicket := p1.Ticket != nil
-		hasDebt := p1.Debt != nil
+		hasDebt := len(p1.Debts) > 0
 		onMap := hasTicket && !hasDebt
 
 		can := []string{"dicemove", "useluck:*", "pawnsouvenir:*", "sellsouvenir:*", "redeemsouvenir:*"}
@@ -845,10 +844,6 @@ type bank struct {
 	Souvenirs map[string]int `json:"souvenirs"`
 }
 
-type debt struct {
-	Amount int `json:"amount"`
-}
-
 type player struct {
 	Name   string `json:"name"`
 	Colour string `json:"colour"`
@@ -864,8 +859,7 @@ type player struct {
 	OnDot     string `json:"onDot"`
 	HasBought bool   `json:"hasBought"`
 
-	// anything to be paid, in neutral currency unit
-	Debt *debt `json:"debt"`
+	Debts []Debt `json:"debts"`
 }
 
 type ticket struct {

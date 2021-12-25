@@ -14,7 +14,7 @@ type PlayerState struct {
 	Souvenirs []string       `json:"souvenirs"`
 	Lucks     []int          `json:"lucks"`
 	Ticket    *Ticket        `json:"ticket"`
-	Debt      *Debt          `json:"debt"`
+	Debts     []Debt         `json:"debts"`
 }
 
 // TurnState is just for the player whose turn is happening
@@ -53,6 +53,7 @@ type GameData struct {
 // Settings is things that control the game, and may be overriden per game.
 type Settings struct {
 	Home          string `json:"home"`
+	StartMoney    int    `json:"startMoney"`
 	SouvenirPrice int    `json:"souvenirPrice"`
 	Goal          int    `json:"goal"`
 }

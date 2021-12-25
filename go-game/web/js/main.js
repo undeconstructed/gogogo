@@ -373,11 +373,11 @@ function makePriceList(data, up) {
 
         let td3 = document.createElement('td')
         td3.classList.add('fare')
-        td3.append(`£${fare*stRate}`)
+        td3.append(`£${fare*stRate/100}`)
         tr.append(td3)
         let td4 = document.createElement('td')
         td4.classList.add('fare')
-        td4.append(`${fare*loRate}`)
+        td4.append(`${fare*loRate/100}`)
         tr.append(td4)
 
         tr.addEventListener('click', _e => {
@@ -1354,11 +1354,23 @@ function makeNotifier() {
 
 function makeDebt() {
   let div = document.querySelector('.debt')
+  let body = div.querySelector('tbody')
 
   let onUpdate = s => {
-    let hasDebt = s.me.debt != null
+    body.replaceChildren()
+    let hasDebt = s.me.debts != null
     if (hasDebt) {
-      div.textContent = "DEBT: " + s.me.debt.amount
+      for (let debt of s.me.debts) {
+        let line = document.createElement('tr')
+        let td0 = document.createElement('td')
+        td0.textContent = debt.reason
+        let td1 = document.createElement('td')
+        td1.textContent = debt.amount
+        let td2 = document.createElement('td')
+        td2.textContent = debt.currency
+        line.append(td0, td1, td2)
+        body.append(line)
+      }
     }
     div.classList.toggle('show', hasDebt)
   }
