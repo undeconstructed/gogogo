@@ -91,7 +91,7 @@ body {
   z-index: 100;
 }
 .state > div {
-  padding: 1rem;
+  padding: 0 1rem;
   background: rgba(255,255,255,0.6);
   display: flex;
   flex-flow: row;
@@ -104,6 +104,13 @@ body {
 }
 .state > div > * {
   display: block;
+}
+.state .msg {
+  font-size: 250%;
+  cursor: pointer;
+}
+.state .msg:hover {
+  font-weight: bold;
 }
 
 .dropdown > div {
