@@ -2212,7 +2212,7 @@
     },
     {
       "name": "Hidden treasure - You discover £500 in Sterling. - (Obtain from Banker)",
-      "code": "getmoney:st:50"
+      "code": "getmoney:st:500"
     },
     {
       "name": "Advance two spaces. - Keep until needed.",
