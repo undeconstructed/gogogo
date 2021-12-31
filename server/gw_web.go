@@ -123,7 +123,7 @@ func (rh *restHandler) makeGame(c *gin.Context) {
 		return
 	}
 	for _, pl := range i.Players {
-		if pl.Name == "" || pl.Colour == "" {
+		if pl.Name == "" {
 			c.String(http.StatusBadRequest, "invalid player")
 			return
 		}

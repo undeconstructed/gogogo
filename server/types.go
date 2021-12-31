@@ -15,7 +15,6 @@ type MakeGameInput struct {
 
 type MakePlayerInput struct {
 	Name    string          `json:"name"`
-	Colour  string          `json:"colour"`
 	Options json.RawMessage `json:"options"`
 }
 

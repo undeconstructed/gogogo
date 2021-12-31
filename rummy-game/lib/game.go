@@ -21,7 +21,7 @@ func NewFromSaved(r io.Reader) (game.Game, error) {
 	return g, nil
 }
 
-func (g *rummygame) AddPlayer(name string, colour string) error {
+func (g *rummygame) AddPlayer(name string, options map[string]interface{}) error {
 	return nil
 }
 

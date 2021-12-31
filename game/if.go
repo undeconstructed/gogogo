@@ -62,7 +62,7 @@ type PlayResult struct {
 // Game describes a single game instance, that can be hosted by a server.
 type Game interface {
 	// activities
-	AddPlayer(name string, colour string) error
+	AddPlayer(name string, options map[string]interface{}) error
 	Start() error
 	Play(player string, c Command) (PlayResult, error)
 

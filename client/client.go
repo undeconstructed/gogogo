@@ -137,7 +137,6 @@ func (c *client) Run() error {
 		}
 		c.gameId = res.GameID
 		c.name = res.PlayerID
-		c.colour = res.Colour
 	}
 
 	upCh := make(chan interface{}, 1)

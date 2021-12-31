@@ -205,7 +205,12 @@ func NewFromSaved(data GameData, r io.Reader) (game.Game, error) {
 }
 
 // AddPlayer adds a player
-func (g *gogame) AddPlayer(name string, colour string) error {
+func (g *gogame) AddPlayer(name string, options map[string]interface{}) error {
+	colour, ok := options["colour"].(string)
+	if !ok {
+		return game.Error(game.StatusConflict, "bad player options")
+	}
+
 	for _, pl := range g.players {
 		if pl.Name == name {
 			return game.Error(game.StatusConflict, "name conflict")

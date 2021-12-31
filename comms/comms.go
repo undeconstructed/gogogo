@@ -212,6 +212,5 @@ type ConnectRequest struct {
 type ConnectResponse struct {
 	GameID   string      `json:"game"`
 	PlayerID string      `json:"player"`
-	Colour   string      `json:"colour"`
 	Err      *CommsError `json:"error"`
 }

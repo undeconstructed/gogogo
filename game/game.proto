@@ -28,7 +28,6 @@ message RGameState {
 // RPlayer is for the current state of some player.
 message RPlayerState {
   string name = 1;
-  string colour = 2;
 
   // turn is the new turn state, and possibiy a whole new turn.
   RTurnState turn = 3;
@@ -79,7 +78,6 @@ message RInitResponse {
 
 message RAddPlayerRequest {
   string name = 1;
-  string colour = 2;
 
   // custom JSON options
   bytes options = 3;

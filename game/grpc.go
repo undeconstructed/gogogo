@@ -249,12 +249,18 @@ func (s *GRPCServer) Init(ctx context.Context, req *RInitRequest) (*RInitRespons
 	}, nil
 }
 
-func (s *GRPCServer) AddPlayer(ctx context.Context, in *RAddPlayerRequest) (*RAddPlayerResponse, error) {
+func (s *GRPCServer) AddPlayer(ctx context.Context, req *RAddPlayerRequest) (*RAddPlayerResponse, error) {
 	if s.gg == nil {
 		panic("no game")
 	}
 
-	err := s.gg.AddPlayer(in.Name, in.Colour)
+	options := map[string]interface{}{}
+	err := json.Unmarshal(req.Options, &options)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "bad options json")
+	}
+
+	err = s.gg.AddPlayer(req.Name, options)
 	if err != nil {
 		switch Code(err) {
 		case StatusBadRequest:

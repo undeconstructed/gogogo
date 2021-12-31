@@ -112,7 +112,7 @@ func (i *instance) doInit(ctx context.Context, cli game.InstanceClient, in MakeG
 	i.state = res.State
 
 	for _, p := range in.Players {
-		res, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Colour: p.Colour})
+		res, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Options: in.Options})
 		if err != nil {
 			return fmt.Errorf("addplayer error: %w", err)
 		}
