@@ -279,13 +279,12 @@ func (s *server) doUserRequest(in requestFromUser) {
 	go func() {
 		res, news := s.doUserRequestSub(g, in)
 
-		cres := responseToUser{ID: in.ID, Body: res}
+		msg := responseToUser{ID: in.ID, Body: res}
 		c := g.clients[in.Who]
 
-		select {
-		case c.downCh <- cres:
-		default:
-			// client lagging
+		err := c.trySend(msg)
+		if err != nil {
+			g.log.Info().Err(err).Msgf("client lagging: %s", in.Who)
 		}
 
 		s.coreCh <- afterRequest{g, news}
