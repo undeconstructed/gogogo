@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/undeconstructed/gogogo/comms"
@@ -43,13 +45,6 @@ func runWebGateway(ctx context.Context, server *server, addr string) error {
 	}
 
 	r := gin.Default()
-	homeStatic := http.Dir("home")
-	r.Use(func(c *gin.Context) {
-		c.Next()
-		if c.Writer.Status() == 404 {
-			c.FileFromFS(c.Request.URL.Path, homeStatic)
-		}
-	})
 
 	a := r.Group("/api")
 	a.GET("/games", rh.getGames)
@@ -59,14 +54,32 @@ func runWebGateway(ctx context.Context, server *server, addr string) error {
 	r.GET("/ws", ch.serveWS)
 
 	r.GET("/play/:type/*any", func(c *gin.Context) {
+		urlPath := c.Request.URL.EscapedPath()
 		gameType := c.Param("type")
-		gameStatic := http.Dir("./run/" + gameType)
-
-		rest := c.Request.URL.EscapedPath()[len(gameType)+6:]
-
-		// XXX - shouldn't blindly serve everything
-		c.FileFromFS(rest, gameStatic)
+		if strings.HasSuffix(urlPath, "/") {
+			// index page
+			key := c.Query("c")
+			if key == "" {
+				// home page
+				c.File(path.Join(".", "run", gameType, "web", "home.html"))
+			} else {
+				// game page
+				c.File(path.Join(".", "run", gameType, "web", "index.html"))
+			}
+		} else if strings.HasSuffix(urlPath, "/data.json") {
+			// data file ..
+			c.File(path.Join(".", "run", gameType, "data.json"))
+		} else {
+			// any other resource
+			dir := http.Dir(path.Join(".", "run", gameType, "web"))
+			rest := urlPath[len(gameType)+6:]
+			// XXX - shouldn't blindly serve everything
+			c.FileFromFS(rest, dir)
+		}
 	})
+
+	commonFS := http.Dir("web")
+	r.StaticFS("/common/", commonFS)
 
 	s := &http.Server{
 		Handler:      r,

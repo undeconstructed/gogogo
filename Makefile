@@ -6,7 +6,6 @@ gogame.bin: .FORCE
 
 gogame.data: .FORCE
 	cp -r ./go-game/web ./run/go
-	cp -r ./go-game/home ./run/go
 	cp ./go-game/data.json ./run/go
 	-mkdir ./run/go/bind
 	-mkdir ./run/go/save
@@ -16,7 +15,6 @@ rummygame.bin: .FORCE
 
 rummygame.data: .FORCE
 	cp -r ./rummy-game/web ./run/rummy
-	cp -r ./rummy-game/home ./run/rummy
 	-mkdir ./run/rummy/bind
 	-mkdir ./run/rummy/save
 

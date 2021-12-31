@@ -1,5 +1,5 @@
 
-import { newUI, connect, promoteCustom } from './game.js'
+import { newUI, connect, promoteCustom } from '/common/js/game.js'
 
 // net stuff
 
@@ -1483,7 +1483,7 @@ function main() {
   document.querySelector('.map').append(mapObject)
 
   mapObject.addEventListener('load', _e => {
-    fetch('../data.json').then(
+    fetch('data.json').then(
       rez => rez.json().then(
         data => setup(data, ccode)
       ),

@@ -34,7 +34,7 @@ function doOnCreate(msg) {
     th0.textContent = k
     let td0 = document.createElement('td')
     let a = document.createElement('a')
-    let link = `${window.location.origin}/play/go/web/?c=${c}`
+    let link = `${window.location.origin}/play/go/?c=${c}`
     a.href = link
     a.textContent = link
     td0.append(a)
