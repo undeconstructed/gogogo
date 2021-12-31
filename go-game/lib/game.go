@@ -240,12 +240,12 @@ func (g *gogame) AddPlayer(name string, colour string) error {
 }
 
 // Start starts the game
-func (g *gogame) Start() (game.TurnState, error) {
+func (g *gogame) Start() error {
 	if g.turn != nil {
-		return game.TurnState{}, game.Error(game.StatusNotStarted, "")
+		return game.Error(game.StatusNotStarted, "")
 	}
 	if len(g.players) < 1 {
-		return game.TurnState{}, game.Error(game.StatusNoPlayers, "")
+		return game.Error(game.StatusNoPlayers, "")
 	}
 
 	rand.Shuffle(len(g.players), func(i, j int) {
@@ -254,7 +254,7 @@ func (g *gogame) Start() (game.TurnState, error) {
 
 	g.toNextPlayer()
 
-	return g.GetTurnState(), nil
+	return nil
 }
 
 // Turn is current player doing things
@@ -280,7 +280,7 @@ func (g *gogame) Play(player string, c game.Command) (game.PlayResult, error) {
 	news := t.news
 	t.news = nil
 
-	return game.PlayResult{Response: res, News: news, Next: g.GetTurnState()}, nil
+	return game.PlayResult{Response: res, News: news}, nil
 }
 
 func (g *gogame) doPlay(t *turn, c game.Command) (interface{}, error) {
@@ -328,27 +328,6 @@ func (g *gogame) doAutoCommand(t *turn, cmd game.CommandPattern) (interface{}, e
 	return handler(t, cmd, args[1:])
 }
 
-func (g *gogame) GetTurnState() game.TurnState {
-	if g.turn == nil {
-		return game.TurnState{
-			Number: -1,
-		}
-	}
-
-	p := g.turn.player
-
-	return game.TurnState{
-		Number: g.turn.Num,
-		Player: p.Name,
-		Can:    g.turn.Can,
-		Must:   g.turn.Must,
-		Custom: TurnState{
-			OnMap:   g.turn.OnMap,
-			Stopped: g.turn.Stopped,
-		},
-	}
-}
-
 func (g *gogame) GetGameState() game.GameState {
 	status := game.StatusInProgress
 
@@ -365,8 +344,26 @@ func (g *gogame) GetGameState() game.GameState {
 		status = game.StatusUnstarted
 	}
 
+	var global = GlobalState{
+		Players: map[string]PlayerState{},
+	}
 	var players []game.PlayerState
+
 	for _, pl := range g.players {
+		var turn *game.TurnState
+		if g.turn != nil && g.turn.player.Name == pl.Name {
+			// TODO - this is assuming still only one player has a turn object
+			turn = &game.TurnState{
+				Number: g.turn.Num,
+				Can:    g.turn.Can,
+				Must:   g.turn.Must,
+				Custom: TurnState{
+					OnMap:   g.turn.OnMap,
+					Stopped: g.turn.Stopped,
+				},
+			}
+		}
+
 		var ticket *Ticket
 		if pl.Ticket != nil {
 			ticket = &Ticket{
@@ -381,32 +378,40 @@ func (g *gogame) GetGameState() game.GameState {
 		for _, d := range pl.Debts {
 			debts = append(debts, d)
 		}
+
 		// XXX - is this always serialized in-process? money is a live map
 		players = append(players, game.PlayerState{
-			Name:   pl.Name,
-			Colour: pl.Colour,
-			Custom: PlayerState{
-				Square:    pl.OnSquare,
-				Dot:       pl.OnDot,
-				Money:     pl.Money,
-				Souvenirs: pl.Souvenirs,
-				Lucks:     pl.LuckCards,
-				Ticket:    ticket,
-				Debts:     debts,
-			},
+			Name: pl.Name,
+			Turn: turn,
 		})
+		global.Players[pl.Name] = PlayerState{
+			Colour:    pl.Colour,
+			Square:    pl.OnSquare,
+			Dot:       pl.OnDot,
+			Money:     pl.Money,
+			Souvenirs: pl.Souvenirs,
+			Lucks:     pl.LuckCards,
+			Ticket:    ticket,
+			Debts:     debts,
+		}
+	}
+
+	turnNumber := -1
+	if g.turn != nil {
+		turnNumber = g.turn.Num
 	}
 
 	return game.GameState{
-		Status:  status,
-		Playing: playing,
-		Winner:  g.winner,
-		Players: players,
+		Status:     status,
+		Playing:    playing,
+		Winner:     g.winner,
+		TurnNumber: turnNumber,
+		Players:    players,
+		Global:     global,
 	}
 }
 
 func (g *gogame) WriteOut(w io.Writer) error {
-
 	out := gameSave{
 		Settings: g.settings,
 		Players:  g.players,

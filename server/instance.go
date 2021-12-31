@@ -14,15 +14,22 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// instance is combined game instance and plugin instance
 type instance struct {
+	// game type, e.g. go.
 	gameType string
-	id       string
-	cli      game.InstanceClient
-	state    *game.GameState
-	turn     *game.TurnState
-	clients  map[string]*clientBundle
-	stopCh   chan struct{}
-	log      zerolog.Logger
+	// unique id
+	id string
+	// gRPC client connecting to plugin
+	cli game.InstanceClient
+	// cached last seen state
+	state *game.RGameState
+	// player clients
+	clients map[string]*clientBundle
+
+	// internal stuff
+	stopCh chan struct{}
+	log    zerolog.Logger
 }
 
 func newInstance(gameType string, id string) *instance {
@@ -102,14 +109,14 @@ func (i *instance) doInit(ctx context.Context, cli game.InstanceClient, in MakeG
 		return fmt.Errorf("init error: %w", err)
 	}
 
-	i.state = game.UnwrapGameState(res.State)
+	i.state = res.State
 
 	for _, p := range in.Players {
 		res, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Colour: p.Colour})
 		if err != nil {
 			return fmt.Errorf("addplayer error: %w", err)
 		}
-		i.state = game.UnwrapGameState(res.State)
+		i.state = res.State
 	}
 
 	return nil
@@ -138,8 +145,7 @@ func (i *instance) doLoad(ctx context.Context, cli game.InstanceClient) error {
 		return err
 	}
 
-	i.state = game.UnwrapGameState(res.State)
-	i.turn = game.UnwrapTurnState(res.Turn)
+	i.state = res.State
 
 	return nil
 }
@@ -163,8 +169,7 @@ func (i *instance) Start() error {
 		return err
 	}
 
-	i.state = game.UnwrapGameState(res.State)
-	i.turn = game.UnwrapTurnState(res.Turn)
+	i.state = res.State
 
 	return nil
 }
@@ -193,18 +198,13 @@ func (i *instance) Play(player string, c game.Command) ([]game.Change, json.RawM
 		return nil, nil, err
 	}
 
-	i.state = game.UnwrapGameState(res.State)
-	i.turn = game.UnwrapTurnState(res.Turn)
+	i.state = res.State
 
 	return game.UnwrapChanges(res.News), res.Response, nil
 }
 
-func (i *instance) GetGameState() game.GameState {
-	return *i.state
-}
-
-func (i *instance) GetTurnState() game.TurnState {
-	return *i.turn
+func (i *instance) GetGameState() *game.RGameState {
+	return i.state
 }
 
 func (i *instance) Destroy() error {

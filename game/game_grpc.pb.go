@@ -18,11 +18,17 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InstanceClient interface {
+	// Load means find game data and load it.
 	Load(ctx context.Context, in *RLoadRequest, opts ...grpc.CallOption) (*RLoadResponse, error)
+	// Init means create a new game here.
 	Init(ctx context.Context, in *RInitRequest, opts ...grpc.CallOption) (*RInitResponse, error)
+	// AddPlayer adds a player. It may be not allowed after start.
 	AddPlayer(ctx context.Context, in *RAddPlayerRequest, opts ...grpc.CallOption) (*RAddPlayerResponse, error)
+	// Start starts the game.
 	Start(ctx context.Context, in *RStartRequest, opts ...grpc.CallOption) (*RStartResponse, error)
+	// Play submits something that should be done in the context of a current turn.
 	Play(ctx context.Context, in *RPlayRequest, opts ...grpc.CallOption) (*RPlayResponse, error)
+	// Destroy terminates the game and removes all data.
 	Destroy(ctx context.Context, in *RDestroyRequest, opts ...grpc.CallOption) (*RDestroyResponse, error)
 }
 
@@ -92,11 +98,17 @@ func (c *instanceClient) Destroy(ctx context.Context, in *RDestroyRequest, opts 
 // All implementations must embed UnimplementedInstanceServer
 // for forward compatibility
 type InstanceServer interface {
+	// Load means find game data and load it.
 	Load(context.Context, *RLoadRequest) (*RLoadResponse, error)
+	// Init means create a new game here.
 	Init(context.Context, *RInitRequest) (*RInitResponse, error)
+	// AddPlayer adds a player. It may be not allowed after start.
 	AddPlayer(context.Context, *RAddPlayerRequest) (*RAddPlayerResponse, error)
+	// Start starts the game.
 	Start(context.Context, *RStartRequest) (*RStartResponse, error)
+	// Play submits something that should be done in the context of a current turn.
 	Play(context.Context, *RPlayRequest) (*RPlayResponse, error)
+	// Destroy terminates the game and removes all data.
 	Destroy(context.Context, *RDestroyRequest) (*RDestroyResponse, error)
 	mustEmbedUnimplementedInstanceServer()
 }

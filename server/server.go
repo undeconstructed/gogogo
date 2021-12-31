@@ -79,7 +79,6 @@ func (s *server) Run(ctx context.Context) error {
 	for in := range s.coreCh {
 		var g *instance
 		var news []game.Change
-		var turn *game.TurnState
 
 		switch msg := in.(type) {
 		case listGamesMsg:
@@ -95,7 +94,7 @@ func (s *server) Run(ctx context.Context) error {
 		case deleteGameMsg:
 			s.doDeleteGame(msg)
 		case connectMsg:
-			g, news, turn = s.doConnect(msg)
+			g, news = s.doConnect(msg)
 		case disconnectMsg:
 			g, news = s.doDisconnect(msg)
 		case textFromUser:
@@ -103,40 +102,52 @@ func (s *server) Run(ctx context.Context) error {
 		case requestFromUser:
 			s.doUserRequest(msg)
 		case afterRequest:
-			g, news, turn = msg.game, msg.news, msg.turn
+			g, news = msg.game, msg.news
 		default:
 			log.Warn().Msgf("nonsense in core: %#v", in)
 		}
 
 		if g != nil && len(news) > 0 {
-			state := *g.state
-			update := game.GameUpdate{News: news, GameState: state}
-			msg, err := comms.Encode("update", update)
-			if err != nil {
-				g.log.Error().Err(err).Msg("failed to encode update")
-				panic("encode update error")
-			}
-			s.broadcast(g, msg, "")
-		}
+			gState := g.state
 
-		if turn != nil {
-			c, ok := g.clients[turn.Player]
-			if !ok {
-				g.log.Info().Msgf("current player not connected: %s", turn.Player)
-				continue
+			var players []game.Presence
+			for _, pState := range g.state.Players {
+				_, here := g.clients[pState.Name]
+				players = append(players, game.Presence{
+					Name:      pState.Name,
+					Connected: here,
+				})
 			}
 
-			msg, err := comms.Encode("turn", turn)
-			if err != nil {
-				g.log.Error().Err(err).Msg("failed to encode turn")
-				panic("encode turn error")
-			}
+			for _, pState := range g.state.Players {
+				client, here := g.clients[pState.Name]
+				if !here {
+					g.log.Info().Msgf("client not connected: %s", pState.Name)
+					continue
+				}
 
-			select {
-			case c.downCh <- msg:
-			default:
-				// client lagging
-				g.log.Info().Msgf("client lagging: %s", turn.Player)
+				update := game.GameUpdate{
+					News:       news,
+					Status:     game.GameStatus(gState.Status),
+					Playing:    gState.Playing,
+					Winner:     gState.Winner,
+					TurnNumber: int(gState.TurnNumber),
+					Players:    players,
+					Global:     json.RawMessage(gState.Global),
+					Private:    pState.Private,
+					Turn:       pState.Turn,
+				}
+
+				msg, err := comms.Encode("update", update)
+				if err != nil {
+					g.log.Error().Err(err).Msg("failed to encode update")
+					panic("encode update error")
+				}
+
+				err = client.trySend(msg)
+				if err != nil {
+					g.log.Info().Err(err).Msgf("client lagging: %s", pState.Name)
+				}
 			}
 		}
 	}
@@ -214,26 +225,20 @@ func (s *server) doDeleteGame(in deleteGameMsg) {
 	in.Rep <- nil
 }
 
-func (s *server) doConnect(in connectMsg) (*instance, []game.Change, *game.TurnState) {
+func (s *server) doConnect(in connectMsg) (*instance, []game.Change) {
 	instance, ok := s.games[in.GameId]
 	if !ok {
 		in.Rep <- errors.New("game not found")
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	instance.clients[in.PlayerId] = &in.Client
 	in.Rep <- nil
 
-	// resend the turn, if it's this player
-	var turn *game.TurnState
-	if instance.turn != nil && instance.turn.Player == in.PlayerId {
-		turn = instance.turn
-	}
-
 	return instance, []game.Change{{
 		Who:  in.PlayerId,
 		What: "reconnects",
-	}}, turn
+	}}
 }
 
 func (s *server) doDisconnect(in disconnectMsg) (*instance, []game.Change) {
@@ -272,7 +277,7 @@ func (s *server) doUserRequest(in requestFromUser) {
 	}
 
 	go func() {
-		res, news, turn := s.doUserRequestSub(g, in)
+		res, news := s.doUserRequestSub(g, in)
 
 		cres := responseToUser{ID: in.ID, Body: res}
 		c := g.clients[in.Who]
@@ -283,11 +288,11 @@ func (s *server) doUserRequest(in requestFromUser) {
 			// client lagging
 		}
 
-		s.coreCh <- afterRequest{g, news, turn}
+		s.coreCh <- afterRequest{g, news}
 	}()
 }
 
-func (s *server) doUserRequestSub(g *instance, in requestFromUser) (interface{}, []game.Change, *game.TurnState) {
+func (s *server) doUserRequestSub(g *instance, in requestFromUser) (interface{}, []game.Change) {
 	f := in.Cmd
 	switch f[0] {
 	case "start":
@@ -295,35 +300,35 @@ func (s *server) doUserRequestSub(g *instance, in requestFromUser) (interface{},
 		if err != nil {
 			return game.StartResultJSON{
 				Err: comms.WrapError(err),
-			}, nil, nil
+			}, nil
 		}
-		return game.StartResultJSON{}, []game.Change{{What: "the game starts"}}, g.turn
+		return game.StartResultJSON{}, []game.Change{{What: "the game starts"}}
 	case "query":
 		f = f[1:]
 		switch f[0] {
 		default:
-			return comms.WrapError(fmt.Errorf("unknown query: %v", f)), nil, nil
+			return comms.WrapError(fmt.Errorf("unknown query: %v", f)), nil
 		}
 	case "play":
 		data, ok := in.Body.([]byte)
 		if !ok {
-			return game.PlayResultJSON{Err: comms.WrapError(errors.New("bad data"))}, nil, nil
+			return game.PlayResultJSON{Err: comms.WrapError(errors.New("bad data"))}, nil
 		}
 
 		gameCommand := game.Command{}
 		if err := json.Unmarshal(data, &gameCommand); err != nil {
 			// bad command
-			return game.PlayResultJSON{Err: comms.WrapError(fmt.Errorf("bad body: %w", err))}, nil, nil
+			return game.PlayResultJSON{Err: comms.WrapError(fmt.Errorf("bad body: %w", err))}, nil
 		}
 
 		news, res, err := g.Play(in.Who, gameCommand)
 		if err != nil {
-			return game.PlayResultJSON{Err: comms.WrapError(err)}, nil, nil
+			return game.PlayResultJSON{Err: comms.WrapError(err)}, nil
 		}
 
-		return game.PlayResultJSON{Msg: res}, news, g.turn
+		return game.PlayResultJSON{Msg: res}, news
 	default:
-		return comms.WrapError(fmt.Errorf("unknown request: %v", in.Cmd)), nil, nil
+		return comms.WrapError(fmt.Errorf("unknown request: %v", in.Cmd)), nil
 	}
 }
 

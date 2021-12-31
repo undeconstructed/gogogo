@@ -7,6 +7,13 @@ let netState = null
 
 function processUpdate(u) {
   for (let pl of u.players) {
+    let gp = u.global.players[pl.name]
+    if (gp) {
+      for (let x in gp) {
+        pl[x] = gp[x]
+      }
+    }
+
     pl.souvenirs = pl.souvenirs || []
     pl.lucks = pl.lucks || []
     pl.money = pl.money || {}
@@ -1469,7 +1476,6 @@ function main() {
     alert('missing connect code')
     return
   }
-
 
   let mapObject = document.createElement('object')
   mapObject.type = 'image/svg+xml'

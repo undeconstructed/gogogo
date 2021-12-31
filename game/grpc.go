@@ -31,40 +31,6 @@ func WrapChanges(in []Change) []*RChange {
 	return out
 }
 
-func WrapGameState(in *GameState) *RGameState {
-	custom, _ := json.Marshal(in.Custom)
-
-	var players []*RPlayer
-	for _, p := range in.Players {
-		custom, _ := json.Marshal(p.Custom)
-		players = append(players, &RPlayer{
-			Name:   p.Name,
-			Colour: p.Colour,
-			Custom: custom,
-		})
-	}
-
-	return &RGameState{
-		Status:  string(in.Status),
-		Playing: in.Playing,
-		Winner:  in.Winner,
-		Players: players,
-		Custom:  custom,
-	}
-}
-
-func WrapTurnState(in *TurnState) *RTurnState {
-	custom, _ := json.Marshal(in.Custom)
-
-	return &RTurnState{
-		Number: int32(in.Number),
-		Player: in.Player,
-		Can:    in.Can,
-		Must:   in.Must,
-		Custom: custom,
-	}
-}
-
 func UnwrapChanges(in []*RChange) []Change {
 	var out []Change
 	for _, c := range in {
@@ -78,29 +44,93 @@ func UnwrapChanges(in []*RChange) []Change {
 	return out
 }
 
+func WrapGameState(in *GameState) *RGameState {
+	global, _ := json.Marshal(in.Global)
+
+	var players []*RPlayerState
+	for _, p := range in.Players {
+		players = append(players, WrapPlayerState(&p))
+	}
+
+	return &RGameState{
+		Status:     string(in.Status),
+		Playing:    in.Playing,
+		Winner:     in.Winner,
+		TurnNumber: int32(in.TurnNumber),
+		Players:    players,
+		Global:     global,
+	}
+}
+
 func UnwrapGameState(in *RGameState) *GameState {
 	var players []PlayerState
 	for _, p := range in.Players {
-		players = append(players, PlayerState{
-			Name:   p.Name,
-			Colour: p.Colour,
-			Custom: json.RawMessage(p.Custom),
-		})
+		players = append(players, *UnwrapPlayerState(p))
+	}
+
+	var global []byte
+	if in.Global != nil {
+		global, _ = json.Marshal(in.Global)
 	}
 
 	return &GameState{
-		Status:  GameStatus(in.Status),
-		Playing: in.Playing,
-		Winner:  in.Winner,
-		Players: players,
-		Custom:  json.RawMessage(in.Custom),
+		Status:     GameStatus(in.Status),
+		Playing:    in.Playing,
+		Winner:     in.Winner,
+		TurnNumber: int(in.TurnNumber),
+		Players:    players,
+		Global:     json.RawMessage(global),
+	}
+}
+
+func WrapPlayerState(in *PlayerState) *RPlayerState {
+	var private []byte
+	if in.Private != nil {
+		private, _ = json.Marshal(in.Private)
+	}
+
+	var turn *RTurnState
+	if in.Turn != nil {
+		turn = WrapTurnState(in.Turn)
+	}
+
+	return &RPlayerState{
+		Name:    in.Name,
+		Turn:    turn,
+		Private: private,
+	}
+}
+
+func UnwrapPlayerState(in *RPlayerState) *PlayerState {
+	var turn *TurnState
+	if in.Turn != nil {
+		turn = UnwrapTurnState(in.Turn)
+	}
+
+	return &PlayerState{
+		Name:    in.Name,
+		Turn:    turn,
+		Private: json.RawMessage(in.Private),
+	}
+}
+
+func WrapTurnState(in *TurnState) *RTurnState {
+	var custom []byte
+	if in.Custom != nil {
+		custom, _ = json.Marshal(in.Custom)
+	}
+
+	return &RTurnState{
+		Number: int32(in.Number),
+		Can:    in.Can,
+		Must:   in.Must,
+		Custom: custom,
 	}
 }
 
 func UnwrapTurnState(in *RTurnState) *TurnState {
 	return &TurnState{
 		Number: int(in.Number),
-		Player: in.Player,
 		Can:    in.Can,
 		Must:   in.Must,
 		Custom: json.RawMessage(in.Custom),
@@ -185,11 +215,9 @@ func (s *GRPCServer) Load(ctx context.Context, req *RLoadRequest) (*RLoadRespons
 	s.gg = gg
 
 	sg := s.gg.GetGameState()
-	st := s.gg.GetTurnState()
 
 	return &RLoadResponse{
 		State: WrapGameState(&sg),
-		Turn:  WrapTurnState(&st),
 	}, nil
 }
 
@@ -252,7 +280,7 @@ func (s *GRPCServer) Start(context.Context, *RStartRequest) (*RStartResponse, er
 		panic("no game")
 	}
 
-	st, err := s.gg.Start()
+	err := s.gg.Start()
 	if err != nil {
 		switch Code(err) {
 		case StatusBadRequest:
@@ -270,7 +298,6 @@ func (s *GRPCServer) Start(context.Context, *RStartRequest) (*RStartResponse, er
 
 	return &RStartResponse{
 		State: WrapGameState(&sg),
-		Turn:  WrapTurnState(&st),
 	}, nil
 }
 
@@ -306,7 +333,6 @@ func (s *GRPCServer) Play(ctx context.Context, in *RPlayRequest) (*RPlayResponse
 		Response: rr,
 		News:     WrapChanges(res.News),
 		State:    WrapGameState(&sg),
-		Turn:     WrapTurnState(&res.Next),
 	}, nil
 }
 

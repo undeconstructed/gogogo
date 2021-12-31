@@ -7,31 +7,51 @@ package game;
 message Empty {
 }
 
-message RPlayer {
+// RGameState is the whole state of the game.
+message RGameState {
+  // game status, e.g. inplay
+  string status = 1;
+  // current player name
+  string playing = 2;
+  // name of the winner, if in won state
+  string winner = 3;
+  // top level turn count
+  int32 turnNumber = 4;
+
+  // custom JSON data, to be shown to everyone
+  bytes global = 9;
+
+  // per player
+  repeated RPlayerState players = 5;
+}
+
+// RPlayer is for the current state of some player.
+message RPlayerState {
   string name = 1;
   string colour = 2;
 
-  bytes custom = 9;
+  // turn is the new turn state, and possibiy a whole new turn.
+  RTurnState turn = 3;
+
+  // custom JSON data, just for this player
+  bytes private = 9;
 }
 
-message RGameState {
-  string status = 1;
-  string playing = 2;
-  string winner = 3;
-  repeated RPlayer players = 4;
-
-  bytes custom = 9;
-}
-
+// RTurnState is the part of the game state that relates an active turn.
 message RTurnState {
+  // turn number - is the same as in the global state, that's not right.
   int32 number = 1;
-  string player = 2;
+
+  // what the player can do
   repeated string can = 3;
+  // what the player must do, before the turn can end
   repeated string must = 4;
 
+  // custom JSON data that just relates to the current turn
   bytes custom = 9;
 }
 
+// RChange is a change in the game state, which should be sent to erveryone.
 message RChange {
   string who = 1;
   string what = 2;
@@ -44,11 +64,12 @@ message RLoadRequest {
 
 message RLoadResponse {
   RGameState state = 1;
-  RTurnState turn = 2;
 }
 
 message RInitRequest {
   string id = 1;
+
+  // custom JSON options
   bytes options = 2;
 }
 
@@ -59,6 +80,8 @@ message RInitResponse {
 message RAddPlayerRequest {
   string name = 1;
   string colour = 2;
+
+  // custom JSON options
   bytes options = 3;
 }
 
@@ -70,37 +93,51 @@ message RStartRequest {
 }
 
 message RStartResponse {
-  RTurnState turn = 1;
-  RGameState state = 2;
+  RGameState state = 1;
 }
 
+// RPlayRequest is make a move.
 message RPlayRequest {
+  // player ID, must be server set.
   string player = 1;
+  // command, is in CommandString format
   string command = 2;
+  // options for the command
   string options = 3;
 }
 
+// RPlayResponse is result of a move.
 message RPlayResponse {
+  // response is direct response
   bytes response = 1;
+  // news is changes to be broadcast
   repeated RChange news = 2;
-  RTurnState turn = 3;
-  RGameState state = 4;
+  // state is the entire game state.
+  RGameState state = 3;
 }
 
+// RDestroyRequest takes out the game instance entirely, and also shuts down
+// the process.
 message RDestroyRequest {
 }
 
 message RDestroyResponse {
 }
 
-// Instance service, represents a game instance
+// Instance service, represents a game instance.
 service Instance {
+  // Load means find game data and load it.
   rpc Load (RLoadRequest) returns (RLoadResponse);
+  // Init means create a new game here.
   rpc Init (RInitRequest) returns (RInitResponse);
 
+  // AddPlayer adds a player. It may be not allowed after start.
   rpc AddPlayer (RAddPlayerRequest) returns (RAddPlayerResponse);
+  // Start starts the game.
   rpc Start (RStartRequest) returns (RStartResponse);
+  // Play submits something that should be done in the context of a current turn.
   rpc Play (RPlayRequest) returns (RPlayResponse);
 
+  // Destroy terminates the game and removes all data.
   rpc Destroy (RDestroyRequest) returns (RDestroyResponse);
 }

@@ -8,7 +8,7 @@ export function promoteCustom(o) {
 }
 
 function defaultProcessUpdate(u) {
-  promoteCustom(u)
+  // promoteCustom(u)
 
   u.players = u.players || []
 
@@ -19,13 +19,6 @@ function defaultProcessUpdate(u) {
   }
 
   return u
-}
-
-function defaultProcessTurn(t) {
-  promoteCustom(t)
-  t.can = t.can  || []
-  t.must = t.must || []
-  return t
 }
 
 export function connect(listener, ccode) {
@@ -84,7 +77,7 @@ export function connect(listener, ccode) {
     }
 
     let msg = JSON.parse(e.data)
-    console.log('rx', msg)
+    console.log('rx', JSON.stringify(msg))
 
     if (firstMessage) {
       if (msg.head === 'connected') {
@@ -96,8 +89,6 @@ export function connect(listener, ccode) {
 
     if (msg.head === 'update') {
       setTimeout(() => listener.onUpdate(msg.data), 0)
-    } else if (msg.head === 'turn') {
-      setTimeout(() => listener.onTurn(msg.data), 0)
     } else if (msg.head === 'text') {
       setTimeout(() => listener.onText(msg.data), 0)
     } else if (msg.head.startsWith('response:')) {
@@ -114,8 +105,7 @@ export function connect(listener, ccode) {
   return netState
 }
 
-export function newUI(data, processUpdate, processTurn) {
-  processTurn = processTurn || (e => e)
+export function newUI(data, processUpdate) {
   processUpdate = processUpdate || (e => e)
   let state = {
     data: data,
@@ -139,6 +129,7 @@ export function newUI(data, processUpdate, processTurn) {
   }
 
   let newTurn = t => {
+    promoteCustom(t)
     t.can = t.can || []
     t.must = t.must || []
     t.hasCan = pattern => {
@@ -194,32 +185,32 @@ export function newUI(data, processUpdate, processTurn) {
 
   let onUpdate = u => {
     u = processUpdate(defaultProcessUpdate(u))
+    console.log('rxu', JSON.stringify(u))
 
     state.status = u.status
     state.winner = u.winner
     state.playing = u.playing
+
     for (let pl of u.players) {
       state.players[pl.name] = pl
       if (pl.name == state.me.name) {
         state.me = pl
       }
     }
-    if (state.playing != state.me.name) {
-      turn = newTurn({})
-      for (let c of components) {
-        c.onTurn && c.onTurn(turn)
-      }
-    }
+
     for (let c of components) {
       c.onUpdate && c.onUpdate(state)
     }
+
     for (let n of u.news) {
       sendCommand({ do: 'log', msg: n })
     }
+
+    onTurn(u.turn || {})
   }
 
   let onTurn = t => {
-    t = processTurn(defaultProcessTurn(t))
+    // t = defaultProcessTurn(t)
     turn = newTurn(t)
     for (let c of components) {
       c.onTurn && c.onTurn(turn)
@@ -237,7 +228,6 @@ export function newUI(data, processUpdate, processTurn) {
     onConnect,
     onDisconnect,
     onUpdate,
-    onTurn,
     onText
   }
 }

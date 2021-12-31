@@ -2,17 +2,18 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/undeconstructed/gogogo/game"
 )
 
 type MakeGameInput struct {
 	Type    string            `json:"type"`
-	Players []GamePlayerInput `json:"players"`
+	Players []MakePlayerInput `json:"players"`
 	Options json.RawMessage   `json:"options"`
 }
 
-type GamePlayerInput struct {
+type MakePlayerInput struct {
 	Name    string          `json:"name"`
 	Colour  string          `json:"colour"`
 	Options json.RawMessage `json:"options"`
@@ -84,6 +85,15 @@ type clientBundle struct {
 	downCh chan interface{}
 }
 
+func (c *clientBundle) trySend(msg interface{}) error {
+	select {
+	case c.downCh <- msg:
+		return nil
+	default:
+		return errors.New("queue full")
+	}
+}
+
 type afterCreate struct {
 	in   createGameMsg
 	out  MakeGameOutput
@@ -93,5 +103,4 @@ type afterCreate struct {
 type afterRequest struct {
 	game *instance
 	news []game.Change
-	turn *game.TurnState
 }

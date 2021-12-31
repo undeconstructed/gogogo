@@ -30,15 +30,30 @@ type PlayResultJSON struct {
 	Err *comms.CommsError `json:"error"`
 }
 
-// Change is something that happened
-type Change struct {
-	Who   string `json:"who"`
-	What  string `json:"what"`
-	Where string `json:"where"`
+// Presence will be whether a player exists and is connected.
+type Presence struct {
+	Name      string `json:"name"`
+	Connected bool   `json:"connected"`
 }
 
-// GameUpdate is a giant state object, until I do some sort of selective updating.
+// GameUpdate is what will be sent to a user.
 type GameUpdate struct {
 	News []Change `json:"news"`
-	GameState
+
+	Status  GameStatus `json:"status"`
+	Playing string     `json:"playing"`
+	Winner  string     `json:"winner"`
+
+	TurnNumber int `json:"turnNumber"`
+
+	Players []Presence `json:"players"`
+
+	// state that can be seen by anyone
+	Global json.RawMessage `json:"global"`
+
+	// state that is just for one player
+	Private json.RawMessage `json:"private"`
+
+	// turn object for one player
+	Turn *RTurnState `json:"turn"`
 }

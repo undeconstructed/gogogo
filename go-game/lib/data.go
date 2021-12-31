@@ -6,8 +6,14 @@ import (
 	"path"
 )
 
+// GlobalState is the info that can be seen by all players
+type GlobalState struct {
+	Players map[string]PlayerState `json:"players"`
+}
+
 // PlayerState is a summary of each player
 type PlayerState struct {
+	Colour    string         `json:"colour"`
 	Square    int            `json:"square"`
 	Dot       string         `json:"dot"`
 	Money     map[string]int `json:"money"`
@@ -17,7 +23,11 @@ type PlayerState struct {
 	Debts     []Debt         `json:"debts"`
 }
 
-// TurnState is just for the player whose turn is happening
+// PrivateState is for each player individually
+type PrivateState struct {
+}
+
+// TurnState is for custom data about current turn
 type TurnState struct {
 	OnMap   bool `json:"onmap"`
 	Stopped bool `json:"stopped"`
