@@ -20,7 +20,7 @@ func main() {
 	pgames := flag.String("games", "", "games to load")
 	flag.Parse()
 
-	games := strings.Split(*pgames, " ")
+	games := strings.Split(*pgames, ",")
 
 	rand.Seed(time.Now().Unix())
 

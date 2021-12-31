@@ -1,5 +1,5 @@
 
-modules = comms client game go-game/lib go-game/bin server
+modules = comms client game go-game/lib go-game/bin rummy-game/lib rummy-game/bin server
 
 gogame.bin: .FORCE
 	go build -o ./run/go/bin ./go-game/bin
@@ -11,9 +11,18 @@ gogame.data: .FORCE
 	-mkdir ./run/go/bind
 	-mkdir ./run/go/save
 
-server.run: gogame.bin gogame.data
+rummygame.bin: .FORCE
+	go build -o ./run/rummy/bin ./rummy-game/bin
+
+rummygame.data: .FORCE
+	cp -r ./rummy-game/web ./run/rummy
+	cp -r ./rummy-game/home ./run/rummy
+	-mkdir ./run/rummy/bind
+	-mkdir ./run/rummy/save
+
+server.run: gogame.bin gogame.data rummygame.bin rummygame.data
 	-rm ./run/*/bind/*.pipe
-	go run ./server --games go
+	go run ./server --games go,rummy
 
 listgames:
 	curl -v 'localhost:1235/api/games'
