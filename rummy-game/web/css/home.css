@@ -1,0 +1,112 @@
+
+body {
+  height: 100vh;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.makegame {
+  width: 30em;
+  padding: 2em 1em 0 1em;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 7em 1fr;
+}
+
+.form-group {
+  margin-bottom: .5em;
+}
+.players .player {
+  display: grid;
+  grid-template-columns: 1fr 2em;
+  column-gap: .5em;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+
+select,input {
+  border-width: 0;
+  border-bottom: 1px dotted black;
+  background: transparent;
+  padding: .5em;
+  color: inherit;
+  height: 2.4em;
+  min-width: 0;
+}
+
+button {
+  padding: .5em;
+  border: 1px solid black;
+  color: inherit;
+  transition: background-color .5s;
+  background: transparent;
+}
+button:hover {
+  background: white;
+}
+button:focua {
+  background: #fff1;
+}
+button:active {
+  background: #0001;
+}
+button.small {
+  display: block;
+  width: 2em; height: 2em;
+  line-height: 0;
+}
+.addplayerline {
+  text-align: right;
+}
+button.addplayer {
+  width: 2em; height: 2em;
+  line-height: 0;
+}
+button[type=submit] {
+  margin: 1em auto;
+  display: block;
+  text-transform: uppercase;
+  font-weight: bold;
+  width: 100%;
+}
+
+.input, .message, .output {
+  display: none;
+}
+
+.input {
+}
+.makegame[show=input] .input {
+  display: block;
+}
+
+.message {
+  text-align: center;
+  margin-bottom: 3em;
+}
+.makegame[show=message] .message {
+  display: block;
+}
+
+.output {
+  display: none;
+  margin-bottom: 3em;
+}
+.output table {
+  margin: 0 auto;
+}
+.output table th {
+  font-weight: bold;
+}
+.makegame[show=output] .output {
+  display: block;
+}

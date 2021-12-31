@@ -1,1 +1,68 @@
-rummy home
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Play Rummy</title>
+
+  <meta name="description" content="A Go game in Go lang">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="theme-color" content="#0d8db0">
+
+  <link rel="stylesheet" href="/common/css/bootstrap-reboot.css">
+  <link rel="stylesheet" href="css/home.css">
+
+  <script type="module" src="js/home.js"></script>
+</head>
+
+<body>
+
+  <div class="makegame">
+    <h1>Rummy</h1>
+    <div class="input">
+      <form>
+        <div class="form-group">
+          <label for="">Players:</label>
+          <div>
+            <div class="players">
+            </div>
+            <div class="addplayerline">
+              <button type="button" class="addplayer">+</button>
+            </div>
+          </div>
+        </div>
+        <button type="submit">go</button>
+      </form>
+    </div>
+    <div class="message">
+    </div>
+    <div class="output">
+      <table>
+        <tbody>
+          <tr>
+            <th>phil</th>
+            <td><a href="#">http://foo/?id=blahblah</a></td>
+          </tr>
+          <tr>
+            <th>bear</th>
+            <td><a href="#">http://foo/?id=blahblah</a></td>
+          </tr>
+          <tr>
+            <th>olaf</th>
+            <td><a href="#">http://foo/?id=blahblah</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <template id="playerline">
+    <div class="player">
+      <input type="text" class="form-control" name="player1" placeholder="name" minlength="1" maxlength="24" required>
+      <button type="button" class="small removeplayer">-</button>
+    </div>
+  </template>
+
+</body>
+
+</html>
