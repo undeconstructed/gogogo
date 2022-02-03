@@ -74,7 +74,7 @@ function main() {
     for (let p of playersDiv.querySelectorAll('.player')) {
       let n = p.querySelector('input').value
       let c = p.querySelector('select').value
-      players.push({ name: n, colour: c })
+      players.push({ name: n, options: { colour: c }})
     }
     inpDiv.style.display = 'none'
     showMessage('... working ...')

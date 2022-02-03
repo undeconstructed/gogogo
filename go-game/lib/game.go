@@ -208,7 +208,11 @@ func NewFromSaved(data GameData, r io.Reader) (game.Game, error) {
 func (g *gogame) AddPlayer(name string, options map[string]interface{}) error {
 	colour, ok := options["colour"].(string)
 	if !ok {
-		return game.Error(game.StatusConflict, "bad player options")
+		return game.Error(game.StatusBadRequest, "bad player options")
+	}
+
+	if !isAColour(colour) {
+		return game.Error(game.StatusBadRequest, "not a colour")
 	}
 
 	for _, pl := range g.players {
@@ -218,10 +222,6 @@ func (g *gogame) AddPlayer(name string, options map[string]interface{}) error {
 		if pl.Colour == colour && pl.Name != name {
 			return game.Error(game.StatusConflict, "colour conflict")
 		}
-	}
-
-	if !isAColour(colour) {
-		return game.Error(game.StatusBadRequest, "not a colour")
 	}
 
 	homePlace := g.places[g.settings.Home]

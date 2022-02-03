@@ -24,7 +24,6 @@ func Errorf(code StatusCode, format string, a ...interface{}) error {
 }
 
 func Code(err error) StatusCode {
-	// Don't use FromError to avoid allocation of OK status.
 	if err == nil {
 		return StatusOK
 	}

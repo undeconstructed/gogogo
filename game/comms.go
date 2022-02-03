@@ -55,5 +55,5 @@ type GameUpdate struct {
 	Private json.RawMessage `json:"private"`
 
 	// turn object for one player
-	Turn *RTurnState `json:"turn"`
+	Turn *TurnState `json:"turn"`
 }

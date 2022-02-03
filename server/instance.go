@@ -106,15 +106,17 @@ func (i *instance) doInit(ctx context.Context, cli game.InstanceClient, in MakeG
 		Options: []byte(in.Options),
 	})
 	if err != nil {
-		return fmt.Errorf("init error: %w", err)
+		err := status.Convert(err)
+		return fmt.Errorf("Can't create game: %s", err.Message())
 	}
 
 	i.state = res.State
 
 	for _, p := range in.Players {
-		res, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Options: in.Options})
+		res, err := cli.AddPlayer(ctx, &game.RAddPlayerRequest{Name: p.Name, Options: p.Options})
 		if err != nil {
-			return fmt.Errorf("addplayer error: %w", err)
+			err := status.Convert(err)
+			return fmt.Errorf("Can't add player: %s", err.Message())
 		}
 		i.state = res.State
 	}

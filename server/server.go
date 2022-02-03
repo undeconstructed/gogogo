@@ -135,7 +135,7 @@ func (s *server) Run(ctx context.Context) error {
 					Players:    players,
 					Global:     json.RawMessage(gState.Global),
 					Private:    pState.Private,
-					Turn:       pState.Turn,
+					Turn:       game.UnwrapTurnState(pState.Turn),
 				}
 
 				msg, err := comms.Encode("update", update)

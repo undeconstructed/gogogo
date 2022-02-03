@@ -137,6 +137,16 @@ func UnwrapTurnState(in *RTurnState) *TurnState {
 	}
 }
 
+func ErrorToGRPC(err error) error {
+	if err, ok := err.(*GameError); ok {
+		switch err.Code {
+		case StatusBadRequest:
+			return status.Errorf(codes.InvalidArgument, "%v", err.Message)
+		}
+	}
+	return status.Errorf(codes.FailedPrecondition, "%v", err)
+}
+
 type NewGameFunc func(map[string]interface{}) (Game, error)
 type LoadGameFunc func(io.Reader) (Game, error)
 
@@ -262,12 +272,7 @@ func (s *GRPCServer) AddPlayer(ctx context.Context, req *RAddPlayerRequest) (*RA
 
 	err = s.gg.AddPlayer(req.Name, options)
 	if err != nil {
-		switch Code(err) {
-		case StatusBadRequest:
-			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
-		default:
-			return nil, status.Errorf(codes.FailedPrecondition, "%v", err)
-		}
+		return nil, ErrorToGRPC(err)
 	}
 	err = s.saveGame()
 	if err != nil {
