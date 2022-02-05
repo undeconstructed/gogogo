@@ -670,6 +670,20 @@ function makeLuckStack(data) {
     }
   }
 
+  let doUse = (id, card) => {
+    if (card.ui === 'prompt') {
+      let options = prompt('options (or none)')
+      if (options == null) {
+        return
+      }
+      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      netState.doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
+    } else {
+      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      netState.doRequest('play', { command: 'useluck:'+id+':' }, cb)
+    }
+  }
+
   let doClose = () => {
     stack.classList.remove('open')
     stack.classList.add('stashed')
@@ -696,12 +710,7 @@ function makeLuckStack(data) {
         div.querySelector('.body').textContent = luckData.name
         div.querySelector('button').addEventListener('click', e => {
           e.stopPropagation()
-          let options = prompt('options (or none)')
-          if (options == null) {
-            return
-          }
-          let cb = (e, _r) => { if (e) { alert(e.message); return; } }
-          netState.doRequest('play', { command: 'useluck:'+luckId+':'+options }, cb)
+          doUse(luckId, luckData)
           doClose()
         })
         stack.append(div)
@@ -1425,6 +1434,22 @@ function fixupData(indata) {
       dot.terminal = true
       if (place.city) {
         dot.city = true
+      }
+    }
+  }
+
+  for (let luck of indata.lucks) {
+    if (luck.retain) {
+      luck.ui = 'prompt'
+      let code = luck.code
+      if (code.match(/^advance:\d+$/)) {
+        luck.ui = null
+      } else if (code.match(/^freeticket:/)) {
+        if (!code.contains('*')) {
+          luck.ui = null
+        }
+      } else if (code === 'freeinsurance' || code === 'dest' || code === 'inoculation' || code === 'immunity') {
+        luck.ui = null
       }
     }
   }
