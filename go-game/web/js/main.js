@@ -336,8 +336,19 @@ function makeSquares(data) {
 
 function makePriceList(data, up) {
   let ele = document.querySelector('.prices')
+  let freeticket = null
 
-  ;(() => {
+  let isFree = (from, to, by) => {
+    let match = (value, filter) => {
+      return !filter || filter === '*' || filter === value
+    }
+    if (freeticket) {
+      return match(from, freeticket.from) && match(to, freeticket.to) && match(by, freeticket.by)
+    }
+    return false
+  }
+
+  let doSetupList = () => {
     let tbody = ele.querySelector('tbody')
     tbody.replaceChildren()
 
@@ -369,6 +380,10 @@ function makePriceList(data, up) {
         let mode = makeByLine(data, modeId)
         let fare = place.routes[r]
 
+        if (isFree(placeId, destId, modeId)) {
+          fare = 0
+        }
+
         let td1 = document.createElement('td')
         td1.classList.add('place')
         td1.append(dest)
@@ -388,11 +403,15 @@ function makePriceList(data, up) {
         tr.append(td4)
 
         tr.addEventListener('click', _e => {
-          let cb = (e, _r) => {
-            if (e) { alert(e.message); return; }
-            up.send({ do: 'notify', msg: 'you have bought a ticket' })
+          if (freeticket) {
+            freeticket.cb(placeId, destId, modeId)
+          } else {
+            let cb = (e, _r) => {
+              if (e) { alert(e.message); return; }
+              up.send({ do: 'notify', msg: 'you have bought a ticket' })
+            }
+            netState.doRequest('play', { command: `buyticket:${placeId}:${destId}:${modeId}` }, cb)
           }
-          netState.doRequest('play', { command: `buyticket:${placeId}:${destId}:${modeId}` }, cb)
         })
 
         tbody.append(tr)
@@ -406,23 +425,36 @@ function makePriceList(data, up) {
     for (let placeId in data.places) {
       makePlacePrices(placeId)
     }
-  })()
+  }
 
   let doOpen = (placeId) => {
     ele.classList.add('open')
-    let p = ele.querySelector(`.${placeId}`)
-    p.scrollIntoView({ behavior: 'smooth' })
+    if (placeId) {
+      let p = ele.querySelector(`.${placeId}`)
+      p.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  let doOpenFree = (placeId, filter) => {
+    freeticket = filter
+    doSetupList()
+    doOpen(placeId)
   }
 
   let doClose = () => {
     ele.classList.remove('open')
+    if (freeticket) {
+      freeticket = null
+      doSetupList()
+    }
   }
-
-  ele.addEventListener('click', doClose)
 
   let onCommand = c => {
     if (c.do === 'showprices') {
       doOpen(c.at)
+    } else if (c.do === 'freeticket') {
+      // TODO - need to have current location here
+      doOpenFree(c.at, c)
     }
   }
 
@@ -435,6 +467,11 @@ function makePriceList(data, up) {
     }
     ele.classList.toggle('canbuy', canbuy)
   }
+
+  ;(() => {
+    doSetupList({})
+    ele.addEventListener('click', doClose)
+  })()
 
   return { onCommand, onTurn }
 }
@@ -652,7 +689,7 @@ function makeRiskView(data) {
   return { onTurn }
 }
 
-function makeLuckStack(data) {
+function makeLuckStack(data, up) {
   let stack = document.querySelector('.lucks')
 
   let doOpen = () => {
@@ -670,6 +707,14 @@ function makeLuckStack(data) {
     }
   }
 
+  let makeDoFreeTicket = (id) => {
+    return (from, to, by) => {
+      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      let options = `${from}:${to}:${by}`
+      netState.doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
+    }
+  }
+
   let doUse = (id, card) => {
     if (card.ui === 'prompt') {
       let options = prompt('options (or none)')
@@ -678,6 +723,13 @@ function makeLuckStack(data) {
       }
       let cb = (e, _r) => { if (e) { alert(e.message); return; } }
       netState.doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
+    } else if (card.ui === 'freeticketfixed') {
+      let options = card.code.substring(11)
+      let cb = (e, _r) => { if (e) { alert(e.message); return; } }
+      netState.doRequest('play', { command: 'useluck:'+id+':'+options }, cb)
+    } else if (card.ui === 'freeticketchoice') {
+      let [_x, from, to, by] = card.code.split(':')
+      up.send({ do: 'freeticket', from, to, by, cb: makeDoFreeTicket(id) })
     } else {
       let cb = (e, _r) => { if (e) { alert(e.message); return; } }
       netState.doRequest('play', { command: 'useluck:'+id+':' }, cb)
@@ -1445,8 +1497,10 @@ function fixupData(indata) {
       if (code.match(/^advance:\d+$/)) {
         luck.ui = null
       } else if (code.match(/^freeticket:/)) {
-        if (!code.contains('*')) {
-          luck.ui = null
+        if (!code.includes('*')) {
+          luck.ui = 'freeticketfixed'
+        } else {
+          luck.ui = 'freeticketchoice'
         }
       } else if (code === 'freeinsurance' || code === 'dest' || code === 'inoculation' || code === 'immunity') {
         luck.ui = null
