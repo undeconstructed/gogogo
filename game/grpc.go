@@ -89,32 +89,26 @@ func WrapPlayerState(in *PlayerState) *RPlayerState {
 		private, _ = json.Marshal(in.Private)
 	}
 
-	var turn *RTurnState
-	if in.Turn != nil {
-		turn = WrapTurnState(in.Turn)
-	}
-
 	return &RPlayerState{
 		Name:    in.Name,
-		Turn:    turn,
+		Turn:    WrapTurnState(in.Turn),
 		Private: private,
 	}
 }
 
 func UnwrapPlayerState(in *RPlayerState) *PlayerState {
-	var turn *TurnState
-	if in.Turn != nil {
-		turn = UnwrapTurnState(in.Turn)
-	}
-
 	return &PlayerState{
 		Name:    in.Name,
-		Turn:    turn,
+		Turn:    UnwrapTurnState(in.Turn),
 		Private: json.RawMessage(in.Private),
 	}
 }
 
 func WrapTurnState(in *TurnState) *RTurnState {
+	if in == nil {
+		return nil
+	}
+
 	var custom []byte
 	if in.Custom != nil {
 		custom, _ = json.Marshal(in.Custom)
@@ -129,6 +123,10 @@ func WrapTurnState(in *TurnState) *RTurnState {
 }
 
 func UnwrapTurnState(in *RTurnState) *TurnState {
+	if in == nil {
+		return nil
+	}
+
 	return &TurnState{
 		Number: int(in.Number),
 		Can:    in.Can,
