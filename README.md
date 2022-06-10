@@ -7,7 +7,7 @@ Also, I'm not uploading the rule book etc.
 
 ```
 make server.run
-xdg-open 'http://localhost:1235/play/go'
+xdg-open 'http://localhost:1235/play/go/'
 ```
 
 Then create a game, the server will make links for each player,
