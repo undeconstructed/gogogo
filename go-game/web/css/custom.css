@@ -434,9 +434,10 @@ body {
 }
 .buysouvenirbutton .button {
   flex: 0 0 auto;
-  width: 5rem;
-  height: 10rem;
-  background: white;
+  width: 10rem;
+  height: 12rem;
+  /* background: white; */
+  background: center / contain no-repeat url("../img/souvenirs.svg");
 }
 
 .showmessage {

@@ -37,7 +37,7 @@ generate.grpc:
 	protoc --go_out=. --go_opt=M --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative game/game.proto
 
 pstree:
-	sh -c 'PID=$$(ps --no-headers -o pid -C go) ; pstree -p -T $$PID'
+	sh -c 'PID=$$(ps --no-headers -o pid -C go | head -1) ; pstree -c -a -p -T $$PID'
 
 .PHONY: .FORCE
 

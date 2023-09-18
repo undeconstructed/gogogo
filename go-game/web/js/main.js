@@ -998,7 +998,7 @@ function makeSouvenirPile(data) {
         let currency = data.currencies[place.currency]
         let div = tmpl.cloneNode(true)
         div.querySelector('.where').textContent = 'Souvenir from ' + place.name
-        let price = data.settings.souvenirPrice * currency.rate
+        let price = data.settings.souvenirPrice * currency.rate / 100
         div.querySelector('.price').textContent = '' + price + ' ' + currency.name
         for (let bar of div.querySelectorAll('.bar')) {
           bar.style.backgroundColor = currency.colour

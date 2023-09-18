@@ -644,7 +644,7 @@ func (g *gogame) stopOnMap(t *turn) {
 			// but insurance has expired
 			t.player.Insurance = false
 
-			if g.settings.Home == placeId && len(t.player.Souvenirs) >= g.settings.Goal {
+			if g.settings.Home == placeId && len(t.player.Souvenirs) >= g.settings.Goal && g.winner == "" {
 				t.addEvent("wins the game!")
 				g.winner = t.player.Name
 			}
